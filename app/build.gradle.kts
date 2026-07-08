@@ -36,6 +36,9 @@ android {
 }
 
 dependencies {
+    implementation(libs.sqlcipher.android)
+    implementation(libs.sqlite)
+
     implementation(libs.activity.ktx)
     implementation(libs.appcompat)
     implementation(libs.constraintlayout)
