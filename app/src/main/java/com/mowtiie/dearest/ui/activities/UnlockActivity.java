@@ -2,6 +2,7 @@ package com.mowtiie.dearest.ui.activities;
 
 import android.os.Bundle;
 import android.os.CountDownTimer;
+import android.security.keystore.KeyPermanentlyInvalidatedException;
 import android.text.Editable;
 import android.view.View;
 import android.widget.Button;
@@ -9,13 +10,20 @@ import android.widget.EditText;
 import android.widget.TextView;
 
 import androidx.activity.OnBackPressedCallback;
+import androidx.annotation.NonNull;
+import androidx.biometric.BiometricManager;
+import androidx.biometric.BiometricPrompt;
+import androidx.core.content.ContextCompat;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.mowtiie.dearest.DearestApp;
 import com.mowtiie.dearest.R;
+import com.mowtiie.dearest.security.BiometricGate;
 import com.mowtiie.dearest.ui.viewmodel.UnlockViewModel;
 import com.mowtiie.dearest.ui.viewmodel.UnlockViewModel.Mode;
 import com.google.android.material.progressindicator.CircularProgressIndicator;
+
+import javax.crypto.Cipher;
 
 public class UnlockActivity extends DearestActivity {
 
@@ -26,11 +34,13 @@ public class UnlockActivity extends DearestActivity {
     private EditText passphraseInput;
     private EditText confirmInput;
     private Button primaryButton;
+    private Button biometricButton;
     private TextView errorText;
     private CircularProgressIndicator progress;
 
     private Mode mode = Mode.UNLOCK;
     private CountDownTimer lockoutTimer;
+    private boolean autoPromptedBiometric;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,11 +52,11 @@ public class UnlockActivity extends DearestActivity {
         passphraseInput = findViewById(R.id.passphrase_input);
         confirmInput = findViewById(R.id.confirm_input);
         primaryButton = findViewById(R.id.primary_button);
+        biometricButton = findViewById(R.id.biometric_button);
         errorText = findViewById(R.id.error_text);
         progress = findViewById(R.id.progress);
 
         viewModel = new ViewModelProvider(this).get(UnlockViewModel.class);
-
         viewModel.mode().observe(this, this::applyMode);
         viewModel.busy().observe(this, this::applyBusy);
         viewModel.error().observe(this, this::showError);
@@ -57,6 +67,7 @@ public class UnlockActivity extends DearestActivity {
         });
 
         primaryButton.setOnClickListener(v -> submit());
+        biometricButton.setOnClickListener(v -> tryBiometricUnlock());
 
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override public void handleOnBackPressed() { moveTaskToBack(true); }
@@ -70,6 +81,60 @@ public class UnlockActivity extends DearestActivity {
         explainer.setVisibility(setup ? View.VISIBLE : View.GONE);
         heading.setText(setup ? R.string.unlock_heading_setup : R.string.unlock_heading);
         primaryButton.setText(setup ? R.string.unlock_action_create : R.string.unlock_action_unlock);
+
+        boolean biometricUsable = !setup && biometricUsable();
+        biometricButton.setVisibility(biometricUsable ? View.VISIBLE : View.GONE);
+        if (biometricUsable && !autoPromptedBiometric) {
+            autoPromptedBiometric = true;
+            tryBiometricUnlock();
+        }
+    }
+
+    private boolean biometricUsable() {
+        BiometricGate gate = DearestApp.from(this).biometricGate();
+        return gate.isEnrolled() && BiometricGate.isAvailable(this);
+    }
+
+    private void tryBiometricUnlock() {
+        BiometricGate gate = DearestApp.from(this).biometricGate();
+        if (!gate.isEnrolled() || !BiometricGate.isAvailable(this)) return;
+
+        Cipher cipher;
+        try {
+            cipher = gate.getUnlockCipher();
+        } catch (KeyPermanentlyInvalidatedException invalidated) {
+            gate.disable();
+            biometricButton.setVisibility(View.GONE);
+            showError(getString(R.string.biometric_reset));
+            return;
+        } catch (Exception e) {
+            return;
+        }
+
+        BiometricPrompt prompt = new BiometricPrompt(this,
+                ContextCompat.getMainExecutor(this),
+                new BiometricPrompt.AuthenticationCallback() {
+                    @Override
+                    public void onAuthenticationSucceeded(
+                            @NonNull BiometricPrompt.AuthenticationResult result) {
+                        try {
+                            BiometricPrompt.CryptoObject crypto = result.getCryptoObject();
+                            gate.completeUnlock(crypto.getCipher());
+                            DearestApp.from(UnlockActivity.this).onUnlocked();
+                        } catch (Exception e) {
+                            showError(getString(R.string.biometric_failed));
+                        }
+                    }
+                });
+
+        BiometricPrompt.PromptInfo info = new BiometricPrompt.PromptInfo.Builder()
+                .setTitle(getString(R.string.biometric_title))
+                .setSubtitle(getString(R.string.biometric_subtitle))
+                .setNegativeButtonText(getString(R.string.biometric_use_passphrase))
+                .setAllowedAuthenticators(BiometricManager.Authenticators.BIOMETRIC_STRONG)
+                .build();
+
+        prompt.authenticate(info, new BiometricPrompt.CryptoObject(cipher));
     }
 
     private void applyBusy(Boolean busy) {

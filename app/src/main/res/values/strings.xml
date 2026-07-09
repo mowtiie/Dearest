@@ -81,4 +81,14 @@
     <string name="notebook_deleted">Notebook deleted</string>
     <string name="cd_drag_handle">Reorder</string>
     <string name="cd_delete_notebook">Delete notebook</string>
+
+    <!-- Biometrics -->
+    <string name="biometric_title">Unlock Dearest</string>
+    <string name="biometric_subtitle">Confirm it\'s you</string>
+    <string name="biometric_button">Unlock with biometrics</string>
+    <string name="biometric_use_passphrase">Use passphrase</string>
+    <string name="biometric_reset">Biometrics changed. Please use your passphrase.</string>
+    <string name="biometric_failed">Couldn\'t unlock with biometrics.</string>
+    <string name="biometric_enroll_failed">Couldn\'t enable biometric unlock.</string>
+    <string name="biometric_enabled">Biometric unlock enabled</string>
 </resources>
