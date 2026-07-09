@@ -36,6 +36,7 @@ android {
 }
 
 dependencies {
+    implementation(libs.lifecycle.process)
     implementation(libs.sqlcipher.android)
     implementation(libs.sqlite)
 
