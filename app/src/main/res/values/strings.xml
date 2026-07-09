@@ -1,3 +1,44 @@
 <resources>
     <string name="app_name">Dearest</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+
+    <!-- Bottom-nav / destination titles (also used as toolbar titles) -->
+    <string name="title_journal">Journal</string>
+    <string name="title_calendar">Calendar</string>
+    <string name="title_search">Search</string>
+    <string name="title_settings">Settings</string>
+
+    <!-- Unlock / setup screen -->
+    <string name="unlock_heading">Welcome back</string>
+    <string name="unlock_heading_setup">Create your passphrase</string>
+    <string name="unlock_action_unlock">Unlock</string>
+    <string name="unlock_action_create">Create journal</string>
+    <string name="unlock_hint_passphrase">Passphrase</string>
+    <string name="unlock_hint_confirm">Confirm passphrase</string>
+    <string name="unlock_locked_out">Too many attempts. Try again in %1$d s.</string>
+    <string name="setup_explainer">Dearest has no account and no way to reset this passphrase. It is the only key to your journal — if you forget it, your entries cannot be recovered. Choose something memorable.</string>
+
+    <!-- Journal -->
+    <string name="filter_all">All</string>
+    <string name="entry_untitled">(untitled)</string>
+    <string name="journal_empty_title">No entries yet</string>
+    <string name="journal_empty_subtitle">Tap + to write your first entry.</string>
+    <string name="cd_new_entry">New entry</string>
+
+    <!-- Search -->
+    <string name="search_hint">Search your entries</string>
+    <string name="search_prompt">Search your entries</string>
+    <string name="search_no_results">No matching entries</string>
+
+    <!-- Entry editor -->
+    <string name="editor_title_hint">Title</string>
+    <string name="editor_body_hint">Write your thoughts…</string>
+    <string name="editor_delete">Delete</string>
+    <string name="editor_delete_confirm_title">Delete this entry?</string>
+    <string name="editor_delete_confirm_message">This can\'t be undone.</string>
+
+    <!-- Placeholders -->
+    <string name="placeholder_calendar">Calendar — coming soon</string>
+    <string name="placeholder_settings">Settings — coming soon</string>
 </resources>
