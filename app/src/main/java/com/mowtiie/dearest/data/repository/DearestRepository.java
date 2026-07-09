@@ -28,6 +28,10 @@ public final class DearestRepository {
         void onComplete(boolean success, String errorMessage);
     }
 
+    public interface ResultCallback<T> {
+        void onResult(T value);
+    }
+
     private static volatile DearestRepository instance;
 
     private final Context appContext;
@@ -124,6 +128,13 @@ public final class DearestRepository {
             io.execute(() -> result.postValue(
                     db == null ? Collections.emptyList() : entryDao.search(db, rawQuery)));
             return result;
+        });
+    }
+
+    public void getEntry(String entryId, ResultCallback<Entry> callback) {
+        io.execute(() -> {
+            Entry entry = (db == null) ? null : entryDao.getById(db, entryId);
+            mainHandler.post(() -> callback.onResult(entry));
         });
     }
 
