@@ -1,4 +1,4 @@
-package com.mowtiie.dearest.data;
+package com.mowtiie.dearest.data.model;
 
 
 import java.util.Objects;
