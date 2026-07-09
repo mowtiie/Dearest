@@ -31,13 +31,6 @@
             app:title="@string/settings_change_passphrase" />
     </PreferenceCategory>
 
-    <PreferenceCategory app:title="@string/settings_cat_notebooks">
-
-        <Preference
-            app:key="pref_manage_notebooks"
-            app:title="@string/settings_manage_notebooks" />
-    </PreferenceCategory>
-
     <PreferenceCategory app:title="@string/settings_cat_data">
 
         <Preference
