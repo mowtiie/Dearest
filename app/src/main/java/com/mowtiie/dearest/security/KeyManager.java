@@ -100,6 +100,10 @@ public final class KeyManager {
         return dek.clone();
     }
 
+    void unlockWithDek(byte[] dek) {
+        this.dek = dek.clone();
+    }
+
     public void lock() {
         CryptoPrimitives.zero(dek);
         dek = null;

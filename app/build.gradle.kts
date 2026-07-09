@@ -36,6 +36,7 @@ android {
 }
 
 dependencies {
+    implementation(libs.biometric)
     implementation(libs.lifecycle.process)
     implementation(libs.navigation.fragment.ktx)
     implementation(libs.navigation.ui.ktx)
