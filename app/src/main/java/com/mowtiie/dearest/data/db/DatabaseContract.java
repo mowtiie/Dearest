@@ -1,4 +1,4 @@
-package com.mowtiie.dearest.data;
+package com.mowtiie.dearest.data.db;
 
 import android.provider.BaseColumns;
 
