@@ -13,6 +13,9 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Dearest">
         <activity
+            android:name=".ui.activities.UnlockActivity"
+            android:exported="false" />
+        <activity
             android:name=".ui.activities.EntryEditorActivity"
             android:exported="false" />
         <activity
