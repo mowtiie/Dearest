@@ -12,7 +12,7 @@ import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
 
-public class CryptoPrimitives {
+final class CryptoPrimitives {
 
     static final int DEK_LENGTH_BYTES  = 32;
     static final int SALT_LENGTH_BYTES = 16;
