@@ -138,6 +138,13 @@ public final class DearestRepository {
         });
     }
 
+    public void countEntries(String notebookId, ResultCallback<Integer> callback) {
+        io.execute(() -> {
+            int count = (db == null) ? 0 : entryDao.countByNotebook(db, notebookId);
+            mainHandler.post(() -> callback.onResult(count));
+        });
+    }
+
     public void saveEntry(Entry entry) {
         io.execute(() -> {
             if (db == null) return;
