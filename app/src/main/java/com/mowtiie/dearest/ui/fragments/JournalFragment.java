@@ -14,6 +14,8 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.mowtiie.dearest.R;
 import com.mowtiie.dearest.data.model.Notebook;
+import com.mowtiie.dearest.ui.activities.EntryEditorActivity;
+import com.mowtiie.dearest.ui.adapters.EntryAdapter;
 import com.mowtiie.dearest.ui.viewmodel.JournalViewModel;
 import com.google.android.material.chip.Chip;
 import com.google.android.material.chip.ChipGroup;

@@ -17,7 +17,7 @@ import com.mowtiie.dearest.ui.viewmodel.EntryEditorViewModel;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
-public class EntryEditorActivity extends SecureActivity {
+public class EntryEditorActivity extends DearestActivity {
 
     private static final String EXTRA_ENTRY_ID = "com.dearest.extra.ENTRY_ID";
     private static final String EXTRA_NOTEBOOK_ID = "com.dearest.extra.NOTEBOOK_ID";
