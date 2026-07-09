@@ -62,4 +62,22 @@
     <string name="change_pass_confirm_hint">Confirm new passphrase</string>
     <string name="change_pass_action">Change passphrase</string>
     <string name="change_pass_success">Passphrase changed</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+
+    <!--  Manage notebooks  -->
+    <string name="manage_notebooks_title">Manage notebooks</string>
+    <string name="action_add_notebook">Add notebook</string>
+    <string name="add_notebook_title">New notebook</string>
+    <string name="rename_notebook_title">Rename notebook</string>
+    <string name="notebook_name_hint">Notebook name</string>
+    <string name="action_save">Save</string>
+    <string name="delete_notebook_title">Delete notebook?</string>
+    <string name="delete_notebook_message">This notebook has no entries.</string>
+    <string name="delete_notebook_move_title">Move entries first</string>
+    <string name="delete_notebook_move_message">This notebook has %1$d entries. Choose where to move them, then it will be deleted.</string>
+    <string name="cannot_delete_last">You need at least one notebook.</string>
+    <string name="notebook_deleted">Notebook deleted</string>
+    <string name="cd_drag_handle">Reorder</string>
+    <string name="cd_delete_notebook">Delete notebook</string>
 </resources>
