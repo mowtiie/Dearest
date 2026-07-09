@@ -100,6 +100,15 @@ public final class DearestRepository {
         });
     }
 
+    public LiveData<List<Entry>> observeAllEntries() {
+        return Transformations.switchMap(refreshTrigger, ignored -> {
+            MutableLiveData<List<Entry>> result = new MutableLiveData<>();
+            io.execute(() -> result.postValue(
+                    db == null ? Collections.emptyList() : entryDao.getAll(db)));
+            return result;
+        });
+    }
+
     public LiveData<Entry> observeEntry(String entryId) {
         return Transformations.switchMap(refreshTrigger, ignored -> {
             MutableLiveData<Entry> result = new MutableLiveData<>();
