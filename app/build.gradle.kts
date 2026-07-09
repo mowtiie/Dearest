@@ -39,6 +39,7 @@ dependencies {
     implementation(libs.lifecycle.process)
     implementation(libs.navigation.fragment.ktx)
     implementation(libs.navigation.ui.ktx)
+    implementation(libs.preference)
     implementation(libs.sqlcipher.android)
     implementation(libs.sqlite)
 
