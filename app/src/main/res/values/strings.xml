@@ -3,6 +3,7 @@
 
     <!--  Bottom-nav / destination titles (also used as toolbar titles)  -->
     <string name="title_journal">Journal</string>
+    <string name="title_notebooks">Notebooks</string>
     <string name="title_calendar">Calendar</string>
     <string name="title_search">Search</string>
     <string name="title_settings">Settings</string>

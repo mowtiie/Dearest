@@ -10,6 +10,11 @@
         android:label="@string/title_journal" />
 
     <fragment
+        android:id="@+id/notebooksFragment"
+        android:name="com.mowtiie.dearest.ui.fragments.NotebooksFragment"
+        android:label="@string/title_notebooks" />
+
+    <fragment
         android:id="@+id/calendarFragment"
         android:name="com.mowtiie.dearest.ui.fragments.CalendarFragment"
         android:label="@string/title_calendar" />
