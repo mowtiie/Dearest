@@ -1,13 +1,14 @@
 <resources>
     <string name="app_name">Dearest</string>
 
-    <!--  Bottom-nav / destination titles (also used as toolbar titles)  -->
+    <!-- Bottom-nav / destination titles (also used as toolbar titles) -->
     <string name="title_journal">Journal</string>
-    <string name="title_notebooks">Notebooks</string>
     <string name="title_calendar">Calendar</string>
     <string name="title_search">Search</string>
+    <string name="title_notebooks">Notebooks</string>
     <string name="title_settings">Settings</string>
-    <!--  Unlock / setup screen  -->
+
+    <!-- Unlock / setup screen -->
     <string name="unlock_heading">Welcome back</string>
     <string name="unlock_heading_setup">Create your passphrase</string>
     <string name="unlock_action_unlock">Unlock</string>
@@ -16,31 +17,38 @@
     <string name="unlock_hint_confirm">Confirm passphrase</string>
     <string name="unlock_locked_out">Too many attempts. Try again in %1$d s.</string>
     <string name="setup_explainer">Dearest has no account and no way to reset this passphrase. It is the only key to your journal — if you forget it, your entries cannot be recovered. Choose something memorable.</string>
-    <!--  Journal  -->
+
+    <!-- Journal -->
     <string name="filter_all">All</string>
     <string name="entry_untitled">(untitled)</string>
     <string name="journal_empty_title">No entries yet</string>
     <string name="journal_empty_subtitle">Tap + to write your first entry.</string>
     <string name="cd_new_entry">New entry</string>
-    <!--  Search  -->
+
+    <!-- Search -->
     <string name="search_hint">Search your entries</string>
     <string name="search_prompt">Search your entries</string>
     <string name="search_no_results">No matching entries</string>
-    <!--  Entry editor  -->
+
+    <!-- Entry editor -->
     <string name="editor_title_hint">Title</string>
     <string name="editor_body_hint">Write your thoughts…</string>
     <string name="editor_delete">Delete</string>
     <string name="editor_delete_confirm_title">Delete this entry?</string>
     <string name="editor_delete_confirm_message">This can\'t be undone.</string>
-    <!--  Placeholders  -->
+
+    <!-- Placeholders -->
     <string name="placeholder_calendar">Calendar — coming soon</string>
     <string name="placeholder_settings">Settings — coming soon</string>
-    <!--  Settings  -->
+
+    <!-- Settings -->
     <string name="coming_soon">Coming soon</string>
     <string name="settings_cat_lock">App lock</string>
     <string name="settings_lock_timeout">Auto-lock</string>
     <string name="settings_biometric">Unlock with biometrics</string>
     <string name="settings_biometric_pending">Available in a future update</string>
+    <string name="settings_biometric_summary">Unlock without typing your passphrase</string>
+    <string name="settings_biometric_unavailable">No biometrics enrolled on this device</string>
     <string name="settings_lock_now">Lock now</string>
     <string name="settings_lock_now_summary">Lock the app immediately</string>
     <string name="settings_cat_security">Security</string>
@@ -55,7 +63,7 @@
     <string name="settings_offline">Offline by design</string>
     <string name="settings_offline_summary">Dearest has no internet permission — your journal never leaves this device.</string>
 
-    <!--  Change passphrase  -->
+    <!-- Change passphrase -->
     <string name="change_pass_title">Change passphrase</string>
     <string name="change_pass_explainer">Your entries are re-secured instantly — only the key is rewrapped, so the journal itself is never re-encrypted. There is still no way to recover a forgotten passphrase.</string>
     <string name="change_pass_current_hint">Current passphrase</string>
@@ -63,10 +71,8 @@
     <string name="change_pass_confirm_hint">Confirm new passphrase</string>
     <string name="change_pass_action">Change passphrase</string>
     <string name="change_pass_success">Passphrase changed</string>
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
 
-    <!--  Manage notebooks  -->
+    <!-- Manage notebooks -->
     <string name="manage_notebooks_title">Manage notebooks</string>
     <string name="action_add_notebook">Add notebook</string>
     <string name="add_notebook_title">New notebook</string>

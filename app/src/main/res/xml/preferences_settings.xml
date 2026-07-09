@@ -14,8 +14,7 @@
         <SwitchPreferenceCompat
             app:key="pref_biometric"
             app:title="@string/settings_biometric"
-            app:summary="@string/settings_biometric_pending"
-            app:enabled="false"
+            app:summary="@string/settings_biometric_summary"
             app:persistent="false" />
 
         <Preference
