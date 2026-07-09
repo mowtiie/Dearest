@@ -1,15 +1,12 @@
 <resources>
     <string name="app_name">Dearest</string>
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
 
-    <!-- Bottom-nav / destination titles (also used as toolbar titles) -->
+    <!--  Bottom-nav / destination titles (also used as toolbar titles)  -->
     <string name="title_journal">Journal</string>
     <string name="title_calendar">Calendar</string>
     <string name="title_search">Search</string>
     <string name="title_settings">Settings</string>
-
-    <!-- Unlock / setup screen -->
+    <!--  Unlock / setup screen  -->
     <string name="unlock_heading">Welcome back</string>
     <string name="unlock_heading_setup">Create your passphrase</string>
     <string name="unlock_action_unlock">Unlock</string>
@@ -18,41 +15,42 @@
     <string name="unlock_hint_confirm">Confirm passphrase</string>
     <string name="unlock_locked_out">Too many attempts. Try again in %1$d s.</string>
     <string name="setup_explainer">Dearest has no account and no way to reset this passphrase. It is the only key to your journal — if you forget it, your entries cannot be recovered. Choose something memorable.</string>
-
-    <!-- Journal -->
+    <!--  Journal  -->
     <string name="filter_all">All</string>
     <string name="entry_untitled">(untitled)</string>
     <string name="journal_empty_title">No entries yet</string>
     <string name="journal_empty_subtitle">Tap + to write your first entry.</string>
     <string name="cd_new_entry">New entry</string>
-
-    <!-- Search -->
+    <!--  Search  -->
     <string name="search_hint">Search your entries</string>
     <string name="search_prompt">Search your entries</string>
     <string name="search_no_results">No matching entries</string>
-
-    <!-- Entry editor -->
+    <!--  Entry editor  -->
     <string name="editor_title_hint">Title</string>
     <string name="editor_body_hint">Write your thoughts…</string>
     <string name="editor_delete">Delete</string>
     <string name="editor_delete_confirm_title">Delete this entry?</string>
     <string name="editor_delete_confirm_message">This can\'t be undone.</string>
-
-    <!-- Placeholders -->
+    <!--  Placeholders  -->
     <string name="placeholder_calendar">Calendar — coming soon</string>
     <string name="placeholder_settings">Settings — coming soon</string>
-    <!-- Preference Titles -->
-    <string name="messages_header">Messages</string>
-    <string name="sync_header">Sync</string>
-
-    <!-- Messages Preferences -->
-    <string name="signature_title">Your signature</string>
-    <string name="reply_title">Default reply action</string>
-
-    <!-- Sync Preferences -->
-    <string name="sync_title">Sync email periodically</string>
-    <string name="attachment_title">Download incoming attachments</string>
-    <string name="attachment_summary_on">Automatically download attachments for incoming emails
-    </string>
-    <string name="attachment_summary_off">Only download attachments when manually requested</string>
+    <!--  Settings  -->
+    <string name="coming_soon">Coming soon</string>
+    <string name="settings_cat_lock">App lock</string>
+    <string name="settings_lock_timeout">Auto-lock</string>
+    <string name="settings_biometric">Unlock with biometrics</string>
+    <string name="settings_biometric_pending">Available in a future update</string>
+    <string name="settings_lock_now">Lock now</string>
+    <string name="settings_lock_now_summary">Lock the app immediately</string>
+    <string name="settings_cat_security">Security</string>
+    <string name="settings_change_passphrase">Change passphrase</string>
+    <string name="settings_cat_notebooks">Notebooks</string>
+    <string name="settings_manage_notebooks">Manage notebooks</string>
+    <string name="settings_cat_data">Data</string>
+    <string name="settings_backup_export">Back up &amp; export</string>
+    <string name="settings_backup_export_summary">Encrypted backup, or export as text, CSV, or JSON</string>
+    <string name="settings_cat_about">About</string>
+    <string name="settings_version">Version</string>
+    <string name="settings_offline">Offline by design</string>
+    <string name="settings_offline_summary">Dearest has no internet permission — your journal never leaves this device.</string>
 </resources>
