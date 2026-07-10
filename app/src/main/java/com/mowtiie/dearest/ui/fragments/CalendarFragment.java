@@ -16,7 +16,7 @@ public class CalendarFragment extends Fragment {
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        View v = inflater.inflate(R.layout.fragment_placeholder, container, false);
+        View v = inflater.inflate(R.layout.fragment_calendar, container, false);
         ((TextView) v.findViewById(R.id.placeholder_text)).setText(R.string.placeholder_calendar);
         return v;
     }
