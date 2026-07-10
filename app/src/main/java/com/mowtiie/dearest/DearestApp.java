@@ -1,5 +1,6 @@
 package com.mowtiie.dearest;
 
+
 import android.app.Application;
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -13,6 +14,7 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ProcessLifecycleOwner;
 
+import com.mowtiie.dearest.backup.BackupManager;
 import com.mowtiie.dearest.data.db.DearestDatabase;
 import com.mowtiie.dearest.data.repository.DearestRepository;
 import com.mowtiie.dearest.security.BiometricGate;
@@ -24,7 +26,7 @@ public class DearestApp extends Application implements DefaultLifecycleObserver 
 
     private static final String PREFS = "dearest_settings";
     private static final String KEY_LOCK_TIMEOUT_MS = "lock_timeout_ms";
-    private static final long DEFAULT_TIMEOUT_MS  = 60_000L;
+    private static final long DEFAULT_TIMEOUT_MS = 60_000L;
 
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
     private final MutableLiveData<Boolean> locked = new MutableLiveData<>(true);
@@ -33,6 +35,7 @@ public class DearestApp extends Application implements DefaultLifecycleObserver 
     private KeyManager keyManager;
     private DearestRepository repository;
     private BiometricGate biometricGate;
+    private BackupManager backupManager;
     private SharedPreferences settings;
 
     @Override
@@ -45,6 +48,7 @@ public class DearestApp extends Application implements DefaultLifecycleObserver 
         keyManager = new KeyManager(this);
         repository = DearestRepository.getInstance(this, keyManager);
         biometricGate = new BiometricGate(this, keyManager);
+        backupManager = new BackupManager(this, repository);
 
         ProcessLifecycleOwner.get().getLifecycle().addObserver(this);
     }
@@ -52,7 +56,6 @@ public class DearestApp extends Application implements DefaultLifecycleObserver 
     public static DearestApp from(Context context) {
         return (DearestApp) context.getApplicationContext();
     }
-
 
     public KeyManager keyManager() {
         return keyManager;
@@ -64,6 +67,10 @@ public class DearestApp extends Application implements DefaultLifecycleObserver 
 
     public BiometricGate biometricGate() {
         return biometricGate;
+    }
+
+    public BackupManager backupManager() {
+        return backupManager;
     }
 
     public LiveData<Boolean> lockState() {
@@ -90,7 +97,6 @@ public class DearestApp extends Application implements DefaultLifecycleObserver 
     public void setLockTimeoutMs(long timeoutMs) {
         settings.edit().putLong(KEY_LOCK_TIMEOUT_MS, timeoutMs).apply();
     }
-
 
     @Override
     public void onStart(@NonNull LifecycleOwner owner) {
