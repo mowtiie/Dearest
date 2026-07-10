@@ -5,14 +5,22 @@ import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.biometric.BiometricManager;
+import androidx.biometric.BiometricPrompt;
+import androidx.core.content.ContextCompat;
 import androidx.preference.ListPreference;
 import androidx.preference.Preference;
 import androidx.preference.PreferenceFragmentCompat;
+import androidx.preference.SwitchPreferenceCompat;
 
 import com.mowtiie.dearest.DearestApp;
 import com.mowtiie.dearest.R;
+import com.mowtiie.dearest.security.BiometricGate;
 import com.mowtiie.dearest.ui.activities.BackupActivity;
+
+import javax.crypto.Cipher;
 
 public class SettingsFragment extends PreferenceFragmentCompat {
 
@@ -47,6 +55,23 @@ public class SettingsFragment extends PreferenceFragmentCompat {
         wireComingSoon("pref_change_passphrase");
         wireComingSoon("pref_manage_notebooks");
 
+        SwitchPreferenceCompat bio = findPreference("pref_biometric");
+        BiometricGate gate = DearestApp.from(requireContext()).biometricGate();
+        if (bio != null) {
+            boolean available = BiometricGate.isAvailable(requireContext());
+            bio.setEnabled(available);
+            bio.setChecked(gate.isEnrolled());
+            if (!available) bio.setSummary(R.string.settings_biometric_unavailable);
+            bio.setOnPreferenceChangeListener((pref, newValue) -> {
+                if ((Boolean) newValue) {
+                    enrollBiometric((SwitchPreferenceCompat) pref);
+                    return false;
+                }
+                gate.disable();
+                return true;
+            });
+        }
+
         Preference backup = findPreference("pref_backup_export");
         if (backup != null) {
             backup.setOnPreferenceClickListener(p -> {
@@ -54,6 +79,41 @@ public class SettingsFragment extends PreferenceFragmentCompat {
                 return true;
             });
         }
+    }
+
+    private void enrollBiometric(SwitchPreferenceCompat pref) {
+        BiometricGate gate = DearestApp.from(requireContext()).biometricGate();
+        Cipher cipher;
+        try {
+            cipher = gate.getEnrollCipher();
+        } catch (Exception e) {
+            Toast.makeText(requireContext(), R.string.biometric_enroll_failed, Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        BiometricPrompt prompt = new BiometricPrompt(this,
+                ContextCompat.getMainExecutor(requireContext()),
+                new BiometricPrompt.AuthenticationCallback() {
+                    @Override public void onAuthenticationSucceeded(
+                            @NonNull BiometricPrompt.AuthenticationResult result) {
+                        try {
+                            gate.completeEnroll(result.getCryptoObject().getCipher());
+                            pref.setChecked(true);
+                            Toast.makeText(requireContext(), R.string.biometric_enabled, Toast.LENGTH_SHORT).show();
+                        } catch (Exception e) {
+                            Toast.makeText(requireContext(), R.string.biometric_enroll_failed, Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                });
+
+        prompt.authenticate(
+                new BiometricPrompt.PromptInfo.Builder()
+                        .setTitle(getString(R.string.biometric_title))
+                        .setSubtitle(getString(R.string.biometric_subtitle))
+                        .setNegativeButtonText(getString(R.string.biometric_use_passphrase))
+                        .setAllowedAuthenticators(BiometricManager.Authenticators.BIOMETRIC_STRONG)
+                        .build(),
+                new BiometricPrompt.CryptoObject(cipher));
     }
 
     private void wireComingSoon(String key) {
