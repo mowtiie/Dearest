@@ -19,6 +19,7 @@ import com.mowtiie.dearest.DearestApp;
 import com.mowtiie.dearest.R;
 import com.mowtiie.dearest.security.BiometricGate;
 import com.mowtiie.dearest.ui.activities.BackupActivity;
+import com.mowtiie.dearest.ui.activities.ChangePassphraseActivity;
 
 import javax.crypto.Cipher;
 
@@ -52,8 +53,13 @@ public class SettingsFragment extends PreferenceFragmentCompat {
             version.setSummary(appVersion());
         }
 
-        wireComingSoon("pref_change_passphrase");
-        wireComingSoon("pref_manage_notebooks");
+        Preference changePass = findPreference("pref_change_passphrase");
+        if (changePass != null) {
+            changePass.setOnPreferenceClickListener(p -> {
+                startActivity(new Intent(requireContext(), ChangePassphraseActivity.class));
+                return true;
+            });
+        }
 
         SwitchPreferenceCompat bio = findPreference("pref_biometric");
         BiometricGate gate = DearestApp.from(requireContext()).biometricGate();
@@ -114,16 +120,6 @@ public class SettingsFragment extends PreferenceFragmentCompat {
                         .setAllowedAuthenticators(BiometricManager.Authenticators.BIOMETRIC_STRONG)
                         .build(),
                 new BiometricPrompt.CryptoObject(cipher));
-    }
-
-    private void wireComingSoon(String key) {
-        Preference p = findPreference(key);
-        if (p != null) {
-            p.setOnPreferenceClickListener(pref -> {
-                Toast.makeText(requireContext(), R.string.coming_soon, Toast.LENGTH_SHORT).show();
-                return true;
-            });
-        }
     }
 
     private String appVersion() {
