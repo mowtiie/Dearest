@@ -13,16 +13,20 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Dearest">
         <activity
-            android:name=".ui.activities.ChangePassphraseActivity"
+            android:name=".ui.activities.BackupActivity"
             android:parentActivityName=".ui.activities.MainActivity"
             android:exported="false" />
+        <activity
+            android:name=".ui.activities.ChangePassphraseActivity"
+            android:exported="false"
+            android:parentActivityName=".ui.activities.MainActivity" />
         <activity
             android:name=".ui.activities.UnlockActivity"
             android:exported="false" />
         <activity
             android:name=".ui.activities.EntryEditorActivity"
-            android:parentActivityName=".ui.activities.MainActivity"
-            android:exported="false" />
+            android:exported="false"
+            android:parentActivityName=".ui.activities.MainActivity" />
         <activity
             android:name=".ui.activities.MainActivity"
             android:exported="true">
