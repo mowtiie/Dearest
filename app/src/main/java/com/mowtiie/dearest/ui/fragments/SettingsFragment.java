@@ -1,5 +1,6 @@
 package com.mowtiie.dearest.ui.fragments;
 
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.widget.Toast;
@@ -11,6 +12,7 @@ import androidx.preference.PreferenceFragmentCompat;
 
 import com.mowtiie.dearest.DearestApp;
 import com.mowtiie.dearest.R;
+import com.mowtiie.dearest.ui.activities.BackupActivity;
 
 public class SettingsFragment extends PreferenceFragmentCompat {
 
@@ -44,7 +46,14 @@ public class SettingsFragment extends PreferenceFragmentCompat {
 
         wireComingSoon("pref_change_passphrase");
         wireComingSoon("pref_manage_notebooks");
-        wireComingSoon("pref_backup_export");
+
+        Preference backup = findPreference("pref_backup_export");
+        if (backup != null) {
+            backup.setOnPreferenceClickListener(p -> {
+                startActivity(new Intent(requireContext(), BackupActivity.class));
+                return true;
+            });
+        }
     }
 
     private void wireComingSoon(String key) {
