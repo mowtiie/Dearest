@@ -10,6 +10,7 @@ import androidx.lifecycle.Transformations;
 
 import com.mowtiie.dearest.data.dao.EntryDao;
 import com.mowtiie.dearest.data.dao.NotebookDao;
+import com.mowtiie.dearest.data.db.DatabaseContract;
 import com.mowtiie.dearest.data.db.DearestDatabase;
 import com.mowtiie.dearest.data.model.Entry;
 import com.mowtiie.dearest.data.model.Notebook;
@@ -19,6 +20,7 @@ import net.zetetic.database.sqlcipher.SQLiteDatabase;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.function.BiConsumer;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -142,6 +144,58 @@ public final class DearestRepository {
         io.execute(() -> {
             int count = (db == null) ? 0 : entryDao.countByNotebook(db, notebookId);
             mainHandler.post(() -> callback.onResult(count));
+        });
+    }
+
+    public void loadAll(BiConsumer<List<Notebook>, List<Entry>> callback) {
+        io.execute(() -> {
+            List<Notebook> notebooks = (db == null) ? Collections.emptyList() : notebookDao.getAll(db);
+            List<Entry> entries = (db == null) ? Collections.emptyList() : entryDao.getAll(db);
+            mainHandler.post(() -> callback.accept(notebooks, entries));
+        });
+    }
+
+    public void importAll(List<Notebook> notebooks, List<Entry> entries,
+                          boolean replaceAll, OperationCallback cb) {
+        io.execute(() -> {
+            if (db == null) {
+                postResult(cb, false, "Database is locked");
+                return;
+            }
+            boolean ok = false;
+            String error = null;
+            try {
+                db.beginTransaction();
+                try {
+                    if (replaceAll) {
+                        db.delete(DatabaseContract.Entries.TABLE, null, null);
+                        db.delete(DatabaseContract.Notebooks.TABLE, null, null);
+                    }
+                    for (Notebook n : notebooks) {
+                        if (notebookDao.getById(db, n.getId()) == null) {
+                            notebookDao.insert(db, n);
+                        } else {
+                            notebookDao.update(db, n);
+                        }
+                    }
+                    for (Entry e : entries) {
+                        Entry existing = entryDao.getById(db, e.getId());
+                        if (existing == null) {
+                            entryDao.insert(db, e);
+                        } else if (e.getUpdatedAt() > existing.getUpdatedAt()) {
+                            entryDao.update(db, e);
+                        }
+                    }
+                    db.setTransactionSuccessful();
+                    ok = true;
+                } finally {
+                    db.endTransaction();
+                }
+                triggerRefresh();
+            } catch (Exception e) {
+                error = e.getMessage();
+            }
+            postResult(cb, ok, error);
         });
     }
 
