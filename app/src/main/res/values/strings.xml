@@ -127,4 +127,9 @@
     <string name="import_replace">Replace existing entries instead of merging</string>
     <string name="import_explainer">Merging keeps your current entries and adds the backup\'s (newer versions win). Replace deletes everything first.</string>
     <string name="import_action">Restore</string>
+
+    <!-- Calendar -->
+    <string name="calendar_no_entries">No entries on this day</string>
+    <string name="cd_prev_month">Previous month</string>
+    <string name="cd_next_month">Next month</string>
 </resources>
