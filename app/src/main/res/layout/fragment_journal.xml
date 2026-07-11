@@ -21,6 +21,22 @@
             app:singleSelection="true" />
     </HorizontalScrollView>
 
+    <HorizontalScrollView
+        android:id="@+id/tag_chip_scroll"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingHorizontal="8dp"
+        android:paddingBottom="4dp"
+        android:scrollbars="none"
+        android:visibility="gone">
+
+        <com.google.android.material.chip.ChipGroup
+            android:id="@+id/tag_chips"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:singleLine="true" />
+    </HorizontalScrollView>
+
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
@@ -43,13 +59,13 @@
             android:padding="32dp"
             android:visibility="gone">
 
-            <com.google.android.material.textview.MaterialTextView
+            <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/journal_empty_title"
                 android:textAppearance="?attr/textAppearanceTitleMedium" />
 
-            <com.google.android.material.textview.MaterialTextView
+            <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
@@ -65,6 +81,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="bottom|end"
             android:layout_margin="16dp"
+            android:contentDescription="@string/cd_new_entry"
             app:srcCompat="@drawable/ic_add" />
     </FrameLayout>
 </LinearLayout>

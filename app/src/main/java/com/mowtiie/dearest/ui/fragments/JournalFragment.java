@@ -10,7 +10,6 @@ import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.widget.SearchView;
 import androidx.core.view.MenuProvider;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
@@ -19,6 +18,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.mowtiie.dearest.R;
 import com.mowtiie.dearest.data.model.Notebook;
+import com.mowtiie.dearest.data.model.Tag;
 import com.mowtiie.dearest.ui.activities.EntryEditorActivity;
 import com.mowtiie.dearest.ui.adapters.EntryAdapter;
 import com.mowtiie.dearest.ui.viewmodel.JournalViewModel;
@@ -28,12 +28,15 @@ import com.google.android.material.chip.ChipGroup;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.util.List;
+import java.util.Set;
 
 public class JournalFragment extends Fragment {
 
     private JournalViewModel viewModel;
     private EntryAdapter adapter;
     private ChipGroup notebookChips;
+    private View tagChipScroll;
+    private ChipGroup tagChips;
     private View emptyState;
 
     @Nullable
@@ -48,6 +51,8 @@ public class JournalFragment extends Fragment {
         viewModel = new ViewModelProvider(this).get(JournalViewModel.class);
 
         notebookChips = view.findViewById(R.id.notebook_chips);
+        tagChipScroll = view.findViewById(R.id.tag_chip_scroll);
+        tagChips = view.findViewById(R.id.tag_chips);
         emptyState = view.findViewById(R.id.empty_state);
 
         RecyclerView list = view.findViewById(R.id.entries_list);
@@ -65,6 +70,8 @@ public class JournalFragment extends Fragment {
             emptyState.setVisibility((entries == null || entries.isEmpty()) ? View.VISIBLE : View.GONE);
         });
         viewModel.notebooks().observe(getViewLifecycleOwner(), this::bindNotebookChips);
+        viewModel.tags().observe(getViewLifecycleOwner(), this::bindTagChips);
+        viewModel.selectedTagIds().observe(getViewLifecycleOwner(), ids -> checkSelectedTagChips());
 
         setupToolbarMenu();
     }
@@ -115,16 +122,16 @@ public class JournalFragment extends Fragment {
 
     private void bindNotebookChips(List<Notebook> notebooks) {
         notebookChips.removeAllViews();
-        notebookChips.addView(createChip(getString(R.string.filter_all), null));
+        notebookChips.addView(createNotebookChip(getString(R.string.filter_all), null));
         if (notebooks != null) {
             for (Notebook n : notebooks) {
-                notebookChips.addView(createChip(n.getName(), n.getId()));
+                notebookChips.addView(createNotebookChip(n.getName(), n.getId()));
             }
         }
-        checkSelectedChip();
+        checkSelectedNotebookChip();
     }
 
-    private Chip createChip(String label, @Nullable String notebookId) {
+    private Chip createNotebookChip(String label, @Nullable String notebookId) {
         Chip chip = (Chip) getLayoutInflater()
                 .inflate(R.layout.item_filter_chip, notebookChips, false);
         chip.setText(label);
@@ -133,7 +140,7 @@ public class JournalFragment extends Fragment {
         return chip;
     }
 
-    private void checkSelectedChip() {
+    private void checkSelectedNotebookChip() {
         String selected = viewModel.selectedNotebookId().getValue();
         for (int i = 0; i < notebookChips.getChildCount(); i++) {
             Chip chip = (Chip) notebookChips.getChildAt(i);
@@ -142,6 +149,34 @@ public class JournalFragment extends Fragment {
                 chip.setChecked(true);
                 break;
             }
+        }
+    }
+
+    private void bindTagChips(@Nullable List<Tag> tags) {
+        tagChips.removeAllViews();
+        tagChipScroll.setVisibility((tags == null || tags.isEmpty()) ? View.GONE : View.VISIBLE);
+        if (tags != null) {
+            for (Tag t : tags) {
+                tagChips.addView(createTagChip(t));
+            }
+        }
+        checkSelectedTagChips();
+    }
+
+    private Chip createTagChip(Tag tag) {
+        Chip chip = (Chip) getLayoutInflater().inflate(R.layout.item_filter_chip, tagChips, false);
+        chip.setText(tag.getName());
+        chip.setTag(tag.getId());
+        chip.setOnClickListener(v -> viewModel.toggleTag(tag.getId()));
+        return chip;
+    }
+
+    private void checkSelectedTagChips() {
+        Set<String> selected = viewModel.selectedTagIds().getValue();
+        for (int i = 0; i < tagChips.getChildCount(); i++) {
+            Chip chip = (Chip) tagChips.getChildAt(i);
+            boolean checked = selected != null && selected.contains(chip.getTag());
+            if (chip.isChecked() != checked) chip.setChecked(checked);
         }
     }
 }
