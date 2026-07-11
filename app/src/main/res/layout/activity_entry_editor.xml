@@ -18,6 +18,44 @@
             android:background="?attr/colorSurface" />
     </com.google.android.material.appbar.AppBarLayout>
 
+    <LinearLayout
+        android:id="@+id/notebook_selector"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="?attr/selectableItemBackground"
+        android:clickable="true"
+        android:focusable="true"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingHorizontal="16dp"
+        android:paddingVertical="8dp">
+
+        <ImageView
+            android:layout_width="18dp"
+            android:layout_height="18dp"
+            android:contentDescription="@null"
+            android:src="@drawable/ic_notebook"
+            app:tint="?attr/colorPrimary"
+            xmlns:app="http://schemas.android.com/apk/res-auto" />
+
+        <TextView
+            android:id="@+id/notebook_selector_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:textAppearance="?attr/textAppearanceLabelLarge"
+            android:textColor="?attr/colorPrimary" />
+
+        <ImageView
+            android:layout_width="18dp"
+            android:layout_height="18dp"
+            android:layout_marginStart="4dp"
+            android:contentDescription="@null"
+            android:src="@drawable/ic_dropdown"
+            app:tint="?attr/colorPrimary"
+            xmlns:app="http://schemas.android.com/apk/res-auto" />
+    </LinearLayout>
+
     <EditText
         android:id="@+id/editor_title"
         android:layout_width="match_parent"

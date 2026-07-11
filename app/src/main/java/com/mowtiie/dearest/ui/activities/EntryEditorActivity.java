@@ -5,7 +5,9 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.EditText;
+import android.widget.TextView;
 
 import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
@@ -13,10 +15,14 @@ import androidx.annotation.Nullable;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.mowtiie.dearest.R;
+import com.mowtiie.dearest.data.model.Notebook;
 import com.mowtiie.dearest.ui.InsetsUtil;
 import com.mowtiie.dearest.ui.viewmodel.EntryEditorViewModel;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class EntryEditorActivity extends DearestActivity {
 
@@ -33,6 +39,8 @@ public class EntryEditorActivity extends DearestActivity {
     private EntryEditorViewModel viewModel;
     private EditText titleField;
     private EditText bodyField;
+    private View notebookSelector;
+    private TextView notebookSelectorName;
     private boolean shouldPopulate;
 
     @Override
@@ -50,9 +58,12 @@ public class EntryEditorActivity extends DearestActivity {
 
         titleField = findViewById(R.id.editor_title);
         bodyField = findViewById(R.id.editor_body);
+        notebookSelector = findViewById(R.id.notebook_selector);
+        notebookSelectorName = findViewById(R.id.notebook_selector_name);
 
         viewModel = new ViewModelProvider(this).get(EntryEditorViewModel.class);
-        viewModel.init(getIntent().getStringExtra(EXTRA_ENTRY_ID), getIntent().getStringExtra(EXTRA_NOTEBOOK_ID));
+        viewModel.init(getIntent().getStringExtra(EXTRA_ENTRY_ID),
+                getIntent().getStringExtra(EXTRA_NOTEBOOK_ID));
 
         shouldPopulate = (savedInstanceState == null);
         viewModel.entry().observe(this, entry -> {
@@ -66,9 +77,50 @@ public class EntryEditorActivity extends DearestActivity {
             if (Boolean.TRUE.equals(done)) finish();
         });
 
+        viewModel.notebooks().observe(this, notebooks -> updateNotebookLabel());
+        viewModel.notebookId().observe(this, id -> updateNotebookLabel());
+        notebookSelector.setOnClickListener(v -> showNotebookPicker());
+
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override public void handleOnBackPressed() { saveAndFinish(); }
         });
+    }
+
+    private void updateNotebookLabel() {
+        List<Notebook> notebooks = viewModel.notebooks().getValue();
+        String id = viewModel.notebookId().getValue();
+        if (notebooks == null || id == null) return;
+        for (Notebook n : notebooks) {
+            if (n.getId().equals(id)) {
+                notebookSelectorName.setText(n.getName());
+                return;
+            }
+        }
+    }
+
+    private void showNotebookPicker() {
+        List<Notebook> notebooks = viewModel.notebooks().getValue();
+        if (notebooks == null || notebooks.isEmpty()) return;
+
+        String currentId = viewModel.notebookId().getValue();
+        List<String> ids = new ArrayList<>();
+        String[] names = new String[notebooks.size()];
+        int checked = 0;
+        for (int i = 0; i < notebooks.size(); i++) {
+            Notebook n = notebooks.get(i);
+            ids.add(n.getId());
+            names[i] = n.getName();
+            if (n.getId().equals(currentId)) checked = i;
+        }
+
+        new MaterialAlertDialogBuilder(this)
+                .setTitle(R.string.editor_choose_notebook)
+                .setSingleChoiceItems(names, checked, (dialog, which) -> {
+                    viewModel.setNotebook(ids.get(which));
+                    dialog.dismiss();
+                })
+                .setNegativeButton(android.R.string.cancel, null)
+                .show();
     }
 
     private void saveAndFinish() {
