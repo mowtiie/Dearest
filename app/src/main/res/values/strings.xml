@@ -4,9 +4,16 @@
     <!-- Bottom-nav / destination titles (also used as toolbar titles) -->
     <string name="title_journal">Journal</string>
     <string name="title_calendar">Calendar</string>
-    <string name="title_search">Search</string>
     <string name="title_notebooks">Notebooks</string>
     <string name="title_settings">Settings</string>
+
+    <!-- Toolbar actions -->
+    <string name="action_search">Search</string>
+    <string name="action_sort">Sort</string>
+    <string name="journal_search_hint">Search entries</string>
+    <string name="sort_newest">Newest first</string>
+    <string name="sort_oldest">Oldest first</string>
+    <string name="sort_title">Title (A\u2013Z)</string>
 
     <!-- Unlock / setup screen -->
     <string name="unlock_heading">Welcome back</string>
