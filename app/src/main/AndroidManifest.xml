@@ -13,9 +13,13 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Dearest">
         <activity
-            android:name=".ui.activities.BackupActivity"
+            android:name=".ui.activities.TagsManagementActivity"
             android:parentActivityName=".ui.activities.MainActivity"
             android:exported="false" />
+        <activity
+            android:name=".ui.activities.BackupActivity"
+            android:exported="false"
+            android:parentActivityName=".ui.activities.MainActivity" />
         <activity
             android:name=".ui.activities.ChangePassphraseActivity"
             android:exported="false"
