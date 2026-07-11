@@ -30,6 +30,13 @@
             app:title="@string/settings_change_passphrase" />
     </PreferenceCategory>
 
+    <PreferenceCategory app:title="@string/settings_cat_organization">
+
+        <Preference
+            app:key="pref_manage_tags"
+            app:title="@string/settings_manage_tags" />
+    </PreferenceCategory>
+
     <PreferenceCategory app:title="@string/settings_cat_data">
 
         <Preference
