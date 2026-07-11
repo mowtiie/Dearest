@@ -47,6 +47,25 @@ public class TagsManagementActivity extends DearestActivity implements TagAdapte
             adapter.submitList(tags);
             emptyView.setVisibility((tags == null || tags.isEmpty()) ? View.VISIBLE : View.GONE);
         });
+
+        findViewById(R.id.fab_add_tag).setOnClickListener(v -> showAddTagDialog());
+    }
+
+    private void showAddTagDialog() {
+        View content = getLayoutInflater().inflate(R.layout.dialog_edit_name, null);
+        EditText input = content.findViewById(R.id.name_input);
+
+        new MaterialAlertDialogBuilder(this)
+                .setTitle(R.string.add_tag_title)
+                .setView(content)
+                .setNegativeButton(android.R.string.cancel, null)
+                .setPositiveButton(R.string.action_save, (d, w) ->
+                        viewModel.createTag(input.getText().toString(), (ok, error) -> {
+                            if (!ok && error != null) {
+                                Toast.makeText(this, error, Toast.LENGTH_SHORT).show();
+                            }
+                        }))
+                .show();
     }
 
     @Override

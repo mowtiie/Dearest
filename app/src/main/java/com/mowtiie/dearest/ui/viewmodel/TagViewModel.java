@@ -1,6 +1,5 @@
 package com.mowtiie.dearest.ui.viewmodel;
 
-
 import android.app.Application;
 
 import androidx.annotation.NonNull;
@@ -23,6 +22,15 @@ public class TagViewModel extends DearestViewModel {
 
     public LiveData<java.util.List<Tag>> tags() {
         return tags;
+    }
+
+    public void createTag(String name, RenameCallback cb) {
+        String trimmed = name == null ? "" : name.trim();
+        if (trimmed.isEmpty()) {
+            cb.onResult(false, null);
+            return;
+        }
+        repository().createTag(trimmed, cb::onResult);
     }
 
     public void renameTag(Tag tag, String newName, RenameCallback cb) {
