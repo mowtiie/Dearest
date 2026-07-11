@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/editor_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -17,83 +18,74 @@
             android:background="?attr/colorSurface" />
     </com.google.android.material.appbar.AppBarLayout>
 
-    <LinearLayout
-        android:id="@+id/notebook_selector"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:background="?attr/selectableItemBackground"
-        android:clickable="true"
-        android:focusable="true"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:paddingHorizontal="16dp"
-        android:paddingVertical="8dp">
-
-        <ImageView
-            android:layout_width="18dp"
-            android:layout_height="18dp"
-            android:contentDescription="@null"
-            android:src="@drawable/ic_notebook"
-            app:tint="?attr/colorPrimary"
-            xmlns:app="http://schemas.android.com/apk/res-auto" />
-
-        <TextView
-            android:id="@+id/notebook_selector_name"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:textAppearance="?attr/textAppearanceLabelLarge"
-            android:textColor="?attr/colorPrimary" />
-
-        <ImageView
-            android:layout_width="18dp"
-            android:layout_height="18dp"
-            android:layout_marginStart="4dp"
-            android:contentDescription="@null"
-            android:src="@drawable/ic_dropdown"
-            app:tint="?attr/colorPrimary"
-            xmlns:app="http://schemas.android.com/apk/res-auto" />
-    </LinearLayout>
-
-    <EditText
-        android:id="@+id/editor_title"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginHorizontal="16dp"
-        android:layout_marginTop="8dp"
-        android:background="@null"
-        android:hint="@string/editor_title_hint"
-        android:importantForAutofill="no"
-        android:inputType="textCapSentences|textShortMessage"
-        android:maxLines="2"
-        android:textAppearance="?attr/textAppearanceTitleLarge" />
-
-    <EditText
-        android:id="@+id/editor_body"
+    <ScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:layout_marginHorizontal="16dp"
-        android:layout_marginTop="4dp"
-        android:background="@null"
-        android:gravity="top|start"
-        android:hint="@string/editor_body_hint"
-        android:importantForAutofill="no"
-        android:inputType="textCapSentences|textMultiLine"
-        android:textAppearance="?attr/textAppearanceBodyLarge" />
+        android:fillViewport="true">
 
-    <HorizontalScrollView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:paddingHorizontal="12dp"
-        android:paddingVertical="8dp"
-        android:scrollbars="none">
-
-        <com.google.android.material.chip.ChipGroup
-            android:id="@+id/tag_chip_group"
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            app:singleLine="true"
-            xmlns:app="http://schemas.android.com/apk/res-auto" />
-    </HorizontalScrollView>
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <!-- Non-editable dropdown: user picks from the list, never types here. -->
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/notebook_dropdown_layout"
+                style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="@string/editor_notebook_hint">
+
+                <AutoCompleteTextView
+                    android:id="@+id/notebook_dropdown"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:editable="false"
+                    android:inputType="none" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.textfield.TextInputLayout
+                style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:hint="@string/editor_title_hint">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/editor_title"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:importantForAutofill="no"
+                    android:inputType="textCapSentences|textShortMessage"
+                    android:maxLines="2" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.textfield.TextInputLayout
+                style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:hint="@string/editor_body_hint">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/editor_body"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:minLines="10"
+                    android:gravity="top|start"
+                    android:importantForAutofill="no"
+                    android:inputType="textCapSentences|textMultiLine" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- Wraps across lines rather than scrolling horizontally, so any
+                 number of tags stays fully visible without hidden overflow. -->
+            <com.google.android.material.chip.ChipGroup
+                android:id="@+id/tag_chip_group"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp" />
+        </LinearLayout>
+    </ScrollView>
 </LinearLayout>
