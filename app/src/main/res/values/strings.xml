@@ -49,6 +49,7 @@
     <string name="editor_delete">Delete</string>
     <string name="editor_delete_confirm_title">Delete this entry?</string>
     <string name="editor_delete_confirm_message">This can\'t be undone.</string>
+    <string name="editor_choose_notebook">Choose notebook</string>
 
     <!-- Placeholders -->
     <string name="placeholder_calendar">Calendar — coming soon</string>
