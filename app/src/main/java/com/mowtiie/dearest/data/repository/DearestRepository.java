@@ -273,6 +273,25 @@ public final class DearestRepository {
         });
     }
 
+    public void createTag(String name, OperationCallback cb) {
+        io.execute(() -> {
+            boolean ok = false;
+            String error = null;
+            if (db == null) {
+                error = "Database is locked";
+            } else {
+                try {
+                    tagDao.findOrCreateByName(db, name.trim());
+                    triggerRefresh();
+                    ok = true;
+                } catch (Exception e) {
+                    error = e.getMessage();
+                }
+            }
+            postResult(cb, ok, error);
+        });
+    }
+
     public void renameTag(String tagId, String newName, OperationCallback cb) {
         io.execute(() -> {
             boolean ok = false;

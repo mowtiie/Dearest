@@ -3,14 +3,12 @@ package com.mowtiie.dearest.ui.activities;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.EditText;
-import android.widget.TextView;
 
 import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
@@ -45,10 +43,11 @@ public class EntryEditorActivity extends DearestActivity {
     private EntryEditorViewModel viewModel;
     private EditText titleField;
     private EditText bodyField;
-    private View notebookSelector;
-    private TextView notebookSelectorName;
+    private AutoCompleteTextView notebookDropdown;
     private ChipGroup tagChipGroup;
     private boolean shouldPopulate;
+
+    private final List<String> notebookIdsForDropdown = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -64,8 +63,7 @@ public class EntryEditorActivity extends DearestActivity {
 
         titleField = findViewById(R.id.editor_title);
         bodyField = findViewById(R.id.editor_body);
-        notebookSelector = findViewById(R.id.notebook_selector);
-        notebookSelectorName = findViewById(R.id.notebook_selector_name);
+        notebookDropdown = findViewById(R.id.notebook_dropdown);
         tagChipGroup = findViewById(R.id.tag_chip_group);
 
         viewModel = new ViewModelProvider(this).get(EntryEditorViewModel.class);
@@ -84,9 +82,8 @@ public class EntryEditorActivity extends DearestActivity {
             if (Boolean.TRUE.equals(done)) finish();
         });
 
-        viewModel.notebooks().observe(this, notebooks -> updateNotebookLabel());
-        viewModel.notebookId().observe(this, id -> updateNotebookLabel());
-        notebookSelector.setOnClickListener(v -> showNotebookPicker());
+        viewModel.notebooks().observe(this, notebooks -> bindNotebookDropdown());
+        viewModel.notebookId().observe(this, id -> bindNotebookDropdown());
 
         viewModel.tagNames().observe(this, this::renderTagChips);
 
@@ -95,41 +92,26 @@ public class EntryEditorActivity extends DearestActivity {
         });
     }
 
-    private void updateNotebookLabel() {
+    private void bindNotebookDropdown() {
         List<Notebook> notebooks = viewModel.notebooks().getValue();
-        String id = viewModel.notebookId().getValue();
-        if (notebooks == null || id == null) return;
-        for (Notebook n : notebooks) {
-            if (n.getId().equals(id)) {
-                notebookSelectorName.setText(n.getName());
-                return;
-            }
-        }
-    }
-
-    private void showNotebookPicker() {
-        List<Notebook> notebooks = viewModel.notebooks().getValue();
-        if (notebooks == null || notebooks.isEmpty()) return;
-
         String currentId = viewModel.notebookId().getValue();
-        List<String> ids = new ArrayList<>();
-        String[] names = new String[notebooks.size()];
-        int checked = 0;
-        for (int i = 0; i < notebooks.size(); i++) {
-            Notebook n = notebooks.get(i);
-            ids.add(n.getId());
-            names[i] = n.getName();
-            if (n.getId().equals(currentId)) checked = i;
+        if (notebooks == null) return;
+
+        notebookIdsForDropdown.clear();
+        List<String> names = new ArrayList<>();
+        String currentName = null;
+        for (Notebook n : notebooks) {
+            notebookIdsForDropdown.add(n.getId());
+            names.add(n.getName());
+            if (n.getId().equals(currentId)) currentName = n.getName();
         }
 
-        new MaterialAlertDialogBuilder(this)
-                .setTitle(R.string.editor_choose_notebook)
-                .setSingleChoiceItems(names, checked, (dialog, which) -> {
-                    viewModel.setNotebook(ids.get(which));
-                    dialog.dismiss();
-                })
-                .setNegativeButton(android.R.string.cancel, null)
-                .show();
+        notebookDropdown.setAdapter(new ArrayAdapter<>(this,
+                android.R.layout.simple_dropdown_item_1line, names));
+        notebookDropdown.setOnItemClickListener((parent, view, position, id) ->
+                viewModel.setNotebook(notebookIdsForDropdown.get(position)));
+
+        notebookDropdown.setText(currentName, false);
     }
 
     private void renderTagChips(@Nullable List<String> tagNames) {
