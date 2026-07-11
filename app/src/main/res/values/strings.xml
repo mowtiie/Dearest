@@ -146,4 +146,16 @@
     <string name="calendar_no_entries">No entries on this day</string>
     <string name="cd_prev_month">Previous month</string>
     <string name="cd_next_month">Next month</string>
+
+    <!-- Tags -->
+    <string name="editor_add_tag">Add tag</string>
+    <string name="tag_name_hint">Tag name</string>
+    <string name="settings_cat_organization">Organization</string>
+    <string name="settings_manage_tags">Manage tags</string>
+    <string name="manage_tags_title">Manage tags</string>
+    <string name="tags_empty">No tags yet — add one from any entry.</string>
+    <string name="rename_tag_title">Rename tag</string>
+    <string name="delete_tag_title">Delete tag?</string>
+    <string name="delete_tag_message">\"%1$s\" will be removed from every entry it\'s on. Entries themselves are not affected.</string>
+    <string name="cd_delete_tag">Delete tag</string>
 </resources>
