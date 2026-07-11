@@ -42,4 +42,18 @@ public final class InsetsUtil {
         });
         ViewCompat.requestApplyInsets(view);
     }
+
+    public static void applyToolbarAndBottom(View container, View topBar) {
+        final int cl = container.getPaddingLeft(), ct = container.getPaddingTop(),
+                cr = container.getPaddingRight(), cb = container.getPaddingBottom();
+        final int tl = topBar.getPaddingLeft(), tt = topBar.getPaddingTop(),
+                tr = topBar.getPaddingRight(), tb = topBar.getPaddingBottom();
+        ViewCompat.setOnApplyWindowInsetsListener(container, (v, wi) -> {
+            Insets s = wi.getInsets(WindowInsetsCompat.Type.systemBars());
+            topBar.setPadding(tl, tt + s.top, tr, tb);
+            v.setPadding(cl, ct, cr, cb + s.bottom);
+            return WindowInsetsCompat.CONSUMED;
+        });
+        ViewCompat.requestApplyInsets(container);
+    }
 }

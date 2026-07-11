@@ -13,6 +13,7 @@ import androidx.annotation.Nullable;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.mowtiie.dearest.R;
+import com.mowtiie.dearest.ui.InsetsUtil;
 import com.mowtiie.dearest.ui.viewmodel.EntryEditorViewModel;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
@@ -39,7 +40,9 @@ public class EntryEditorActivity extends DearestActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_entry_editor);
 
-        MaterialToolbar toolbar = findViewById(R.id.editor_toolbar);
+        InsetsUtil.applyToolbarAndBottom(findViewById(R.id.root_view), findViewById(R.id.app_bar));
+
+        MaterialToolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);

@@ -19,6 +19,7 @@ import androidx.lifecycle.ViewModelProvider;
 import com.mowtiie.dearest.DearestApp;
 import com.mowtiie.dearest.R;
 import com.mowtiie.dearest.security.BiometricGate;
+import com.mowtiie.dearest.ui.InsetsUtil;
 import com.mowtiie.dearest.ui.viewmodel.UnlockViewModel;
 import com.mowtiie.dearest.ui.viewmodel.UnlockViewModel.Mode;
 import com.google.android.material.progressindicator.CircularProgressIndicator;
@@ -46,6 +47,8 @@ public class UnlockActivity extends DearestActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_unlock);
+
+        InsetsUtil.applyTopAndBottom(findViewById(android.R.id.content));
 
         heading = findViewById(R.id.heading);
         explainer = findViewById(R.id.setup_explainer);

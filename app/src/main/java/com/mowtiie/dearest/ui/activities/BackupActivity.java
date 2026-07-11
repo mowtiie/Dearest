@@ -16,6 +16,7 @@ import com.mowtiie.dearest.DearestApp;
 import com.mowtiie.dearest.R;
 import com.mowtiie.dearest.backup.BackupManager;
 import com.mowtiie.dearest.backup.BackupManager.Format;
+import com.mowtiie.dearest.ui.InsetsUtil;
 import com.mowtiie.dearest.ui.viewmodel.UnlockViewModel;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
@@ -59,7 +60,9 @@ public class BackupActivity extends DearestActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_backup);
 
-        MaterialToolbar toolbar = findViewById(R.id.backup_toolbar);
+        InsetsUtil.applyToolbarAndBottom(findViewById(R.id.root_view), findViewById(R.id.app_bar));
+
+        MaterialToolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);

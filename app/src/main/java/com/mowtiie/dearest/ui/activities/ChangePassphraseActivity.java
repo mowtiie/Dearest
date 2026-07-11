@@ -11,6 +11,7 @@ import android.widget.Toast;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.mowtiie.dearest.R;
+import com.mowtiie.dearest.ui.InsetsUtil;
 import com.mowtiie.dearest.ui.viewmodel.ChangePassphraseViewModel;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.progressindicator.CircularProgressIndicator;
@@ -30,7 +31,9 @@ public class ChangePassphraseActivity extends DearestActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_change_passphrase);
 
-        MaterialToolbar toolbar = findViewById(R.id.cp_toolbar);
+        InsetsUtil.applyToolbarAndBottom(findViewById(R.id.root_view), findViewById(R.id.app_bar));
+
+        MaterialToolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
