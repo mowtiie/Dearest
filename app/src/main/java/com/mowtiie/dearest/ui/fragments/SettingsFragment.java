@@ -20,6 +20,7 @@ import com.mowtiie.dearest.R;
 import com.mowtiie.dearest.security.BiometricGate;
 import com.mowtiie.dearest.ui.activities.BackupActivity;
 import com.mowtiie.dearest.ui.activities.ChangePassphraseActivity;
+import com.mowtiie.dearest.ui.activities.TagsManagementActivity;
 
 import javax.crypto.Cipher;
 
@@ -36,6 +37,14 @@ public class SettingsFragment extends PreferenceFragmentCompat {
             timeout.setValue(String.valueOf(app.getLockTimeoutMs()));
             timeout.setOnPreferenceChangeListener((pref, newValue) -> {
                 app.setLockTimeoutMs(Long.parseLong((String) newValue));
+                return true;
+            });
+        }
+
+        Preference manageTags = findPreference("pref_manage_tags");
+        if (manageTags != null) {
+            manageTags.setOnPreferenceClickListener(p -> {
+                startActivity(new Intent(requireContext(), TagsManagementActivity.class));
                 return true;
             });
         }

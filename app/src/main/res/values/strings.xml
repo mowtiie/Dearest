@@ -11,6 +11,11 @@
     <!-- Toolbar actions -->
     <string name="action_search">Search</string>
     <string name="action_sort">Sort</string>
+    <string name="action_filter">Filter</string>
+    <string name="filter_title">Filter entries</string>
+    <string name="filter_notebook_label">Notebook</string>
+    <string name="filter_tags_label">Tags</string>
+    <string name="filter_clear">Clear filters</string>
     <string name="journal_search_hint">Search entries</string>
     <string name="sort_newest">Newest first</string>
     <string name="sort_oldest">Oldest first</string>
@@ -49,7 +54,7 @@
     <string name="editor_delete">Delete</string>
     <string name="editor_delete_confirm_title">Delete this entry?</string>
     <string name="editor_delete_confirm_message">This can\'t be undone.</string>
-    <string name="editor_choose_notebook">Choose notebook</string>
+    <string name="editor_notebook_hint">Notebook</string>
 
     <!-- Placeholders -->
     <string name="placeholder_calendar">Calendar — coming soon</string>
@@ -155,6 +160,8 @@
     <string name="manage_tags_title">Manage tags</string>
     <string name="tags_empty">No tags yet — add one from any entry.</string>
     <string name="rename_tag_title">Rename tag</string>
+    <string name="add_tag_title">New tag</string>
+    <string name="action_add_tag">Add tag</string>
     <string name="delete_tag_title">Delete tag?</string>
     <string name="delete_tag_message">\"%1$s\" will be removed from every entry it\'s on. Entries themselves are not affected.</string>
     <string name="cd_delete_tag">Delete tag</string>
