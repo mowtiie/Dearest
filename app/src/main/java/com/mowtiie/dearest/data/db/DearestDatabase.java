@@ -9,8 +9,8 @@ import java.util.UUID;
 
 public class DearestDatabase extends SQLiteOpenHelper {
 
-    public static final String DB_NAME    = "dearest.db";
-    public static final int    DB_VERSION = 1;
+    public static final String DB_NAME = "dearest.db";
+    public static final int DB_VERSION = 2;
 
     private static final String DEFAULT_NOTEBOOK_NAME = "My Journal";
 
@@ -46,11 +46,23 @@ public class DearestDatabase extends SQLiteOpenHelper {
         db.execSQL(TRIGGER_AFTER_DELETE);
         db.execSQL(TRIGGER_AFTER_UPDATE);
 
+        createTagTables(db);
+
         seedDefaultNotebook(db);
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+        if (oldVersion < 2) {
+            createTagTables(db);
+        }
+    }
+
+    private void createTagTables(SQLiteDatabase db) {
+        db.execSQL(CREATE_TAGS);
+        db.execSQL(INDEX_TAGS_NAME);
+        db.execSQL(CREATE_ENTRY_TAGS);
+        db.execSQL(INDEX_ENTRY_TAGS_TAG);
     }
 
     private void seedDefaultNotebook(SQLiteDatabase db) {
@@ -127,4 +139,32 @@ public class DearestDatabase extends SQLiteOpenHelper {
                     DatabaseContract.EntriesFts.COL_BODY  + " = new." + DatabaseContract.Entries.COL_BODY + " " +
                     "WHERE rowid = new." + DatabaseContract.Entries._ID + "; " +
                     "END;";
+
+    private static final String CREATE_TAGS =
+            "CREATE TABLE " + DatabaseContract.Tags.TABLE + " (" +
+                    DatabaseContract.Tags._ID       + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                    DatabaseContract.Tags.COL_UUID  + " TEXT NOT NULL UNIQUE, " +
+                    DatabaseContract.Tags.COL_NAME  + " TEXT NOT NULL UNIQUE COLLATE NOCASE, " +
+                    DatabaseContract.Tags.COL_CREATED + " INTEGER NOT NULL);";
+
+    private static final String INDEX_TAGS_NAME =
+            "CREATE INDEX idx_tags_name ON " + DatabaseContract.Tags.TABLE +
+                    "(" + DatabaseContract.Tags.COL_NAME + ");";
+
+    private static final String CREATE_ENTRY_TAGS =
+            "CREATE TABLE " + DatabaseContract.EntryTags.TABLE + " (" +
+                    DatabaseContract.EntryTags.COL_ENTRY + " TEXT NOT NULL, " +
+                    DatabaseContract.EntryTags.COL_TAG   + " TEXT NOT NULL, " +
+                    "PRIMARY KEY (" + DatabaseContract.EntryTags.COL_ENTRY + ", " +
+                    DatabaseContract.EntryTags.COL_TAG + "), " +
+                    "FOREIGN KEY (" + DatabaseContract.EntryTags.COL_ENTRY + ") REFERENCES " +
+                    DatabaseContract.Entries.TABLE + "(" + DatabaseContract.Entries.COL_UUID +
+                    ") ON DELETE CASCADE, " +
+                    "FOREIGN KEY (" + DatabaseContract.EntryTags.COL_TAG + ") REFERENCES " +
+                    DatabaseContract.Tags.TABLE + "(" + DatabaseContract.Tags.COL_UUID +
+                    ") ON DELETE CASCADE);";
+
+    private static final String INDEX_ENTRY_TAGS_TAG =
+            "CREATE INDEX idx_entry_tags_tag ON " + DatabaseContract.EntryTags.TABLE +
+                    "(" + DatabaseContract.EntryTags.COL_TAG + ");";
 }

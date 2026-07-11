@@ -10,16 +10,20 @@ import androidx.lifecycle.Transformations;
 
 import com.mowtiie.dearest.data.dao.EntryDao;
 import com.mowtiie.dearest.data.dao.NotebookDao;
+import com.mowtiie.dearest.data.dao.TagDao;
 import com.mowtiie.dearest.data.db.DatabaseContract;
 import com.mowtiie.dearest.data.db.DearestDatabase;
 import com.mowtiie.dearest.data.model.Entry;
 import com.mowtiie.dearest.data.model.Notebook;
+import com.mowtiie.dearest.data.model.Tag;
 import com.mowtiie.dearest.security.KeyManager;
 
 import net.zetetic.database.sqlcipher.SQLiteDatabase;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -40,6 +44,7 @@ public final class DearestRepository {
     private final KeyManager keyManager;
     private final EntryDao entryDao = new EntryDao();
     private final NotebookDao notebookDao = new NotebookDao();
+    private final TagDao tagDao = new TagDao();
     private final ExecutorService io = Executors.newSingleThreadExecutor();
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
     private final MutableLiveData<Object> refreshTrigger = new MutableLiveData<>();
@@ -133,10 +138,35 @@ public final class DearestRepository {
         });
     }
 
+    public LiveData<List<Tag>> observeTags() {
+        return Transformations.switchMap(refreshTrigger, ignored -> {
+            MutableLiveData<List<Tag>> result = new MutableLiveData<>();
+            io.execute(() -> result.postValue(
+                    db == null ? Collections.emptyList() : tagDao.getAll(db)));
+            return result;
+        });
+    }
+
+    public LiveData<Map<String, Set<String>>> observeEntryTagLinks() {
+        return Transformations.switchMap(refreshTrigger, ignored -> {
+            MutableLiveData<Map<String, Set<String>>> result = new MutableLiveData<>();
+            io.execute(() -> result.postValue(
+                    db == null ? Collections.emptyMap() : tagDao.getAllEntryTagLinks(db)));
+            return result;
+        });
+    }
+
     public void getEntry(String entryId, ResultCallback<Entry> callback) {
         io.execute(() -> {
             Entry entry = (db == null) ? null : entryDao.getById(db, entryId);
             mainHandler.post(() -> callback.onResult(entry));
+        });
+    }
+
+    public void getTagsForEntry(String entryId, ResultCallback<List<Tag>> callback) {
+        io.execute(() -> {
+            List<Tag> tags = (db == null) ? Collections.emptyList() : tagDao.getTagsForEntry(db, entryId);
+            mainHandler.post(() -> callback.onResult(tags));
         });
     }
 
@@ -205,6 +235,67 @@ public final class DearestRepository {
             if (entryDao.update(db, entry) == 0) {
                 entryDao.insert(db, entry);
             }
+            triggerRefresh();
+        });
+    }
+
+    public void saveEntryWithTags(Entry entry, List<String> tagNames, OperationCallback cb) {
+        io.execute(() -> {
+            if (db == null) {
+                postResult(cb, false, "Database is locked");
+                return;
+            }
+            boolean ok = false;
+            String error = null;
+            try {
+                db.beginTransaction();
+                try {
+                    if (entryDao.update(db, entry) == 0) {
+                        entryDao.insert(db, entry);
+                    }
+                    List<String> tagIds = new java.util.ArrayList<>();
+                    for (String name : tagNames) {
+                        String trimmed = name == null ? "" : name.trim();
+                        if (trimmed.isEmpty()) continue;
+                        tagIds.add(tagDao.findOrCreateByName(db, trimmed).getId());
+                    }
+                    tagDao.setTagsForEntry(db, entry.getId(), tagIds);
+                    db.setTransactionSuccessful();
+                    ok = true;
+                } finally {
+                    db.endTransaction();
+                }
+                triggerRefresh();
+            } catch (Exception e) {
+                error = e.getMessage();
+            }
+            postResult(cb, ok, error);
+        });
+    }
+
+    public void renameTag(String tagId, String newName, OperationCallback cb) {
+        io.execute(() -> {
+            boolean ok = false;
+            String error = null;
+            if (db == null) {
+                error = "Database is locked";
+            } else {
+                try {
+                    tagDao.update(db, new Tag(tagId, newName.trim(), 0));
+                    triggerRefresh();
+                    ok = true;
+                } catch (Exception e) {
+                    error = "That tag name is already in use";
+                }
+            }
+            postResult(cb, ok, error);
+        });
+    }
+
+    public void deleteTag(String tagId) {
+        io.execute(() -> {
+            if (db == null) return;
+            tagDao.delete(db, tagId);
             triggerRefresh();
         });
     }
