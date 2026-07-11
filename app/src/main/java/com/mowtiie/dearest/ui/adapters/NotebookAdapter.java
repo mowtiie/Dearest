@@ -28,9 +28,17 @@ public class NotebookAdapter extends RecyclerView.Adapter<NotebookAdapter.Notebo
 
     private final List<Notebook> items = new ArrayList<>();
     private final Listener listener;
+    private boolean reorderEnabled = true;
 
     public NotebookAdapter(Listener listener) {
         this.listener = listener;
+    }
+
+    public void setReorderEnabled(boolean enabled) {
+        if (this.reorderEnabled != enabled) {
+            this.reorderEnabled = enabled;
+            notifyDataSetChanged();
+        }
     }
 
     public void setItems(List<Notebook> newItems) {
@@ -52,7 +60,8 @@ public class NotebookAdapter extends RecyclerView.Adapter<NotebookAdapter.Notebo
     @NonNull
     @Override
     public NotebookViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_notebook, parent, false);
+        View v = LayoutInflater.from(parent.getContext())
+                .inflate(R.layout.item_notebook, parent, false);
         return new NotebookViewHolder(v);
     }
 
@@ -63,12 +72,18 @@ public class NotebookAdapter extends RecyclerView.Adapter<NotebookAdapter.Notebo
         holder.name.setText(nb.getName());
         holder.itemView.setOnClickListener(v -> listener.onRename(nb));
         holder.delete.setOnClickListener(v -> listener.onDelete(nb));
-        holder.handle.setOnTouchListener((v, event) -> {
-            if (event.getActionMasked() == MotionEvent.ACTION_DOWN) {
-                listener.onStartDrag(holder);
-            }
-            return false;
-        });
+
+        holder.handle.setVisibility(reorderEnabled ? View.VISIBLE : View.GONE);
+        if (reorderEnabled) {
+            holder.handle.setOnTouchListener((v, event) -> {
+                if (event.getActionMasked() == MotionEvent.ACTION_DOWN) {
+                    listener.onStartDrag(holder);
+                }
+                return false;
+            });
+        } else {
+            holder.handle.setOnTouchListener(null);
+        }
     }
 
     @Override
