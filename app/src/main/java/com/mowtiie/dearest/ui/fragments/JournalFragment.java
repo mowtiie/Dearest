@@ -1,5 +1,6 @@
 package com.mowtiie.dearest.ui.fragments;
 
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -11,6 +12,8 @@ import android.view.ViewGroup;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.widget.SearchView;
+import androidx.core.content.ContextCompat;
+import androidx.core.graphics.drawable.DrawableCompat;
 import androidx.core.view.MenuProvider;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
@@ -18,27 +21,18 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.mowtiie.dearest.R;
-import com.mowtiie.dearest.data.model.Notebook;
-import com.mowtiie.dearest.data.model.Tag;
 import com.mowtiie.dearest.ui.activities.EntryEditorActivity;
 import com.mowtiie.dearest.ui.adapters.EntryAdapter;
 import com.mowtiie.dearest.ui.viewmodel.JournalViewModel;
 import com.mowtiie.dearest.ui.viewmodel.JournalViewModel.Sort;
-import com.google.android.material.chip.Chip;
-import com.google.android.material.chip.ChipGroup;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
-
-import java.util.List;
-import java.util.Set;
 
 public class JournalFragment extends Fragment {
 
     private JournalViewModel viewModel;
     private EntryAdapter adapter;
-    private ChipGroup notebookChips;
-    private View tagChipScroll;
-    private ChipGroup tagChips;
     private View emptyState;
+    private MenuItem filterMenuItem;
 
     @Nullable
     @Override
@@ -51,9 +45,6 @@ public class JournalFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         viewModel = new ViewModelProvider(this).get(JournalViewModel.class);
 
-        notebookChips = view.findViewById(R.id.notebook_chips);
-        tagChipScroll = view.findViewById(R.id.tag_chip_scroll);
-        tagChips = view.findViewById(R.id.tag_chips);
         emptyState = view.findViewById(R.id.empty_state);
 
         RecyclerView list = view.findViewById(R.id.entries_list);
@@ -70,9 +61,9 @@ public class JournalFragment extends Fragment {
             adapter.submitList(entries);
             emptyState.setVisibility((entries == null || entries.isEmpty()) ? View.VISIBLE : View.GONE);
         });
-        viewModel.notebooks().observe(getViewLifecycleOwner(), this::bindNotebookChips);
-        viewModel.tags().observe(getViewLifecycleOwner(), this::bindTagChips);
-        viewModel.selectedTagIds().observe(getViewLifecycleOwner(), ids -> checkSelectedTagChips());
+
+        viewModel.selectedNotebookId().observe(getViewLifecycleOwner(), id -> updateFilterIcon());
+        viewModel.selectedTagIds().observe(getViewLifecycleOwner(), ids -> updateFilterIcon());
 
         setupToolbarMenu();
     }
@@ -94,18 +85,38 @@ public class JournalFragment extends Fragment {
                         }
                     });
                 }
+                filterMenuItem = menu.findItem(R.id.action_filter);
+                updateFilterIcon();
                 checkCurrentSort(menu);
             }
 
             @Override
             public boolean onMenuItemSelected(@NonNull MenuItem item) {
                 int id = item.getItemId();
+                if (id == R.id.action_filter) {
+                    new JournalFilterBottomSheet().show(getChildFragmentManager(), JournalFilterBottomSheet.TAG);
+                    return true;
+                }
                 if (id == R.id.sort_newest) { viewModel.setSort(Sort.NEWEST); item.setChecked(true); return true; }
                 if (id == R.id.sort_oldest) { viewModel.setSort(Sort.OLDEST); item.setChecked(true); return true; }
                 if (id == R.id.sort_title)  { viewModel.setSort(Sort.TITLE);  item.setChecked(true); return true; }
                 return false;
             }
         }, getViewLifecycleOwner());
+    }
+
+    private void updateFilterIcon() {
+        if (filterMenuItem == null) return;
+        boolean active = viewModel.selectedNotebookId().getValue() != null
+                || (viewModel.selectedTagIds().getValue() != null
+                && !viewModel.selectedTagIds().getValue().isEmpty());
+        Drawable icon = filterMenuItem.getIcon();
+        if (icon == null) return;
+        Drawable wrapped = DrawableCompat.wrap(icon.mutate());
+        int color = ContextCompat.getColor(requireContext(),
+                active ? R.color.md_theme_primary : R.color.md_theme_onSurfaceVariant);
+        DrawableCompat.setTint(wrapped, color);
+        filterMenuItem.setIcon(wrapped);
     }
 
     private void checkCurrentSort(Menu menu) {
@@ -119,65 +130,5 @@ public class JournalFragment extends Fragment {
         }
         MenuItem item = menu.findItem(itemId);
         if (item != null) item.setChecked(true);
-    }
-
-    private void bindNotebookChips(List<Notebook> notebooks) {
-        notebookChips.removeAllViews();
-        notebookChips.addView(createNotebookChip(getString(R.string.filter_all), null));
-        if (notebooks != null) {
-            for (Notebook n : notebooks) {
-                notebookChips.addView(createNotebookChip(n.getName(), n.getId()));
-            }
-        }
-        checkSelectedNotebookChip();
-    }
-
-    private Chip createNotebookChip(String label, @Nullable String notebookId) {
-        Chip chip = (Chip) getLayoutInflater()
-                .inflate(R.layout.item_filter_chip, notebookChips, false);
-        chip.setText(label);
-        chip.setTag(notebookId);
-        chip.setOnClickListener(v -> viewModel.selectNotebook(notebookId));
-        return chip;
-    }
-
-    private void checkSelectedNotebookChip() {
-        String selected = viewModel.selectedNotebookId().getValue();
-        for (int i = 0; i < notebookChips.getChildCount(); i++) {
-            Chip chip = (Chip) notebookChips.getChildAt(i);
-            boolean match = (selected == null) ? chip.getTag() == null : selected.equals(chip.getTag());
-            if (match) {
-                chip.setChecked(true);
-                break;
-            }
-        }
-    }
-
-    private void bindTagChips(@Nullable List<Tag> tags) {
-        tagChips.removeAllViews();
-        tagChipScroll.setVisibility((tags == null || tags.isEmpty()) ? View.GONE : View.VISIBLE);
-        if (tags != null) {
-            for (Tag t : tags) {
-                tagChips.addView(createTagChip(t));
-            }
-        }
-        checkSelectedTagChips();
-    }
-
-    private Chip createTagChip(Tag tag) {
-        Chip chip = (Chip) getLayoutInflater().inflate(R.layout.item_filter_chip, tagChips, false);
-        chip.setText(tag.getName());
-        chip.setTag(tag.getId());
-        chip.setOnClickListener(v -> viewModel.toggleTag(tag.getId()));
-        return chip;
-    }
-
-    private void checkSelectedTagChips() {
-        Set<String> selected = viewModel.selectedTagIds().getValue();
-        for (int i = 0; i < tagChips.getChildCount(); i++) {
-            Chip chip = (Chip) tagChips.getChildAt(i);
-            boolean checked = selected != null && selected.contains(chip.getTag());
-            if (chip.isChecked() != checked) chip.setChecked(checked);
-        }
     }
 }
