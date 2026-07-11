@@ -33,7 +33,7 @@
             android:layout_width="18dp"
             android:layout_height="18dp"
             android:contentDescription="@null"
-            android:src="@drawable/ic_notebooks"
+            android:src="@drawable/ic_notebook"
             app:tint="?attr/colorPrimary"
             xmlns:app="http://schemas.android.com/apk/res-auto" />
 
