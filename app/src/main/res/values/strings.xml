@@ -92,6 +92,17 @@
     <string name="change_pass_success">Passphrase changed</string>
     <string name="loading_default_message">Working\u2026</string>
 
+    <!-- Daily reminder -->
+    <string name="settings_cat_reminders">Reminders</string>
+    <string name="settings_daily_reminder">Daily reminder</string>
+    <string name="settings_daily_reminder_summary">A gentle nudge to write, once a day</string>
+    <string name="settings_reminder_time">Reminder time</string>
+    <string name="reminder_channel_name">Daily reminder</string>
+    <string name="reminder_channel_description">A daily nudge to write in your journal</string>
+    <string name="reminder_notification_title">Time to write</string>
+    <string name="reminder_notification_text">Take a moment to reflect on your day.</string>
+    <string name="reminder_permission_denied">Notifications are off for Dearest — enable them in system settings to use reminders.</string>
+
 
     <!-- Manage notebooks -->
     <string name="manage_notebooks_title">Manage notebooks</string>
