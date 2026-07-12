@@ -4,13 +4,14 @@ import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.security.keystore.KeyPermanentlyInvalidatedException;
 import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.View;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.TextView;
 
 import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.biometric.BiometricManager;
 import androidx.biometric.BiometricPrompt;
 import androidx.core.content.ContextCompat;
@@ -22,6 +23,8 @@ import com.mowtiie.dearest.security.BiometricGate;
 import com.mowtiie.dearest.ui.LoadingDialog;
 import com.mowtiie.dearest.ui.viewmodel.UnlockViewModel;
 import com.mowtiie.dearest.ui.viewmodel.UnlockViewModel.Mode;
+import com.google.android.material.textfield.TextInputEditText;
+import com.google.android.material.textfield.TextInputLayout;
 
 import javax.crypto.Cipher;
 
@@ -31,11 +34,12 @@ public class UnlockActivity extends DearestActivity {
 
     private TextView heading;
     private TextView explainer;
-    private EditText passphraseInput;
-    private EditText confirmInput;
+    private TextInputLayout passphraseLayout;
+    private TextInputLayout confirmLayout;
+    private TextInputEditText passphraseInput;
+    private TextInputEditText confirmInput;
     private Button primaryButton;
     private Button biometricButton;
-    private TextView errorText;
     private LoadingDialog loadingDialog;
 
     private Mode mode = Mode.UNLOCK;
@@ -49,12 +53,16 @@ public class UnlockActivity extends DearestActivity {
 
         heading = findViewById(R.id.heading);
         explainer = findViewById(R.id.setup_explainer);
+        passphraseLayout = findViewById(R.id.passphrase_layout);
+        confirmLayout = findViewById(R.id.confirm_layout);
         passphraseInput = findViewById(R.id.passphrase_input);
         confirmInput = findViewById(R.id.confirm_input);
         primaryButton = findViewById(R.id.primary_button);
         biometricButton = findViewById(R.id.biometric_button);
-        errorText = findViewById(R.id.error_text);
         loadingDialog = new LoadingDialog(this);
+
+        clearErrorOnEdit(passphraseInput, passphraseLayout);
+        clearErrorOnEdit(confirmInput, confirmLayout);
 
         viewModel = new ViewModelProvider(this).get(UnlockViewModel.class);
         viewModel.mode().observe(this, this::applyMode);
@@ -77,7 +85,7 @@ public class UnlockActivity extends DearestActivity {
     private void applyMode(Mode m) {
         this.mode = m;
         boolean setup = (m == Mode.SETUP);
-        confirmInput.setVisibility(setup ? View.VISIBLE : View.GONE);
+        confirmLayout.setVisibility(setup ? View.VISIBLE : View.GONE);
         explainer.setVisibility(setup ? View.VISIBLE : View.GONE);
         heading.setText(setup ? R.string.unlock_heading_setup : R.string.unlock_heading);
         primaryButton.setText(setup ? R.string.unlock_action_create : R.string.unlock_action_unlock);
@@ -156,9 +164,8 @@ public class UnlockActivity extends DearestActivity {
         confirmInput.setEnabled(!b);
     }
 
-    private void showError(String message) {
-        errorText.setText(message);
-        errorText.setVisibility(message == null ? View.GONE : View.VISIBLE);
+    private void showError(@Nullable String message) {
+        passphraseLayout.setError(message);
     }
 
     private void applyLockout(Long remainingMs) {
@@ -184,6 +191,9 @@ public class UnlockActivity extends DearestActivity {
     }
 
     private void submit() {
+        passphraseLayout.setError(null);
+        confirmLayout.setError(null);
+
         char[] passphrase = extractChars(passphraseInput.getText());
         passphraseInput.setText("");
 
@@ -192,7 +202,7 @@ public class UnlockActivity extends DearestActivity {
             if (mode == Mode.SETUP) {
                 confirmInput.setText("");
             }
-            showError(getString(R.string.unlock_error_empty_passphrase));
+            passphraseLayout.setError(getString(R.string.unlock_error_empty_passphrase));
             return;
         }
 
@@ -202,13 +212,21 @@ public class UnlockActivity extends DearestActivity {
             if (confirmation.length == 0) {
                 wipe(passphrase);
                 wipe(confirmation);
-                showError(getString(R.string.unlock_error_empty_confirm));
+                confirmLayout.setError(getString(R.string.unlock_error_empty_confirm));
                 return;
             }
             viewModel.setup(passphrase, confirmation);
         } else {
             viewModel.unlock(passphrase);
         }
+    }
+
+    private static void clearErrorOnEdit(TextInputEditText field, TextInputLayout layout) {
+        field.addTextChangedListener(new TextWatcher() {
+            @Override public void beforeTextChanged(CharSequence s, int a, int b, int c) {}
+            @Override public void onTextChanged(CharSequence s, int a, int b, int c) {}
+            @Override public void afterTextChanged(Editable s) { layout.setError(null); }
+        });
     }
 
     private static char[] extractChars(Editable editable) {

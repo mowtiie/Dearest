@@ -106,7 +106,7 @@
     <string name="reminder_permission_denied">Notifications are off for Dearest — enable them in system settings to use reminders.</string>
 
     <!-- Crash reporting -->
-    <string name="dialog_title_crash">App has crashed</string>
+    <string name="dialog_title_crash">Dearest ran into a problem</string>
     <string name="dialog_message_crash">The app closed unexpectedly last time. A technical report was saved on this device — nothing from your journal is included. You can copy or export it to share with the developer, or dismiss it.</string>
     <string name="crash_action_copy">Copy to clipboard</string>
     <string name="crash_action_export">Export to file</string>
@@ -170,6 +170,7 @@
     <string name="export_saved">Export saved</string>
     <string name="import_title">Restore backup</string>
     <string name="import_password_hint">Backup password</string>
+    <string name="import_password_required">Enter the backup password.</string>
     <string name="import_replace">Replace existing entries instead of merging</string>
     <string name="import_explainer">Merging keeps your current entries and adds the backup\'s (newer versions win). Replace deletes everything first.</string>
     <string name="import_action">Restore</string>

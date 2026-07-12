@@ -2,51 +2,65 @@ package com.mowtiie.dearest.ui.activities;
 
 import android.os.Bundle;
 import android.text.Editable;
-import android.view.View;
+import android.text.TextWatcher;
 import android.widget.Button;
-import android.widget.EditText;
-import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.Nullable;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.mowtiie.dearest.R;
 import com.mowtiie.dearest.ui.InsetsUtil;
 import com.mowtiie.dearest.ui.LoadingDialog;
 import com.mowtiie.dearest.ui.viewmodel.ChangePassphraseViewModel;
+import com.mowtiie.dearest.ui.viewmodel.ChangePassphraseViewModel.ErrorField;
 import com.google.android.material.appbar.MaterialToolbar;
+import com.google.android.material.textfield.TextInputEditText;
+import com.google.android.material.textfield.TextInputLayout;
 
 public class ChangePassphraseActivity extends DearestActivity {
 
     private ChangePassphraseViewModel viewModel;
-    private EditText currentInput;
-    private EditText newInput;
-    private EditText confirmInput;
+    private TextInputLayout currentLayout;
+    private TextInputLayout newLayout;
+    private TextInputLayout confirmLayout;
+    private TextInputEditText currentInput;
+    private TextInputEditText newInput;
+    private TextInputEditText confirmInput;
     private Button changeButton;
-    private TextView errorText;
     private LoadingDialog loadingDialog;
+
+    @Nullable private ErrorField pendingErrorField;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_change_passphrase);
 
-        MaterialToolbar toolbar = findViewById(R.id.cp_toolbar);
+        MaterialToolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         }
-        InsetsUtil.applyToolbarAndBottom(findViewById(R.id.cp_root), findViewById(R.id.cp_app_bar));
 
+        InsetsUtil.applyToolbarAndBottom(findViewById(R.id.root_view), findViewById(R.id.app_bar));
+
+        currentLayout = findViewById(R.id.current_layout);
+        newLayout = findViewById(R.id.new_layout);
+        confirmLayout = findViewById(R.id.confirm_layout);
         currentInput = findViewById(R.id.current_input);
         newInput = findViewById(R.id.new_input);
         confirmInput = findViewById(R.id.confirm_input);
         changeButton = findViewById(R.id.change_button);
-        errorText = findViewById(R.id.error_text);
         loadingDialog = new LoadingDialog(this);
+
+        clearErrorOnEdit(currentInput, currentLayout);
+        clearErrorOnEdit(newInput, newLayout);
+        clearErrorOnEdit(confirmInput, confirmLayout);
 
         viewModel = new ViewModelProvider(this).get(ChangePassphraseViewModel.class);
         viewModel.busy().observe(this, this::applyBusy);
+        viewModel.errorField().observe(this, field -> pendingErrorField = field);
         viewModel.error().observe(this, this::showError);
         viewModel.success().observe(this, ok -> {
             if (Boolean.TRUE.equals(ok)) {
@@ -59,6 +73,10 @@ public class ChangePassphraseActivity extends DearestActivity {
     }
 
     private void submit() {
+        currentLayout.setError(null);
+        newLayout.setError(null);
+        confirmLayout.setError(null);
+
         char[] current = extractChars(currentInput.getText());
         char[] next = extractChars(newInput.getText());
         char[] confirm = extractChars(confirmInput.getText());
@@ -81,9 +99,21 @@ public class ChangePassphraseActivity extends DearestActivity {
         confirmInput.setEnabled(!b);
     }
 
-    private void showError(String message) {
-        errorText.setText(message);
-        errorText.setVisibility(message == null ? View.GONE : View.VISIBLE);
+    private void showError(@Nullable String message) {
+        if (message == null || pendingErrorField == null) return;
+        switch (pendingErrorField) {
+            case CURRENT: currentLayout.setError(message); break;
+            case NEW:     newLayout.setError(message); break;
+            case CONFIRM: confirmLayout.setError(message); break;
+        }
+    }
+
+    private static void clearErrorOnEdit(TextInputEditText field, TextInputLayout layout) {
+        field.addTextChangedListener(new TextWatcher() {
+            @Override public void beforeTextChanged(CharSequence s, int a, int b, int c) {}
+            @Override public void onTextChanged(CharSequence s, int a, int b, int c) {}
+            @Override public void afterTextChanged(Editable s) { layout.setError(null); }
+        });
     }
 
     @Override
