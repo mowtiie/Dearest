@@ -15,6 +15,7 @@ import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ProcessLifecycleOwner;
 
 import com.mowtiie.dearest.backup.BackupManager;
+import com.mowtiie.dearest.crash.CrashHandler;
 import com.mowtiie.dearest.data.db.DearestDatabase;
 import com.mowtiie.dearest.data.repository.DearestRepository;
 import com.mowtiie.dearest.notification.ReminderScheduler;
@@ -25,7 +26,7 @@ public class DearestApp extends Application implements DefaultLifecycleObserver 
 
     public static final long LOCK_IMMEDIATELY = 0L;
 
-    private static final String PREFS               = "dearest_settings";
+    private static final String PREFS = "dearest_settings";
     private static final String KEY_LOCK_TIMEOUT_MS = "lock_timeout_ms";
     private static final long   DEFAULT_TIMEOUT_MS  = 60_000L;
 
@@ -43,6 +44,8 @@ public class DearestApp extends Application implements DefaultLifecycleObserver 
     @Override
     public void onCreate() {
         super.onCreate();
+
+        CrashHandler.install(this);
 
         DearestDatabase.loadLibrary();
 
