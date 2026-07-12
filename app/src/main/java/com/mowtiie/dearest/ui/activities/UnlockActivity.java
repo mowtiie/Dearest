@@ -19,10 +19,9 @@ import androidx.lifecycle.ViewModelProvider;
 import com.mowtiie.dearest.DearestApp;
 import com.mowtiie.dearest.R;
 import com.mowtiie.dearest.security.BiometricGate;
-import com.mowtiie.dearest.ui.InsetsUtil;
+import com.mowtiie.dearest.ui.LoadingDialog;
 import com.mowtiie.dearest.ui.viewmodel.UnlockViewModel;
 import com.mowtiie.dearest.ui.viewmodel.UnlockViewModel.Mode;
-import com.google.android.material.progressindicator.CircularProgressIndicator;
 
 import javax.crypto.Cipher;
 
@@ -37,7 +36,7 @@ public class UnlockActivity extends DearestActivity {
     private Button primaryButton;
     private Button biometricButton;
     private TextView errorText;
-    private CircularProgressIndicator progress;
+    private LoadingDialog loadingDialog;
 
     private Mode mode = Mode.UNLOCK;
     private CountDownTimer lockoutTimer;
@@ -48,8 +47,6 @@ public class UnlockActivity extends DearestActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_unlock);
 
-        InsetsUtil.applyTopAndBottom(findViewById(android.R.id.content));
-
         heading = findViewById(R.id.heading);
         explainer = findViewById(R.id.setup_explainer);
         passphraseInput = findViewById(R.id.passphrase_input);
@@ -57,7 +54,7 @@ public class UnlockActivity extends DearestActivity {
         primaryButton = findViewById(R.id.primary_button);
         biometricButton = findViewById(R.id.biometric_button);
         errorText = findViewById(R.id.error_text);
-        progress = findViewById(R.id.progress);
+        loadingDialog = new LoadingDialog(this);
 
         viewModel = new ViewModelProvider(this).get(UnlockViewModel.class);
         viewModel.mode().observe(this, this::applyMode);
@@ -142,7 +139,11 @@ public class UnlockActivity extends DearestActivity {
 
     private void applyBusy(Boolean busy) {
         boolean b = Boolean.TRUE.equals(busy);
-        progress.setVisibility(b ? View.VISIBLE : View.GONE);
+        if (b) {
+            loadingDialog.show();
+        } else {
+            loadingDialog.dismiss();
+        }
         primaryButton.setEnabled(!b);
         passphraseInput.setEnabled(!b);
         confirmInput.setEnabled(!b);
@@ -197,6 +198,7 @@ public class UnlockActivity extends DearestActivity {
     @Override
     protected void onDestroy() {
         if (lockoutTimer != null) lockoutTimer.cancel();
+        loadingDialog.dismiss();
         super.onDestroy();
     }
 }

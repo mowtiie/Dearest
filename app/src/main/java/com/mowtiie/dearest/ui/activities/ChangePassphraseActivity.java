@@ -12,9 +12,9 @@ import androidx.lifecycle.ViewModelProvider;
 
 import com.mowtiie.dearest.R;
 import com.mowtiie.dearest.ui.InsetsUtil;
+import com.mowtiie.dearest.ui.LoadingDialog;
 import com.mowtiie.dearest.ui.viewmodel.ChangePassphraseViewModel;
 import com.google.android.material.appbar.MaterialToolbar;
-import com.google.android.material.progressindicator.CircularProgressIndicator;
 
 public class ChangePassphraseActivity extends DearestActivity {
 
@@ -24,27 +24,26 @@ public class ChangePassphraseActivity extends DearestActivity {
     private EditText confirmInput;
     private Button changeButton;
     private TextView errorText;
-    private CircularProgressIndicator progress;
+    private LoadingDialog loadingDialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_change_passphrase);
 
-        InsetsUtil.applyToolbarAndBottom(findViewById(R.id.root_view), findViewById(R.id.app_bar));
-
-        MaterialToolbar toolbar = findViewById(R.id.toolbar);
+        MaterialToolbar toolbar = findViewById(R.id.cp_toolbar);
         setSupportActionBar(toolbar);
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         }
+        InsetsUtil.applyToolbarAndBottom(findViewById(R.id.cp_root), findViewById(R.id.cp_app_bar));
 
         currentInput = findViewById(R.id.current_input);
         newInput = findViewById(R.id.new_input);
         confirmInput = findViewById(R.id.confirm_input);
         changeButton = findViewById(R.id.change_button);
         errorText = findViewById(R.id.error_text);
-        progress = findViewById(R.id.progress);
+        loadingDialog = new LoadingDialog(this);
 
         viewModel = new ViewModelProvider(this).get(ChangePassphraseViewModel.class);
         viewModel.busy().observe(this, this::applyBusy);
@@ -71,7 +70,11 @@ public class ChangePassphraseActivity extends DearestActivity {
 
     private void applyBusy(Boolean busy) {
         boolean b = Boolean.TRUE.equals(busy);
-        progress.setVisibility(b ? View.VISIBLE : View.GONE);
+        if (b) {
+            loadingDialog.show();
+        } else {
+            loadingDialog.dismiss();
+        }
         changeButton.setEnabled(!b);
         currentInput.setEnabled(!b);
         newInput.setEnabled(!b);
@@ -94,5 +97,11 @@ public class ChangePassphraseActivity extends DearestActivity {
         char[] out = new char[editable.length()];
         editable.getChars(0, editable.length(), out, 0);
         return out;
+    }
+
+    @Override
+    protected void onDestroy() {
+        loadingDialog.dismiss();
+        super.onDestroy();
     }
 }
