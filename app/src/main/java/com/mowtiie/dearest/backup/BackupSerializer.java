@@ -35,6 +35,7 @@ public final class BackupSerializer {
                 JSONObject o = new JSONObject();
                 o.put("id", n.getId());
                 o.put("name", n.getName());
+                o.put("description", n.getDescription() == null ? JSONObject.NULL : n.getDescription());
                 o.put("position", n.getPosition());
                 o.put("createdAt", n.getCreatedAt());
                 notebooks.put(o);
@@ -70,6 +71,7 @@ public final class BackupSerializer {
                 notebooks.add(new Notebook(
                         o.getString("id"),
                         o.getString("name"),
+                        (o.isNull("description")) ? null : o.optString("description", null),
                         o.optInt("position", i),
                         o.optLong("createdAt", System.currentTimeMillis())));
             }

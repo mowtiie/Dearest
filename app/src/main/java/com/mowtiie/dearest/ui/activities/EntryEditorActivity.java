@@ -44,6 +44,7 @@ public class EntryEditorActivity extends DearestActivity {
     private EditText titleField;
     private EditText bodyField;
     private AutoCompleteTextView notebookDropdown;
+    private android.widget.TextView notebookDescriptionHint;
     private ChipGroup tagChipGroup;
     private boolean shouldPopulate;
 
@@ -64,6 +65,7 @@ public class EntryEditorActivity extends DearestActivity {
         titleField = findViewById(R.id.editor_title);
         bodyField = findViewById(R.id.editor_body);
         notebookDropdown = findViewById(R.id.notebook_dropdown);
+        notebookDescriptionHint = findViewById(R.id.notebook_description_hint);
         tagChipGroup = findViewById(R.id.tag_chip_group);
 
         viewModel = new ViewModelProvider(this).get(EntryEditorViewModel.class);
@@ -100,10 +102,14 @@ public class EntryEditorActivity extends DearestActivity {
         notebookIdsForDropdown.clear();
         List<String> names = new ArrayList<>();
         String currentName = null;
+        String currentDescription = null;
         for (Notebook n : notebooks) {
             notebookIdsForDropdown.add(n.getId());
             names.add(n.getName());
-            if (n.getId().equals(currentId)) currentName = n.getName();
+            if (n.getId().equals(currentId)) {
+                currentName = n.getName();
+                currentDescription = n.getDescription();
+            }
         }
 
         notebookDropdown.setAdapter(new ArrayAdapter<>(this,
@@ -112,6 +118,10 @@ public class EntryEditorActivity extends DearestActivity {
                 viewModel.setNotebook(notebookIdsForDropdown.get(position)));
 
         notebookDropdown.setText(currentName, false);
+
+        boolean hasDescription = currentDescription != null && !currentDescription.trim().isEmpty();
+        notebookDescriptionHint.setVisibility(hasDescription ? View.VISIBLE : View.GONE);
+        if (hasDescription) notebookDescriptionHint.setText(currentDescription);
     }
 
     private void renderTagChips(@Nullable List<String> tagNames) {

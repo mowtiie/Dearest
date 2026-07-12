@@ -16,6 +16,7 @@ public class NotebookDao {
     private static final String[] COLUMNS = {
             Notebooks.COL_UUID,
             Notebooks.COL_NAME,
+            Notebooks.COL_DESCRIPTION,
             Notebooks.COL_POSITION,
             Notebooks.COL_CREATED
     };
@@ -55,15 +56,18 @@ public class NotebookDao {
         ContentValues values = new ContentValues();
         values.put(Notebooks.COL_UUID, notebook.getId());
         values.put(Notebooks.COL_NAME, notebook.getName());
+        values.put(Notebooks.COL_DESCRIPTION, notebook.getDescription());
         values.put(Notebooks.COL_POSITION, notebook.getPosition());
         values.put(Notebooks.COL_CREATED, notebook.getCreatedAt());
         return values;
     }
 
     private Notebook fromCursor(Cursor c) {
+        int descIdx = c.getColumnIndexOrThrow(Notebooks.COL_DESCRIPTION);
         return new Notebook(
                 c.getString(c.getColumnIndexOrThrow(Notebooks.COL_UUID)),
                 c.getString(c.getColumnIndexOrThrow(Notebooks.COL_NAME)),
+                c.isNull(descIdx) ? null : c.getString(descIdx),
                 c.getInt(c.getColumnIndexOrThrow(Notebooks.COL_POSITION)),
                 c.getLong(c.getColumnIndexOrThrow(Notebooks.COL_CREATED))
         );

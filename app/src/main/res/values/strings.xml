@@ -91,12 +91,33 @@
     <string name="change_pass_action">Change passphrase</string>
     <string name="change_pass_success">Passphrase changed</string>
 
+    <!-- Password strength -->
+    <string name="password_strength_too_short">Too short</string>
+    <string name="password_strength_weak">Weak</string>
+    <string name="password_strength_fair">Fair</string>
+    <string name="password_strength_good">Good</string>
+    <string name="password_strength_strong">Strong</string>
+    <string name="password_warning_common">This looks like a common or predictable passphrase — please choose something more unique.</string>
+    <string name="password_req_min_length">At least %1$d characters</string>
+    <string name="password_req_recommended_length">%1$d+ characters recommended for stronger protection</string>
+    <string name="password_req_variety">Mix of letters, numbers &amp; symbols (recommended)</string>
+    <string name="passphrase_error_too_short">Use at least %1$d characters.</string>
+    <string name="passphrase_error_common">This passphrase is too common or predictable. Please choose something more unique.</string>
+    <string name="unlock_error_mismatch">Those don\'t match. Try again.</string>
+    <string name="unlock_error_setup_failed">Setup failed. Please try again.</string>
+    <string name="unlock_error_locked_out_generic">Too many attempts. Please wait.</string>
+    <string name="unlock_error_incorrect">Incorrect passphrase.</string>
+    <string name="unlock_error_incorrect_locked">Incorrect passphrase. Too many attempts — please wait.</string>
+    <string name="change_pass_error_mismatch">The new passphrases don\'t match.</string>
+    <string name="change_pass_error_incorrect_current">Current passphrase is incorrect.</string>
+
     <!-- Manage notebooks -->
     <string name="manage_notebooks_title">Manage notebooks</string>
     <string name="action_add_notebook">Add notebook</string>
     <string name="add_notebook_title">New notebook</string>
     <string name="rename_notebook_title">Rename notebook</string>
     <string name="notebook_name_hint">Notebook name</string>
+    <string name="notebook_description_hint">Description (optional)</string>
     <string name="action_save">Save</string>
     <string name="delete_notebook_title">Delete notebook?</string>
     <string name="delete_notebook_message">This notebook has no entries.</string>

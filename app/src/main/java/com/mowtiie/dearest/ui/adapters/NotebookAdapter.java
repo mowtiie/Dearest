@@ -70,6 +70,10 @@ public class NotebookAdapter extends RecyclerView.Adapter<NotebookAdapter.Notebo
     public void onBindViewHolder(@NonNull NotebookViewHolder holder, int position) {
         Notebook nb = items.get(position);
         holder.name.setText(nb.getName());
+        String description = nb.getDescription();
+        boolean hasDescription = description != null && !description.trim().isEmpty();
+        holder.description.setVisibility(hasDescription ? View.VISIBLE : View.GONE);
+        if (hasDescription) holder.description.setText(description);
         holder.itemView.setOnClickListener(v -> listener.onRename(nb));
         holder.delete.setOnClickListener(v -> listener.onDelete(nb));
 
@@ -94,12 +98,14 @@ public class NotebookAdapter extends RecyclerView.Adapter<NotebookAdapter.Notebo
     static class NotebookViewHolder extends RecyclerView.ViewHolder {
         final ImageView handle;
         final TextView name;
+        final TextView description;
         final ImageButton delete;
 
         NotebookViewHolder(@NonNull View itemView) {
             super(itemView);
             handle = itemView.findViewById(R.id.drag_handle);
             name = itemView.findViewById(R.id.notebook_name);
+            description = itemView.findViewById(R.id.notebook_description);
             delete = itemView.findViewById(R.id.delete_button);
         }
     }

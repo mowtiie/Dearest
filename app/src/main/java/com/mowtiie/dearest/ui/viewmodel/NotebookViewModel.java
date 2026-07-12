@@ -56,17 +56,21 @@ public class NotebookViewModel extends DearestViewModel {
         if (s != null && s != sort.getValue()) sort.setValue(s);
     }
 
-    public void createNotebook(String name) {
+    public void createNotebook(String name, @Nullable String description) {
         String n = normalize(name);
         if (n.isEmpty()) return;
-        repository().saveNotebook(Notebook.createNew(n, nextPosition()));
+        repository().saveNotebook(Notebook.createNew(n, blankToNull(description), nextPosition()));
     }
 
-    public void renameNotebook(Notebook notebook, String newName) {
+    public void updateNotebook(Notebook notebook, String newName, @Nullable String newDescription) {
         String n = normalize(newName);
-        if (n.isEmpty() || n.equals(notebook.getName())) return;
+        String d = blankToNull(newDescription);
+        if (n.isEmpty()) return;
+        if (n.equals(notebook.getName()) && java.util.Objects.equals(d, notebook.getDescription())) {
+            return;
+        }
         repository().saveNotebook(
-                new Notebook(notebook.getId(), n, notebook.getPosition(), notebook.getCreatedAt()));
+                new Notebook(notebook.getId(), n, d, notebook.getPosition(), notebook.getCreatedAt()));
     }
 
     public void saveOrder(List<Notebook> ordered) {
@@ -74,7 +78,7 @@ public class NotebookViewModel extends DearestViewModel {
             Notebook nb = ordered.get(i);
             if (nb.getPosition() != i) {
                 repository().saveNotebook(
-                        new Notebook(nb.getId(), nb.getName(), i, nb.getCreatedAt()));
+                        new Notebook(nb.getId(), nb.getName(), nb.getDescription(), i, nb.getCreatedAt()));
             }
         }
     }
@@ -129,5 +133,11 @@ public class NotebookViewModel extends DearestViewModel {
 
     private static String normalize(@Nullable String s) {
         return s == null ? "" : s.trim();
+    }
+
+    @Nullable
+    private static String blankToNull(@Nullable String s) {
+        String n = normalize(s);
+        return n.isEmpty() ? null : n;
     }
 }

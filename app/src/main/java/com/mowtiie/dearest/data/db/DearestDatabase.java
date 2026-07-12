@@ -9,8 +9,8 @@ import java.util.UUID;
 
 public class DearestDatabase extends SQLiteOpenHelper {
 
-    public static final String DB_NAME = "dearest.db";
-    public static final int DB_VERSION = 2;
+    public static final String DB_NAME    = "dearest.db";
+    public static final int    DB_VERSION = 3;
 
     private static final String DEFAULT_NOTEBOOK_NAME = "My Journal";
 
@@ -56,6 +56,10 @@ public class DearestDatabase extends SQLiteOpenHelper {
         if (oldVersion < 2) {
             createTagTables(db);
         }
+        if (oldVersion < 3) {
+            db.execSQL("ALTER TABLE " + DatabaseContract.Notebooks.TABLE +
+                    " ADD COLUMN " + DatabaseContract.Notebooks.COL_DESCRIPTION + " TEXT;");
+        }
     }
 
     private void createTagTables(SQLiteDatabase db) {
@@ -80,14 +84,14 @@ public class DearestDatabase extends SQLiteOpenHelper {
                 });
     }
 
-
     private static final String CREATE_NOTEBOOKS =
             "CREATE TABLE " + DatabaseContract.Notebooks.TABLE + " (" +
-                    DatabaseContract.Notebooks._ID          + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                    DatabaseContract.Notebooks.COL_UUID     + " TEXT    NOT NULL UNIQUE, " +
-                    DatabaseContract.Notebooks.COL_NAME     + " TEXT    NOT NULL, " +
-                    DatabaseContract.Notebooks.COL_POSITION + " INTEGER NOT NULL DEFAULT 0, " +
-                    DatabaseContract.Notebooks.COL_CREATED  + " INTEGER NOT NULL);";
+                    DatabaseContract.Notebooks._ID           + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                    DatabaseContract.Notebooks.COL_UUID      + " TEXT    NOT NULL UNIQUE, " +
+                    DatabaseContract.Notebooks.COL_NAME      + " TEXT    NOT NULL, " +
+                    DatabaseContract.Notebooks.COL_DESCRIPTION + " TEXT, " +
+                    DatabaseContract.Notebooks.COL_POSITION  + " INTEGER NOT NULL DEFAULT 0, " +
+                    DatabaseContract.Notebooks.COL_CREATED   + " INTEGER NOT NULL);";
 
     private static final String CREATE_ENTRIES =
             "CREATE TABLE " + DatabaseContract.Entries.TABLE + " (" +

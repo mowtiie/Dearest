@@ -62,7 +62,8 @@ public class NotebooksFragment extends Fragment implements NotebookAdapter.Liste
 
         FloatingActionButton fab = view.findViewById(R.id.fab_add_notebook);
         fab.setOnClickListener(v ->
-                showNameDialog(R.string.add_notebook_title, null, viewModel::createNotebook));
+                showNotebookDialog(R.string.add_notebook_title, null, null,
+                        (name, description) -> viewModel.createNotebook(name, description)));
 
         viewModel.notebooks().observe(getViewLifecycleOwner(), notebooks -> {
             if (!dragging) adapter.setItems(notebooks);
@@ -122,8 +123,8 @@ public class NotebooksFragment extends Fragment implements NotebookAdapter.Liste
 
     @Override
     public void onRename(Notebook notebook) {
-        showNameDialog(R.string.rename_notebook_title, notebook.getName(),
-                name -> viewModel.renameNotebook(notebook, name));
+        showNotebookDialog(R.string.rename_notebook_title, notebook.getName(), notebook.getDescription(),
+                (name, description) -> viewModel.updateNotebook(notebook, name, description));
     }
 
     @Override
@@ -147,23 +148,29 @@ public class NotebooksFragment extends Fragment implements NotebookAdapter.Liste
         touchHelper.startDrag(holder);
     }
 
-    private interface NameCallback {
-        void onName(String name);
+    private interface NotebookDialogCallback {
+        void onSave(String name, @Nullable String description);
     }
 
-    private void showNameDialog(int titleRes, @Nullable String prefill, NameCallback callback) {
-        View content = getLayoutInflater().inflate(R.layout.dialog_edit_name, null);
-        EditText input = content.findViewById(R.id.name_input);
-        if (prefill != null) {
-            input.setText(prefill);
-            input.setSelection(input.getText().length());
+    private void showNotebookDialog(int titleRes, @Nullable String prefillName,
+                                    @Nullable String prefillDescription,
+                                    NotebookDialogCallback callback) {
+        View content = getLayoutInflater().inflate(R.layout.dialog_edit_notebook, null);
+        EditText nameInput = content.findViewById(R.id.name_input);
+        EditText descriptionInput = content.findViewById(R.id.description_input);
+        if (prefillName != null) {
+            nameInput.setText(prefillName);
+            nameInput.setSelection(nameInput.getText().length());
+        }
+        if (prefillDescription != null) {
+            descriptionInput.setText(prefillDescription);
         }
         new MaterialAlertDialogBuilder(requireContext())
                 .setTitle(titleRes)
                 .setView(content)
                 .setNegativeButton(android.R.string.cancel, null)
-                .setPositiveButton(R.string.action_save,
-                        (d, w) -> callback.onName(input.getText().toString()))
+                .setPositiveButton(R.string.action_save, (d, w) -> callback.onSave(
+                        nameInput.getText().toString(), descriptionInput.getText().toString()))
                 .show();
     }
 
