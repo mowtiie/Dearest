@@ -11,13 +11,14 @@ import android.widget.AutoCompleteTextView;
 import android.widget.EditText;
 
 import androidx.activity.OnBackPressedCallback;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.mowtiie.dearest.R;
 import com.mowtiie.dearest.data.model.Notebook;
-import com.mowtiie.dearest.data.model.Tag;
 import com.mowtiie.dearest.ui.InsetsUtil;
 import com.mowtiie.dearest.ui.viewmodel.EntryEditorViewModel;
 import com.google.android.material.appbar.MaterialToolbar;
@@ -26,6 +27,7 @@ import com.google.android.material.chip.ChipGroup;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class EntryEditorActivity extends DearestActivity {
@@ -49,6 +51,13 @@ public class EntryEditorActivity extends DearestActivity {
     private boolean shouldPopulate;
 
     private final List<String> notebookIdsForDropdown = new ArrayList<>();
+
+    private final ActivityResultLauncher<Intent> tagPickerLauncher =
+            registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
+                if (result.getResultCode() != RESULT_OK) return;
+                List<String> names = TagPickerActivity.extractResult(result.getData());
+                if (names != null) viewModel.setTags(names);
+            });
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -131,6 +140,9 @@ public class EntryEditorActivity extends DearestActivity {
                 Chip chip = (Chip) getLayoutInflater()
                         .inflate(R.layout.item_tag_chip, tagChipGroup, false);
                 chip.setText(name);
+                chip.setChipIconResource(R.drawable.ic_tag);
+                chip.setChipIconTintResource(R.color.md_theme_onSurface);
+                chip.setChipIconVisible(true);
                 chip.setCloseIconVisible(true);
                 chip.setOnCloseIconClickListener(v -> viewModel.removeTag(name));
                 tagChipGroup.addView(chip);
@@ -143,30 +155,18 @@ public class EntryEditorActivity extends DearestActivity {
         Chip chip = (Chip) getLayoutInflater().inflate(R.layout.item_tag_chip, tagChipGroup, false);
         chip.setText(R.string.editor_add_tag);
         chip.setChipIconResource(R.drawable.ic_add);
+        chip.setChipIconTintResource(R.color.md_theme_onSurface);
         chip.setChipIconVisible(true);
         chip.setCloseIconVisible(false);
-        chip.setOnClickListener(v -> showAddTagDialog());
+        chip.setOnClickListener(v -> openTagPicker());
         return chip;
     }
 
-    private void showAddTagDialog() {
-        View content = getLayoutInflater().inflate(R.layout.dialog_add_tag, null);
-        AutoCompleteTextView input = content.findViewById(R.id.tag_name_input);
-
-        List<Tag> allTags = viewModel.allTags().getValue();
-        List<String> suggestions = new ArrayList<>();
-        if (allTags != null) {
-            for (Tag t : allTags) suggestions.add(t.getName());
-        }
-        input.setAdapter(new ArrayAdapter<>(this, android.R.layout.simple_dropdown_item_1line, suggestions));
-
-        new MaterialAlertDialogBuilder(this)
-                .setTitle(R.string.editor_add_tag)
-                .setView(content)
-                .setNegativeButton(android.R.string.cancel, null)
-                .setPositiveButton(R.string.action_save,
-                        (d, w) -> viewModel.addTag(input.getText().toString()))
-                .show();
+    private void openTagPicker() {
+        List<String> current = viewModel.tagNames().getValue();
+        Intent intent = TagPickerActivity.createIntent(this,
+                current != null ? current : Collections.emptyList());
+        tagPickerLauncher.launch(intent);
     }
 
     private void saveAndFinish() {

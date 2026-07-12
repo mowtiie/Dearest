@@ -100,6 +100,10 @@ public class EntryEditorViewModel extends DearestViewModel {
         tagNames.setValue(next);
     }
 
+    public void setTags(List<String> names) {
+        tagNames.setValue(new ArrayList<>(names));
+    }
+
     public void save(String title, String body) {
         String t = normalize(title);
         String b = normalize(body);

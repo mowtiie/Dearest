@@ -182,6 +182,7 @@
 
     <!-- Tags -->
     <string name="editor_add_tag">Add tag</string>
+    <string name="editor_tags_label">Tags</string>
     <string name="tag_name_hint">Tag name</string>
     <string name="settings_cat_organization">Organization</string>
     <string name="settings_manage_tags">Manage tags</string>
@@ -190,6 +191,10 @@
     <string name="rename_tag_title">Rename tag</string>
     <string name="add_tag_title">New tag</string>
     <string name="action_add_tag">Add tag</string>
+    <string name="tag_picker_title">Select tags</string>
+    <string name="tag_picker_search_hint">Search tags</string>
+    <string name="tag_picker_empty">No tags yet — tap + to create one</string>
+    <string name="action_done">Done</string>
     <string name="delete_tag_title">Delete tag?</string>
     <string name="delete_tag_message">\"%1$s\" will be removed from every entry it\'s on. Entries themselves are not affected.</string>
     <string name="cd_delete_tag">Delete tag</string>
