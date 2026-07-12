@@ -1,6 +1,5 @@
 package com.mowtiie.dearest;
 
-
 import android.app.Application;
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -17,6 +16,7 @@ import androidx.lifecycle.ProcessLifecycleOwner;
 import com.mowtiie.dearest.backup.BackupManager;
 import com.mowtiie.dearest.data.db.DearestDatabase;
 import com.mowtiie.dearest.data.repository.DearestRepository;
+import com.mowtiie.dearest.notification.ReminderScheduler;
 import com.mowtiie.dearest.security.BiometricGate;
 import com.mowtiie.dearest.security.KeyManager;
 
@@ -24,9 +24,9 @@ public class DearestApp extends Application implements DefaultLifecycleObserver 
 
     public static final long LOCK_IMMEDIATELY = 0L;
 
-    private static final String PREFS = "dearest_settings";
+    private static final String PREFS               = "dearest_settings";
     private static final String KEY_LOCK_TIMEOUT_MS = "lock_timeout_ms";
-    private static final long DEFAULT_TIMEOUT_MS = 60_000L;
+    private static final long   DEFAULT_TIMEOUT_MS  = 60_000L;
 
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
     private final MutableLiveData<Boolean> locked = new MutableLiveData<>(true);
@@ -43,6 +43,8 @@ public class DearestApp extends Application implements DefaultLifecycleObserver 
         super.onCreate();
 
         DearestDatabase.loadLibrary();
+
+        ReminderScheduler.ensureChannel(this);
 
         settings   = getSharedPreferences(PREFS, MODE_PRIVATE);
         keyManager = new KeyManager(this);
