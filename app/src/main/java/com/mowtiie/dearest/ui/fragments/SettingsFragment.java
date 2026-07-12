@@ -6,6 +6,7 @@ import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.text.format.DateFormat;
+import android.util.Log;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -35,6 +36,8 @@ import java.util.Calendar;
 import javax.crypto.Cipher;
 
 public class SettingsFragment extends PreferenceFragmentCompat {
+
+    private static final String TAG = "SettingsFragment";
 
     private ReminderPrefs reminderPrefs;
 
@@ -101,26 +104,36 @@ public class SettingsFragment extends PreferenceFragmentCompat {
         try {
             cipher = gate.getEnrollCipher();
         } catch (Exception e) {
+            Log.e(TAG, "getEnrollCipher failed", e);
             toast(R.string.biometric_enroll_failed);
             return;
         }
 
+        DearestApp app = DearestApp.from(requireContext());
         BiometricPrompt prompt = new BiometricPrompt(this,
                 ContextCompat.getMainExecutor(requireContext()),
                 new BiometricPrompt.AuthenticationCallback() {
                     @Override
                     public void onAuthenticationSucceeded(
                             @NonNull BiometricPrompt.AuthenticationResult result) {
+                        app.setAutoLockSuppressed(false);
                         try {
-                            gate.completeUnlock(result.getCryptoObject().getCipher());
+                            gate.completeEnroll(result.getCryptoObject().getCipher());
                             pref.setChecked(true);
                             toast(R.string.biometric_enabled);
                         } catch (Exception e) {
+                            Log.e(TAG, "completeEnroll failed", e);
                             toast(R.string.biometric_enroll_failed);
                         }
                     }
+
+                    @Override
+                    public void onAuthenticationError(int errorCode, @NonNull CharSequence errString) {
+                        app.setAutoLockSuppressed(false);
+                    }
                 });
 
+        app.setAutoLockSuppressed(true);
         prompt.authenticate(
                 new BiometricPrompt.PromptInfo.Builder()
                         .setTitle(getString(R.string.biometric_title))

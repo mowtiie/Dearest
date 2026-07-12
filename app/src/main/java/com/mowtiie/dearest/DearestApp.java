@@ -8,6 +8,7 @@ import android.os.Looper;
 
 import androidx.annotation.NonNull;
 import androidx.lifecycle.DefaultLifecycleObserver;
+import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.LifecycleOwner;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
@@ -31,6 +32,7 @@ public class DearestApp extends Application implements DefaultLifecycleObserver 
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
     private final MutableLiveData<Boolean> locked = new MutableLiveData<>(true);
     private final Runnable lockRunnable = this::lockNow;
+    private boolean autoLockSuppressed;
 
     private KeyManager keyManager;
     private DearestRepository repository;
@@ -100,6 +102,13 @@ public class DearestApp extends Application implements DefaultLifecycleObserver 
         settings.edit().putLong(KEY_LOCK_TIMEOUT_MS, timeoutMs).apply();
     }
 
+    public void setAutoLockSuppressed(boolean suppressed) {
+        this.autoLockSuppressed = suppressed;
+        if (!suppressed && !ProcessLifecycleOwner.get().getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED)) {
+            onStop(ProcessLifecycleOwner.get());
+        }
+    }
+
     @Override
     public void onStart(@NonNull LifecycleOwner owner) {
         mainHandler.removeCallbacks(lockRunnable);
@@ -108,6 +117,7 @@ public class DearestApp extends Application implements DefaultLifecycleObserver 
     @Override
     public void onStop(@NonNull LifecycleOwner owner) {
         if (!keyManager.isUnlocked()) return;
+        if (autoLockSuppressed) return;
 
         long timeout = getLockTimeoutMs();
         if (timeout <= LOCK_IMMEDIATELY) {

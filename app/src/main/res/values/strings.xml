@@ -34,6 +34,8 @@
     <string name="unlock_hint_passphrase">Passphrase</string>
     <string name="unlock_hint_confirm">Confirm passphrase</string>
     <string name="unlock_locked_out">Too many attempts. Try again in %1$d s.</string>
+    <string name="unlock_error_empty_passphrase">Please enter your passphrase.</string>
+    <string name="unlock_error_empty_confirm">Please confirm your passphrase.</string>
     <string name="setup_explainer">Dearest has no account and no way to reset this passphrase. It is the only key to your journal — if you forget it, your entries cannot be recovered. Choose something memorable.</string>
 
     <!-- Journal -->

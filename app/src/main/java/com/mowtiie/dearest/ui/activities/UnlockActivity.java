@@ -117,6 +117,7 @@ public class UnlockActivity extends DearestActivity {
                     @Override
                     public void onAuthenticationSucceeded(
                             @NonNull BiometricPrompt.AuthenticationResult result) {
+                        DearestApp.from(UnlockActivity.this).setAutoLockSuppressed(false);
                         try {
                             BiometricPrompt.CryptoObject crypto = result.getCryptoObject();
                             gate.completeUnlock(crypto.getCipher());
@@ -124,6 +125,11 @@ public class UnlockActivity extends DearestActivity {
                         } catch (Exception e) {
                             showError(getString(R.string.biometric_failed));
                         }
+                    }
+
+                    @Override
+                    public void onAuthenticationError(int errorCode, @NonNull CharSequence errString) {
+                        DearestApp.from(UnlockActivity.this).setAutoLockSuppressed(false);
                     }
                 });
 
@@ -134,6 +140,7 @@ public class UnlockActivity extends DearestActivity {
                 .setAllowedAuthenticators(BiometricManager.Authenticators.BIOMETRIC_STRONG)
                 .build();
 
+        DearestApp.from(this).setAutoLockSuppressed(true);
         prompt.authenticate(info, new BiometricPrompt.CryptoObject(cipher));
     }
 
@@ -179,9 +186,25 @@ public class UnlockActivity extends DearestActivity {
     private void submit() {
         char[] passphrase = extractChars(passphraseInput.getText());
         passphraseInput.setText("");
+
+        if (passphrase.length == 0) {
+            wipe(passphrase);
+            if (mode == Mode.SETUP) {
+                confirmInput.setText("");
+            }
+            showError(getString(R.string.unlock_error_empty_passphrase));
+            return;
+        }
+
         if (mode == Mode.SETUP) {
             char[] confirmation = extractChars(confirmInput.getText());
             confirmInput.setText("");
+            if (confirmation.length == 0) {
+                wipe(passphrase);
+                wipe(confirmation);
+                showError(getString(R.string.unlock_error_empty_confirm));
+                return;
+            }
             viewModel.setup(passphrase, confirmation);
         } else {
             viewModel.unlock(passphrase);
@@ -193,6 +216,10 @@ public class UnlockActivity extends DearestActivity {
         char[] out = new char[editable.length()];
         editable.getChars(0, editable.length(), out, 0);
         return out;
+    }
+
+    private static void wipe(char[] array) {
+        java.util.Arrays.fill(array, '\0');
     }
 
     @Override
