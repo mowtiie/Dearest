@@ -7,8 +7,6 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ArrayAdapter;
-import android.widget.AutoCompleteTextView;
-import android.widget.EditText;
 
 import androidx.activity.OnBackPressedCallback;
 import androidx.activity.result.ActivityResultLauncher;
@@ -19,11 +17,10 @@ import androidx.lifecycle.ViewModelProvider;
 
 import com.mowtiie.dearest.R;
 import com.mowtiie.dearest.data.model.Notebook;
+import com.mowtiie.dearest.databinding.ActivityEntryEditorBinding;
 import com.mowtiie.dearest.ui.InsetsUtil;
 import com.mowtiie.dearest.ui.viewmodel.EntryEditorViewModel;
-import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.chip.Chip;
-import com.google.android.material.chip.ChipGroup;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
 import java.util.ArrayList;
@@ -32,7 +29,7 @@ import java.util.List;
 
 public class EntryEditorActivity extends DearestActivity {
 
-    private static final String EXTRA_ENTRY_ID    = "com.dearest.extra.ENTRY_ID";
+    private static final String EXTRA_ENTRY_ID = "com.dearest.extra.ENTRY_ID";
     private static final String EXTRA_NOTEBOOK_ID = "com.dearest.extra.NOTEBOOK_ID";
 
     public static void open(Context context, @Nullable String entryId, @Nullable String notebookId) {
@@ -42,12 +39,8 @@ public class EntryEditorActivity extends DearestActivity {
         context.startActivity(intent);
     }
 
+    private ActivityEntryEditorBinding binding;
     private EntryEditorViewModel viewModel;
-    private EditText titleField;
-    private EditText bodyField;
-    private AutoCompleteTextView notebookDropdown;
-    private android.widget.TextView notebookDescriptionHint;
-    private ChipGroup tagChipGroup;
     private boolean shouldPopulate;
 
     private final List<String> notebookIdsForDropdown = new ArrayList<>();
@@ -62,30 +55,24 @@ public class EntryEditorActivity extends DearestActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_entry_editor);
+        binding = ActivityEntryEditorBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
 
-        MaterialToolbar toolbar = findViewById(R.id.editor_toolbar);
-        setSupportActionBar(toolbar);
+        setSupportActionBar(binding.editorToolbar);
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         }
-        InsetsUtil.applyToolbarAndBottom(findViewById(R.id.editor_root), findViewById(R.id.editor_app_bar));
 
-        titleField = findViewById(R.id.editor_title);
-        bodyField = findViewById(R.id.editor_body);
-        notebookDropdown = findViewById(R.id.notebook_dropdown);
-        notebookDescriptionHint = findViewById(R.id.notebook_description_hint);
-        tagChipGroup = findViewById(R.id.tag_chip_group);
+        InsetsUtil.applyToolbarAndBottom(binding.editorRoot, binding.editorAppBar);
 
         viewModel = new ViewModelProvider(this).get(EntryEditorViewModel.class);
-        viewModel.init(getIntent().getStringExtra(EXTRA_ENTRY_ID),
-                getIntent().getStringExtra(EXTRA_NOTEBOOK_ID));
+        viewModel.init(getIntent().getStringExtra(EXTRA_ENTRY_ID), getIntent().getStringExtra(EXTRA_NOTEBOOK_ID));
 
         shouldPopulate = (savedInstanceState == null);
         viewModel.entry().observe(this, entry -> {
             if (shouldPopulate && entry != null) {
-                titleField.setText(entry.getTitle());
-                bodyField.setText(entry.getBody());
+                binding.editorTitle.setText(entry.getTitle());
+                binding.editorBody.setText(entry.getBody());
                 shouldPopulate = false;
             }
         });
@@ -121,41 +108,38 @@ public class EntryEditorActivity extends DearestActivity {
             }
         }
 
-        notebookDropdown.setAdapter(new ArrayAdapter<>(this,
-                android.R.layout.simple_dropdown_item_1line, names));
-        notebookDropdown.setOnItemClickListener((parent, view, position, id) ->
-                viewModel.setNotebook(notebookIdsForDropdown.get(position)));
+        binding.notebookDropdown.setAdapter(new ArrayAdapter<>(this, android.R.layout.simple_dropdown_item_1line, names));
+        binding.notebookDropdown.setOnItemClickListener((parent, view, position, id) -> viewModel.setNotebook(notebookIdsForDropdown.get(position)));
 
-        notebookDropdown.setText(currentName, false);
+        binding.notebookDropdown.setText(currentName, false);
 
         boolean hasDescription = currentDescription != null && !currentDescription.trim().isEmpty();
-        notebookDescriptionHint.setVisibility(hasDescription ? View.VISIBLE : View.GONE);
-        if (hasDescription) notebookDescriptionHint.setText(currentDescription);
+        binding.notebookDescriptionHint.setVisibility(hasDescription ? View.VISIBLE : View.GONE);
+        if (hasDescription) {
+            binding.notebookDescriptionHint.setText(currentDescription);
+        }
     }
 
     private void renderTagChips(@Nullable List<String> tagNames) {
-        tagChipGroup.removeAllViews();
+        binding.tagChipGroup.removeAllViews();
         if (tagNames != null) {
             for (String name : tagNames) {
-                Chip chip = (Chip) getLayoutInflater()
-                        .inflate(R.layout.item_tag_chip, tagChipGroup, false);
+                Chip chip = (Chip) getLayoutInflater().inflate(R.layout.item_tag_chip, binding.tagChipGroup, false);
                 chip.setText(name);
                 chip.setChipIconResource(R.drawable.ic_tag);
-                chip.setChipIconTintResource(R.color.md_theme_onSurface);
                 chip.setChipIconVisible(true);
                 chip.setCloseIconVisible(true);
                 chip.setOnCloseIconClickListener(v -> viewModel.removeTag(name));
-                tagChipGroup.addView(chip);
+                binding.tagChipGroup.addView(chip);
             }
         }
-        tagChipGroup.addView(createAddTagChip());
+        binding.tagChipGroup.addView(createAddTagChip());
     }
 
     private Chip createAddTagChip() {
-        Chip chip = (Chip) getLayoutInflater().inflate(R.layout.item_tag_chip, tagChipGroup, false);
+        Chip chip = (Chip) getLayoutInflater().inflate(R.layout.item_tag_chip, binding.tagChipGroup, false);
         chip.setText(R.string.editor_add_tag);
         chip.setChipIconResource(R.drawable.ic_add);
-        chip.setChipIconTintResource(R.color.md_theme_onSurface);
         chip.setChipIconVisible(true);
         chip.setCloseIconVisible(false);
         chip.setOnClickListener(v -> openTagPicker());
@@ -164,13 +148,12 @@ public class EntryEditorActivity extends DearestActivity {
 
     private void openTagPicker() {
         List<String> current = viewModel.tagNames().getValue();
-        Intent intent = TagPickerActivity.createIntent(this,
-                current != null ? current : Collections.emptyList());
+        Intent intent = TagPickerActivity.createIntent(this, current != null ? current : Collections.emptyList());
         tagPickerLauncher.launch(intent);
     }
 
     private void saveAndFinish() {
-        viewModel.save(titleField.getText().toString(), bodyField.getText().toString());
+        viewModel.save(binding.editorTitle.getText().toString(), binding.editorBody.getText().toString());
     }
 
     @Override

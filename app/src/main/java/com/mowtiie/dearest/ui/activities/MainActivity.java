@@ -18,10 +18,11 @@ import androidx.navigation.ui.NavigationUI;
 import com.mowtiie.dearest.DearestApp;
 import com.mowtiie.dearest.R;
 import com.mowtiie.dearest.crash.CrashReporter;
-import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.mowtiie.dearest.databinding.ActivityMainBinding;
 
 public class MainActivity extends DearestActivity {
 
+    private ActivityMainBinding binding;
     private NavController navController;
     private AppBarConfiguration appBarConfiguration;
     private boolean crashDialogShown;
@@ -44,20 +45,20 @@ public class MainActivity extends DearestActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        binding = ActivityMainBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
 
-        setSupportActionBar(findViewById(R.id.toolbar));
+        setSupportActionBar(binding.toolbar);
 
         NavHostFragment host = (NavHostFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.nav_host_fragment);
         navController = host.getNavController();
 
-        BottomNavigationView bottomNav = findViewById(R.id.bottom_nav);
-        NavigationUI.setupWithNavController(bottomNav, navController);
-        appBarConfiguration = new AppBarConfiguration.Builder(bottomNav.getMenu()).build();
+        NavigationUI.setupWithNavController(binding.bottomNav, navController);
+        appBarConfiguration = new AppBarConfiguration.Builder(binding.bottomNav.getMenu()).build();
         NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
 
-        applyInsets(bottomNav);
+        applyInsets();
 
         DearestApp.from(this).lockState().observe(this, locked -> {
             if (Boolean.TRUE.equals(locked)) {
@@ -69,15 +70,14 @@ public class MainActivity extends DearestActivity {
         });
     }
 
-    private void applyInsets(View bottomNav) {
-        View root = findViewById(R.id.main_root);
-        View appBar = findViewById(R.id.app_bar);
+    private void applyInsets() {
+        View root = binding.getRoot();
+        View appBar = binding.appBar;
+        View bottomNav = binding.bottomNav;
         ViewCompat.setOnApplyWindowInsetsListener(root, (v, wi) -> {
             Insets bars = wi.getInsets(WindowInsetsCompat.Type.systemBars());
-            appBar.setPadding(appBar.getPaddingLeft(), bars.top,
-                    appBar.getPaddingRight(), appBar.getPaddingBottom());
-            bottomNav.setPadding(bottomNav.getPaddingLeft(), bottomNav.getPaddingTop(),
-                    bottomNav.getPaddingRight(), bars.bottom);
+            appBar.setPadding(appBar.getPaddingLeft(), bars.top, appBar.getPaddingRight(), appBar.getPaddingBottom());
+            bottomNav.setPadding(bottomNav.getPaddingLeft(), bottomNav.getPaddingTop(), bottomNav.getPaddingRight(), bars.bottom);
             return WindowInsetsCompat.CONSUMED;
         });
         ViewCompat.requestApplyInsets(root);
@@ -85,7 +85,6 @@ public class MainActivity extends DearestActivity {
 
     @Override
     public boolean onSupportNavigateUp() {
-        return NavigationUI.navigateUp(navController, appBarConfiguration)
-                || super.onSupportNavigateUp();
+        return NavigationUI.navigateUp(navController, appBarConfiguration) || super.onSupportNavigateUp();
     }
 }

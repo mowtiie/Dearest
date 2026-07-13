@@ -2,65 +2,61 @@ package com.mowtiie.dearest.ui.activities;
 
 import android.os.Bundle;
 import android.view.View;
-import android.widget.EditText;
 import android.widget.Toast;
 
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 
 import com.mowtiie.dearest.R;
 import com.mowtiie.dearest.data.model.Tag;
+import com.mowtiie.dearest.databinding.ActivityTagsManagementBinding;
+import com.mowtiie.dearest.databinding.DialogEditNameBinding;
 import com.mowtiie.dearest.ui.InsetsUtil;
 import com.mowtiie.dearest.ui.adapters.TagAdapter;
 import com.mowtiie.dearest.ui.viewmodel.TagViewModel;
-import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
 public class TagsManagementActivity extends DearestActivity implements TagAdapter.Listener {
 
+    private ActivityTagsManagementBinding binding;
     private TagViewModel viewModel;
     private TagAdapter adapter;
-    private View emptyView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_tags_management);
+        binding = ActivityTagsManagementBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
 
-        MaterialToolbar toolbar = findViewById(R.id.tags_toolbar);
-        setSupportActionBar(toolbar);
+        setSupportActionBar(binding.tagsToolbar);
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         }
-        InsetsUtil.applyToolbarAndBottom(findViewById(R.id.tags_root), findViewById(R.id.tags_app_bar));
+        InsetsUtil.applyToolbarAndBottom(binding.tagsRoot, binding.tagsAppBar);
 
-        emptyView = findViewById(R.id.tags_empty);
         viewModel = new ViewModelProvider(this).get(TagViewModel.class);
         adapter = new TagAdapter(this);
 
-        RecyclerView list = findViewById(R.id.tags_list);
-        list.setLayoutManager(new LinearLayoutManager(this));
-        list.setAdapter(adapter);
+        binding.tagsList.setLayoutManager(new LinearLayoutManager(this));
+        binding.tagsList.setAdapter(adapter);
 
         viewModel.tags().observe(this, tags -> {
             adapter.submitList(tags);
-            emptyView.setVisibility((tags == null || tags.isEmpty()) ? View.VISIBLE : View.GONE);
+            binding.tagsEmpty.setVisibility((tags == null || tags.isEmpty()) ? View.VISIBLE : View.GONE);
         });
 
-        findViewById(R.id.fab_add_tag).setOnClickListener(v -> showAddTagDialog());
+        binding.fabAddTag.setOnClickListener(v -> showAddTagDialog());
     }
 
     private void showAddTagDialog() {
-        View content = getLayoutInflater().inflate(R.layout.dialog_edit_name, null);
-        EditText input = content.findViewById(R.id.name_input);
+        DialogEditNameBinding dialogBinding = DialogEditNameBinding.inflate(getLayoutInflater());
 
         new MaterialAlertDialogBuilder(this)
                 .setTitle(R.string.add_tag_title)
-                .setView(content)
+                .setView(dialogBinding.getRoot())
                 .setNegativeButton(android.R.string.cancel, null)
                 .setPositiveButton(R.string.action_save, (d, w) ->
-                        viewModel.createTag(input.getText().toString(), (ok, error) -> {
+                        viewModel.createTag(dialogBinding.nameInput.getText().toString(), (ok, error) -> {
                             if (!ok && error != null) {
                                 Toast.makeText(this, error, Toast.LENGTH_SHORT).show();
                             }
@@ -70,17 +66,16 @@ public class TagsManagementActivity extends DearestActivity implements TagAdapte
 
     @Override
     public void onRename(Tag tag) {
-        View content = getLayoutInflater().inflate(R.layout.dialog_edit_name, null);
-        EditText input = content.findViewById(R.id.name_input);
-        input.setText(tag.getName());
-        input.setSelection(input.getText().length());
+        DialogEditNameBinding dialogBinding = DialogEditNameBinding.inflate(getLayoutInflater());
+        dialogBinding.nameInput.setText(tag.getName());
+        dialogBinding.nameInput.setSelection(dialogBinding.nameInput.getText().length());
 
         new MaterialAlertDialogBuilder(this)
                 .setTitle(R.string.rename_tag_title)
-                .setView(content)
+                .setView(dialogBinding.getRoot())
                 .setNegativeButton(android.R.string.cancel, null)
                 .setPositiveButton(R.string.action_save, (d, w) ->
-                        viewModel.renameTag(tag, input.getText().toString(), (ok, error) -> {
+                        viewModel.renameTag(tag, dialogBinding.nameInput.getText().toString(), (ok, error) -> {
                             if (!ok && error != null) {
                                 Toast.makeText(this, error, Toast.LENGTH_SHORT).show();
                             }

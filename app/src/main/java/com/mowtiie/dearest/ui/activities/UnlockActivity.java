@@ -6,8 +6,6 @@ import android.security.keystore.KeyPermanentlyInvalidatedException;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.View;
-import android.widget.Button;
-import android.widget.TextView;
 
 import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
@@ -19,6 +17,7 @@ import androidx.lifecycle.ViewModelProvider;
 
 import com.mowtiie.dearest.DearestApp;
 import com.mowtiie.dearest.R;
+import com.mowtiie.dearest.databinding.ActivityUnlockBinding;
 import com.mowtiie.dearest.security.BiometricGate;
 import com.mowtiie.dearest.ui.LoadingDialog;
 import com.mowtiie.dearest.ui.viewmodel.UnlockViewModel;
@@ -30,16 +29,8 @@ import javax.crypto.Cipher;
 
 public class UnlockActivity extends DearestActivity {
 
+    private ActivityUnlockBinding binding;
     private UnlockViewModel viewModel;
-
-    private TextView heading;
-    private TextView explainer;
-    private TextInputLayout passphraseLayout;
-    private TextInputLayout confirmLayout;
-    private TextInputEditText passphraseInput;
-    private TextInputEditText confirmInput;
-    private Button primaryButton;
-    private Button biometricButton;
     private LoadingDialog loadingDialog;
 
     private Mode mode = Mode.UNLOCK;
@@ -49,20 +40,13 @@ public class UnlockActivity extends DearestActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_unlock);
+        binding = ActivityUnlockBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
 
-        heading = findViewById(R.id.heading);
-        explainer = findViewById(R.id.setup_explainer);
-        passphraseLayout = findViewById(R.id.passphrase_layout);
-        confirmLayout = findViewById(R.id.confirm_layout);
-        passphraseInput = findViewById(R.id.passphrase_input);
-        confirmInput = findViewById(R.id.confirm_input);
-        primaryButton = findViewById(R.id.primary_button);
-        biometricButton = findViewById(R.id.biometric_button);
         loadingDialog = new LoadingDialog(this);
 
-        clearErrorOnEdit(passphraseInput, passphraseLayout);
-        clearErrorOnEdit(confirmInput, confirmLayout);
+        clearErrorOnEdit(binding.passphraseInput, binding.passphraseLayout);
+        clearErrorOnEdit(binding.confirmInput, binding.confirmLayout);
 
         viewModel = new ViewModelProvider(this).get(UnlockViewModel.class);
         viewModel.mode().observe(this, this::applyMode);
@@ -74,8 +58,8 @@ public class UnlockActivity extends DearestActivity {
             if (Boolean.FALSE.equals(locked)) finish();
         });
 
-        primaryButton.setOnClickListener(v -> submit());
-        biometricButton.setOnClickListener(v -> tryBiometricUnlock());
+        binding.primaryButton.setOnClickListener(v -> submit());
+        binding.biometricButton.setOnClickListener(v -> tryBiometricUnlock());
 
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override public void handleOnBackPressed() { moveTaskToBack(true); }
@@ -85,13 +69,13 @@ public class UnlockActivity extends DearestActivity {
     private void applyMode(Mode m) {
         this.mode = m;
         boolean setup = (m == Mode.SETUP);
-        confirmLayout.setVisibility(setup ? View.VISIBLE : View.GONE);
-        explainer.setVisibility(setup ? View.VISIBLE : View.GONE);
-        heading.setText(setup ? R.string.unlock_heading_setup : R.string.unlock_heading);
-        primaryButton.setText(setup ? R.string.unlock_action_create : R.string.unlock_action_unlock);
+        binding.confirmLayout.setVisibility(setup ? View.VISIBLE : View.GONE);
+        binding.setupExplainer.setVisibility(setup ? View.VISIBLE : View.GONE);
+        binding.heading.setText(setup ? R.string.unlock_heading_setup : R.string.unlock_heading);
+        binding.primaryButton.setText(setup ? R.string.unlock_action_create : R.string.unlock_action_unlock);
 
         boolean biometricUsable = !setup && biometricUsable();
-        biometricButton.setVisibility(biometricUsable ? View.VISIBLE : View.GONE);
+        binding.biometricButton.setVisibility(biometricUsable ? View.VISIBLE : View.GONE);
         if (biometricUsable && !autoPromptedBiometric) {
             autoPromptedBiometric = true;
             tryBiometricUnlock();
@@ -112,7 +96,7 @@ public class UnlockActivity extends DearestActivity {
             cipher = gate.getUnlockCipher();
         } catch (KeyPermanentlyInvalidatedException invalidated) {
             gate.disable();
-            biometricButton.setVisibility(View.GONE);
+            binding.biometricButton.setVisibility(View.GONE);
             showError(getString(R.string.biometric_reset));
             return;
         } catch (Exception e) {
@@ -159,13 +143,13 @@ public class UnlockActivity extends DearestActivity {
         } else {
             loadingDialog.dismiss();
         }
-        primaryButton.setEnabled(!b);
-        passphraseInput.setEnabled(!b);
-        confirmInput.setEnabled(!b);
+        binding.primaryButton.setEnabled(!b);
+        binding.passphraseInput.setEnabled(!b);
+        binding.confirmInput.setEnabled(!b);
     }
 
     private void showError(@Nullable String message) {
-        passphraseLayout.setError(message);
+        binding.passphraseLayout.setError(message);
     }
 
     private void applyLockout(Long remainingMs) {
@@ -175,44 +159,44 @@ public class UnlockActivity extends DearestActivity {
         }
         long ms = (remainingMs == null) ? 0L : remainingMs;
         if (ms <= 0L) {
-            primaryButton.setEnabled(true);
+            binding.primaryButton.setEnabled(true);
             return;
         }
-        primaryButton.setEnabled(false);
+        binding.primaryButton.setEnabled(false);
         lockoutTimer = new CountDownTimer(ms, 1000) {
             @Override public void onTick(long msLeft) {
                 showError(getString(R.string.unlock_locked_out, (msLeft / 1000) + 1));
             }
             @Override public void onFinish() {
-                primaryButton.setEnabled(true);
+                binding.primaryButton.setEnabled(true);
                 showError(null);
             }
         }.start();
     }
 
     private void submit() {
-        passphraseLayout.setError(null);
-        confirmLayout.setError(null);
+        binding.passphraseLayout.setError(null);
+        binding.confirmLayout.setError(null);
 
-        char[] passphrase = extractChars(passphraseInput.getText());
-        passphraseInput.setText("");
+        char[] passphrase = extractChars(binding.passphraseInput.getText());
+        binding.passphraseInput.setText("");
 
         if (passphrase.length == 0) {
             wipe(passphrase);
             if (mode == Mode.SETUP) {
-                confirmInput.setText("");
+                binding.confirmInput.setText("");
             }
-            passphraseLayout.setError(getString(R.string.unlock_error_empty_passphrase));
+            binding.passphraseLayout.setError(getString(R.string.unlock_error_empty_passphrase));
             return;
         }
 
         if (mode == Mode.SETUP) {
-            char[] confirmation = extractChars(confirmInput.getText());
-            confirmInput.setText("");
+            char[] confirmation = extractChars(binding.confirmInput.getText());
+            binding.confirmInput.setText("");
             if (confirmation.length == 0) {
                 wipe(passphrase);
                 wipe(confirmation);
-                confirmLayout.setError(getString(R.string.unlock_error_empty_confirm));
+                binding.confirmLayout.setError(getString(R.string.unlock_error_empty_confirm));
                 return;
             }
             viewModel.setup(passphrase, confirmation);

@@ -3,8 +3,6 @@ package com.mowtiie.dearest.ui.activities;
 import android.net.Uri;
 import android.os.Bundle;
 import android.text.Editable;
-import android.view.View;
-import android.widget.CheckBox;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -16,18 +14,19 @@ import com.mowtiie.dearest.DearestApp;
 import com.mowtiie.dearest.R;
 import com.mowtiie.dearest.backup.BackupManager;
 import com.mowtiie.dearest.backup.BackupManager.Format;
+import com.mowtiie.dearest.databinding.ActivityBackupBinding;
+import com.mowtiie.dearest.databinding.DialogBackupPasswordBinding;
+import com.mowtiie.dearest.databinding.DialogImportBinding;
 import com.mowtiie.dearest.ui.InsetsUtil;
 import com.mowtiie.dearest.ui.viewmodel.UnlockViewModel;
-import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
-import com.google.android.material.textfield.TextInputEditText;
-import com.google.android.material.textfield.TextInputLayout;
 
 import java.time.LocalDate;
 import java.util.Arrays;
 
 public class BackupActivity extends DearestActivity {
 
+    private ActivityBackupBinding binding;
     private BackupManager backupManager;
     private char[] pendingBackupPassword;
     private Uri pendingImportUri;
@@ -60,51 +59,47 @@ public class BackupActivity extends DearestActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_backup);
+        binding = ActivityBackupBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
 
-        MaterialToolbar toolbar = findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
+        setSupportActionBar(binding.backupToolbar);
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         }
-
-        InsetsUtil.applyToolbarAndBottom(findViewById(R.id.root_view), findViewById(R.id.app_bar));
+        InsetsUtil.applyToolbarAndBottom(binding.backupRoot, binding.backupAppBar);
 
         backupManager = DearestApp.from(this).backupManager();
 
-        findViewById(R.id.btn_create_backup).setOnClickListener(v -> promptBackupPassword());
-        findViewById(R.id.btn_restore).setOnClickListener(v -> openBackup.launch(new String[]{"*/*"}));
-        findViewById(R.id.btn_export_plain).setOnClickListener(v -> warnThenExportPlain());
+        binding.btnCreateBackup.setOnClickListener(v -> promptBackupPassword());
+        binding.btnRestore.setOnClickListener(v -> openBackup.launch(new String[]{"*/*"}));
+        binding.btnExportPlain.setOnClickListener(v -> warnThenExportPlain());
     }
 
     private void promptBackupPassword() {
-        View content = getLayoutInflater().inflate(R.layout.dialog_backup_password, null);
-        TextInputLayout passwordLayout = content.findViewById(R.id.backup_password_layout);
-        TextInputLayout confirmLayout = content.findViewById(R.id.backup_password_confirm_layout);
-        TextInputEditText password = content.findViewById(R.id.backup_password);
-        TextInputEditText confirm = content.findViewById(R.id.backup_password_confirm);
+        DialogBackupPasswordBinding dialogBinding =
+                DialogBackupPasswordBinding.inflate(getLayoutInflater());
 
         AlertDialog dialog = new MaterialAlertDialogBuilder(this)
                 .setTitle(R.string.backup_password_title)
-                .setView(content)
+                .setView(dialogBinding.getRoot())
                 .setNegativeButton(android.R.string.cancel, null)
                 .setPositiveButton(R.string.action_save, null)
                 .create();
 
         dialog.setOnShowListener(d -> dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
-            passwordLayout.setError(null);
-            confirmLayout.setError(null);
+            dialogBinding.backupPasswordLayout.setError(null);
+            dialogBinding.backupPasswordConfirmLayout.setError(null);
 
-            char[] p = extractChars(password.getText());
-            char[] c = extractChars(confirm.getText());
+            char[] p = extractChars(dialogBinding.backupPassword.getText());
+            char[] c = extractChars(dialogBinding.backupPasswordConfirm.getText());
             if (!Arrays.equals(p, c)) {
                 wipe(p); wipe(c);
-                confirmLayout.setError(getString(R.string.backup_password_mismatch));
+                dialogBinding.backupPasswordConfirmLayout.setError(getString(R.string.backup_password_mismatch));
                 return;
             }
             if (p.length < UnlockViewModel.MIN_PASSPHRASE_LENGTH) {
                 wipe(p); wipe(c);
-                passwordLayout.setError(getString(R.string.backup_password_short,
+                dialogBinding.backupPasswordLayout.setError(getString(R.string.backup_password_short,
                         UnlockViewModel.MIN_PASSPHRASE_LENGTH));
                 return;
             }
@@ -161,29 +156,26 @@ public class BackupActivity extends DearestActivity {
         if (uri == null) return;
         pendingImportUri = uri;
 
-        View content = getLayoutInflater().inflate(R.layout.dialog_import, null);
-        TextInputLayout passwordLayout = content.findViewById(R.id.import_password_layout);
-        TextInputEditText password = content.findViewById(R.id.import_password);
-        CheckBox replace = content.findViewById(R.id.replace_checkbox);
+        DialogImportBinding dialogBinding = DialogImportBinding.inflate(getLayoutInflater());
 
         AlertDialog dialog = new MaterialAlertDialogBuilder(this)
                 .setTitle(R.string.import_title)
-                .setView(content)
+                .setView(dialogBinding.getRoot())
                 .setNegativeButton(android.R.string.cancel, null)
                 .setPositiveButton(R.string.import_action, null)
                 .create();
 
         dialog.setOnShowListener(d -> dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
-            passwordLayout.setError(null);
+            dialogBinding.importPasswordLayout.setError(null);
 
-            char[] p = extractChars(password.getText());
+            char[] p = extractChars(dialogBinding.importPassword.getText());
             if (p.length == 0) {
                 wipe(p);
-                passwordLayout.setError(getString(R.string.import_password_required));
+                dialogBinding.importPasswordLayout.setError(getString(R.string.import_password_required));
                 return;
             }
 
-            boolean replaceAll = replace.isChecked();
+            boolean replaceAll = dialogBinding.replaceCheckbox.isChecked();
             Uri source = pendingImportUri;
             pendingImportUri = null;
             dialog.dismiss();

@@ -3,31 +3,24 @@ package com.mowtiie.dearest.ui.activities;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.widget.Button;
 import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.mowtiie.dearest.R;
+import com.mowtiie.dearest.databinding.ActivityChangePassphraseBinding;
 import com.mowtiie.dearest.ui.InsetsUtil;
 import com.mowtiie.dearest.ui.LoadingDialog;
 import com.mowtiie.dearest.ui.viewmodel.ChangePassphraseViewModel;
 import com.mowtiie.dearest.ui.viewmodel.ChangePassphraseViewModel.ErrorField;
-import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 
 public class ChangePassphraseActivity extends DearestActivity {
 
+    private ActivityChangePassphraseBinding binding;
     private ChangePassphraseViewModel viewModel;
-    private TextInputLayout currentLayout;
-    private TextInputLayout newLayout;
-    private TextInputLayout confirmLayout;
-    private TextInputEditText currentInput;
-    private TextInputEditText newInput;
-    private TextInputEditText confirmInput;
-    private Button changeButton;
     private LoadingDialog loadingDialog;
 
     @Nullable private ErrorField pendingErrorField;
@@ -35,28 +28,20 @@ public class ChangePassphraseActivity extends DearestActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_change_passphrase);
+        binding = ActivityChangePassphraseBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
 
-        MaterialToolbar toolbar = findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
+        setSupportActionBar(binding.cpToolbar);
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         }
+        InsetsUtil.applyToolbarAndBottom(binding.cpRoot, binding.cpAppBar);
 
-        InsetsUtil.applyToolbarAndBottom(findViewById(R.id.root_view), findViewById(R.id.app_bar));
-
-        currentLayout = findViewById(R.id.current_layout);
-        newLayout = findViewById(R.id.new_layout);
-        confirmLayout = findViewById(R.id.confirm_layout);
-        currentInput = findViewById(R.id.current_input);
-        newInput = findViewById(R.id.new_input);
-        confirmInput = findViewById(R.id.confirm_input);
-        changeButton = findViewById(R.id.change_button);
         loadingDialog = new LoadingDialog(this);
 
-        clearErrorOnEdit(currentInput, currentLayout);
-        clearErrorOnEdit(newInput, newLayout);
-        clearErrorOnEdit(confirmInput, confirmLayout);
+        clearErrorOnEdit(binding.currentInput, binding.currentLayout);
+        clearErrorOnEdit(binding.newInput, binding.newLayout);
+        clearErrorOnEdit(binding.confirmInput, binding.confirmLayout);
 
         viewModel = new ViewModelProvider(this).get(ChangePassphraseViewModel.class);
         viewModel.busy().observe(this, this::applyBusy);
@@ -69,20 +54,20 @@ public class ChangePassphraseActivity extends DearestActivity {
             }
         });
 
-        changeButton.setOnClickListener(v -> submit());
+        binding.changeButton.setOnClickListener(v -> submit());
     }
 
     private void submit() {
-        currentLayout.setError(null);
-        newLayout.setError(null);
-        confirmLayout.setError(null);
+        binding.currentLayout.setError(null);
+        binding.newLayout.setError(null);
+        binding.confirmLayout.setError(null);
 
-        char[] current = extractChars(currentInput.getText());
-        char[] next = extractChars(newInput.getText());
-        char[] confirm = extractChars(confirmInput.getText());
-        currentInput.setText("");
-        newInput.setText("");
-        confirmInput.setText("");
+        char[] current = extractChars(binding.currentInput.getText());
+        char[] next = extractChars(binding.newInput.getText());
+        char[] confirm = extractChars(binding.confirmInput.getText());
+        binding.currentInput.setText("");
+        binding.newInput.setText("");
+        binding.confirmInput.setText("");
         viewModel.change(current, next, confirm);
     }
 
@@ -93,18 +78,18 @@ public class ChangePassphraseActivity extends DearestActivity {
         } else {
             loadingDialog.dismiss();
         }
-        changeButton.setEnabled(!b);
-        currentInput.setEnabled(!b);
-        newInput.setEnabled(!b);
-        confirmInput.setEnabled(!b);
+        binding.changeButton.setEnabled(!b);
+        binding.currentInput.setEnabled(!b);
+        binding.newInput.setEnabled(!b);
+        binding.confirmInput.setEnabled(!b);
     }
 
     private void showError(@Nullable String message) {
         if (message == null || pendingErrorField == null) return;
         switch (pendingErrorField) {
-            case CURRENT: currentLayout.setError(message); break;
-            case NEW:     newLayout.setError(message); break;
-            case CONFIRM: confirmLayout.setError(message); break;
+            case CURRENT: binding.currentLayout.setError(message); break;
+            case NEW:     binding.newLayout.setError(message); break;
+            case CONFIRM: binding.confirmLayout.setError(message); break;
         }
     }
 

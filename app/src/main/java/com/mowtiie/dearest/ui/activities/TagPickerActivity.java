@@ -3,7 +3,6 @@ package com.mowtiie.dearest.ui.activities;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -14,17 +13,16 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.widget.SearchView;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 
 import com.mowtiie.dearest.R;
 import com.mowtiie.dearest.data.model.Tag;
+import com.mowtiie.dearest.databinding.ActivityTagPickerBinding;
+import com.mowtiie.dearest.databinding.DialogEditNameBinding;
 import com.mowtiie.dearest.ui.InsetsUtil;
 import com.mowtiie.dearest.ui.adapters.TagPickerAdapter;
 import com.mowtiie.dearest.ui.viewmodel.TagPickerViewModel;
 import com.mowtiie.dearest.ui.viewmodel.TagPickerViewModel.Sort;
-import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,9 +31,9 @@ public class TagPickerActivity extends DearestActivity implements TagPickerAdapt
 
     private static final String EXTRA_SELECTED_NAMES = "com.dearest.extra.SELECTED_TAG_NAMES";
 
+    private ActivityTagPickerBinding binding;
     private TagPickerViewModel viewModel;
     private TagPickerAdapter adapter;
-    private View emptyView;
 
     public static Intent createIntent(Context context, List<String> currentNames) {
         Intent intent = new Intent(context, TagPickerActivity.class);
@@ -51,35 +49,30 @@ public class TagPickerActivity extends DearestActivity implements TagPickerAdapt
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_tag_picker);
+        binding = ActivityTagPickerBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
 
-        MaterialToolbar toolbar = findViewById(R.id.tag_picker_toolbar);
-        setSupportActionBar(toolbar);
+        setSupportActionBar(binding.tagPickerToolbar);
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         }
-        InsetsUtil.applyToolbarAndBottom(
-                findViewById(R.id.tag_picker_root), findViewById(R.id.tag_picker_app_bar));
-
-        emptyView = findViewById(R.id.tag_picker_empty);
+        InsetsUtil.applyToolbarAndBottom(binding.tagPickerRoot, binding.tagPickerAppBar);
 
         viewModel = new ViewModelProvider(this).get(TagPickerViewModel.class);
         List<String> initialNames = getIntent().getStringArrayListExtra(EXTRA_SELECTED_NAMES);
         viewModel.setInitialSelection(initialNames != null ? initialNames : new ArrayList<>());
 
         adapter = new TagPickerAdapter(this);
-        RecyclerView list = findViewById(R.id.tag_picker_list);
-        list.setLayoutManager(new LinearLayoutManager(this));
-        list.setAdapter(adapter);
+        binding.tagPickerList.setLayoutManager(new LinearLayoutManager(this));
+        binding.tagPickerList.setAdapter(adapter);
 
         viewModel.visibleTags().observe(this, tags -> {
             adapter.submitList(tags);
-            emptyView.setVisibility((tags == null || tags.isEmpty()) ? View.VISIBLE : View.GONE);
+            binding.tagPickerEmpty.setVisibility((tags == null || tags.isEmpty()) ? View.VISIBLE : View.GONE);
         });
         viewModel.selectedIds().observe(this, ids -> adapter.setSelected(ids));
 
-        FloatingActionButton fab = findViewById(R.id.fab_add_tag);
-        fab.setOnClickListener(v -> showAddTagDialog());
+        binding.fabAddTag.setOnClickListener(v -> showAddTagDialog());
 
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override public void handleOnBackPressed() { finishWithResult(); }
@@ -92,15 +85,14 @@ public class TagPickerActivity extends DearestActivity implements TagPickerAdapt
     }
 
     private void showAddTagDialog() {
-        View content = LayoutInflater.from(this).inflate(R.layout.dialog_edit_name, null);
-        android.widget.EditText input = content.findViewById(R.id.name_input);
+        DialogEditNameBinding dialogBinding = DialogEditNameBinding.inflate(getLayoutInflater());
 
         new MaterialAlertDialogBuilder(this)
                 .setTitle(R.string.add_tag_title)
-                .setView(content)
+                .setView(dialogBinding.getRoot())
                 .setNegativeButton(android.R.string.cancel, null)
                 .setPositiveButton(R.string.action_save,
-                        (d, w) -> viewModel.createTag(input.getText().toString()))
+                        (d, w) -> viewModel.createTag(dialogBinding.nameInput.getText().toString()))
                 .show();
     }
 
