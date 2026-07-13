@@ -37,6 +37,7 @@
         <Preference
             app:key="pref_change_passphrase"
             app:iconSpaceReserved="false"
+            app:summary="@string/settings_change_passphrase_summary"
             app:title="@string/settings_change_passphrase" />
     </PreferenceCategory>
 
@@ -47,6 +48,7 @@
         <Preference
             app:key="pref_manage_tags"
             app:iconSpaceReserved="false"
+            app:summary="@string/settings_manage_tags_summary"
             app:title="@string/settings_manage_tags" />
     </PreferenceCategory>
 
