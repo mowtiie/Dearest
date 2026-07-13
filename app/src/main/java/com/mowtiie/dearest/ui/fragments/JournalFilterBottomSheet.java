@@ -12,6 +12,7 @@ import androidx.lifecycle.ViewModelProvider;
 import com.mowtiie.dearest.R;
 import com.mowtiie.dearest.data.model.Notebook;
 import com.mowtiie.dearest.data.model.Tag;
+import com.mowtiie.dearest.databinding.BottomSheetJournalFilterBinding;
 import com.mowtiie.dearest.ui.viewmodel.JournalViewModel;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import com.google.android.material.chip.Chip;
@@ -24,30 +25,25 @@ public class JournalFilterBottomSheet extends BottomSheetDialogFragment {
 
     public static final String TAG = "JournalFilterBottomSheet";
 
+    private BottomSheetJournalFilterBinding binding;
     private JournalViewModel viewModel;
-    private ChipGroup notebookChips;
-    private ChipGroup tagChips;
-    private View tagsLabel;
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.bottom_sheet_journal_filter, container, false);
+        binding = BottomSheetJournalFilterBinding.inflate(inflater, container, false);
+        return binding.getRoot();
     }
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         viewModel = new ViewModelProvider(requireParentFragment()).get(JournalViewModel.class);
 
-        notebookChips = view.findViewById(R.id.filter_notebook_chips);
-        tagChips = view.findViewById(R.id.filter_tag_chips);
-        tagsLabel = view.findViewById(R.id.filter_tags_label);
-
         viewModel.notebooks().observe(getViewLifecycleOwner(), this::bindNotebookChips);
         viewModel.tags().observe(getViewLifecycleOwner(), this::bindTagChips);
 
-        view.findViewById(R.id.filter_clear_button).setOnClickListener(v -> {
+        binding.filterClearButton.setOnClickListener(v -> {
             viewModel.selectNotebook(null);
             viewModel.clearTagFilter();
             bindNotebookChips(viewModel.notebooks().getValue());
@@ -55,7 +51,14 @@ public class JournalFilterBottomSheet extends BottomSheetDialogFragment {
         });
     }
 
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        binding = null;
+    }
+
     private void bindNotebookChips(@Nullable List<Notebook> notebooks) {
+        ChipGroup notebookChips = binding.filterNotebookChips;
         notebookChips.removeAllViews();
         notebookChips.addView(createNotebookChip(getString(R.string.filter_all), null));
         if (notebooks != null) {
@@ -76,7 +79,7 @@ public class JournalFilterBottomSheet extends BottomSheetDialogFragment {
 
     private Chip createNotebookChip(String label, @Nullable String notebookId) {
         Chip chip = (Chip) getLayoutInflater()
-                .inflate(R.layout.item_filter_chip, notebookChips, false);
+                .inflate(R.layout.item_filter_chip, binding.filterNotebookChips, false);
         chip.setText(label);
         chip.setTag(notebookId);
         chip.setOnClickListener(v -> viewModel.selectNotebook(notebookId));
@@ -84,9 +87,10 @@ public class JournalFilterBottomSheet extends BottomSheetDialogFragment {
     }
 
     private void bindTagChips(@Nullable List<Tag> tags) {
+        ChipGroup tagChips = binding.filterTagChips;
         tagChips.removeAllViews();
         boolean hasTags = tags != null && !tags.isEmpty();
-        tagsLabel.setVisibility(hasTags ? View.VISIBLE : View.GONE);
+        binding.filterTagsLabel.setVisibility(hasTags ? View.VISIBLE : View.GONE);
         tagChips.setVisibility(hasTags ? View.VISIBLE : View.GONE);
         if (!hasTags) return;
 

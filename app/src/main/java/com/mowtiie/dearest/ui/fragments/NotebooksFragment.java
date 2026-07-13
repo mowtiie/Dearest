@@ -7,7 +7,6 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.EditText;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -22,21 +21,22 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.mowtiie.dearest.R;
 import com.mowtiie.dearest.data.model.Notebook;
+import com.mowtiie.dearest.databinding.DialogEditNotebookBinding;
+import com.mowtiie.dearest.databinding.FragmentNotebooksBinding;
 import com.mowtiie.dearest.ui.adapters.NotebookAdapter;
 import com.mowtiie.dearest.ui.viewmodel.NotebookViewModel;
 import com.mowtiie.dearest.ui.viewmodel.NotebookViewModel.Sort;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class NotebooksFragment extends Fragment implements NotebookAdapter.Listener {
 
+    private FragmentNotebooksBinding binding;
     private NotebookViewModel viewModel;
     private NotebookAdapter adapter;
     private ItemTouchHelper touchHelper;
-    private View emptyView;
     private boolean dragging;
     private boolean reorderEnabled = true;
 
@@ -44,30 +44,28 @@ public class NotebooksFragment extends Fragment implements NotebookAdapter.Liste
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.fragment_notebooks, container, false);
+        binding = FragmentNotebooksBinding.inflate(inflater, container, false);
+        return binding.getRoot();
     }
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         viewModel = new ViewModelProvider(this).get(NotebookViewModel.class);
         adapter = new NotebookAdapter(this);
-        emptyView = view.findViewById(R.id.notebooks_empty);
 
-        RecyclerView list = view.findViewById(R.id.notebooks_list);
-        list.setLayoutManager(new LinearLayoutManager(requireContext()));
-        list.setAdapter(adapter);
+        binding.notebooksList.setLayoutManager(new LinearLayoutManager(requireContext()));
+        binding.notebooksList.setAdapter(adapter);
 
         touchHelper = new ItemTouchHelper(dragCallback());
-        touchHelper.attachToRecyclerView(list);
+        touchHelper.attachToRecyclerView(binding.notebooksList);
 
-        FloatingActionButton fab = view.findViewById(R.id.fab_add_notebook);
-        fab.setOnClickListener(v ->
+        binding.fabAddNotebook.setOnClickListener(v ->
                 showNotebookDialog(R.string.add_notebook_title, null, null,
                         (name, description) -> viewModel.createNotebook(name, description)));
 
         viewModel.notebooks().observe(getViewLifecycleOwner(), notebooks -> {
             if (!dragging) adapter.setItems(notebooks);
-            emptyView.setVisibility(
+            binding.notebooksEmpty.setVisibility(
                     (notebooks == null || notebooks.isEmpty()) ? View.VISIBLE : View.GONE);
         });
         viewModel.canReorder().observe(getViewLifecycleOwner(), can -> {
@@ -76,6 +74,12 @@ public class NotebooksFragment extends Fragment implements NotebookAdapter.Liste
         });
 
         setupToolbarMenu();
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        binding = null;
     }
 
     private void setupToolbarMenu() {
@@ -155,22 +159,21 @@ public class NotebooksFragment extends Fragment implements NotebookAdapter.Liste
     private void showNotebookDialog(int titleRes, @Nullable String prefillName,
                                     @Nullable String prefillDescription,
                                     NotebookDialogCallback callback) {
-        View content = getLayoutInflater().inflate(R.layout.dialog_edit_notebook, null);
-        EditText nameInput = content.findViewById(R.id.name_input);
-        EditText descriptionInput = content.findViewById(R.id.description_input);
+        DialogEditNotebookBinding dialogBinding = DialogEditNotebookBinding.inflate(getLayoutInflater());
         if (prefillName != null) {
-            nameInput.setText(prefillName);
-            nameInput.setSelection(nameInput.getText().length());
+            dialogBinding.nameInput.setText(prefillName);
+            dialogBinding.nameInput.setSelection(dialogBinding.nameInput.getText().length());
         }
         if (prefillDescription != null) {
-            descriptionInput.setText(prefillDescription);
+            dialogBinding.descriptionInput.setText(prefillDescription);
         }
         new MaterialAlertDialogBuilder(requireContext())
                 .setTitle(titleRes)
-                .setView(content)
+                .setView(dialogBinding.getRoot())
                 .setNegativeButton(android.R.string.cancel, null)
                 .setPositiveButton(R.string.action_save, (d, w) -> callback.onSave(
-                        nameInput.getText().toString(), descriptionInput.getText().toString()))
+                        dialogBinding.nameInput.getText().toString(),
+                        dialogBinding.descriptionInput.getText().toString()))
                 .show();
     }
 

@@ -18,54 +18,56 @@ import androidx.core.view.MenuProvider;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 
 import com.mowtiie.dearest.R;
+import com.mowtiie.dearest.databinding.FragmentJournalBinding;
 import com.mowtiie.dearest.ui.activities.EntryEditorActivity;
 import com.mowtiie.dearest.ui.adapters.EntryAdapter;
 import com.mowtiie.dearest.ui.viewmodel.JournalViewModel;
 import com.mowtiie.dearest.ui.viewmodel.JournalViewModel.Sort;
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 public class JournalFragment extends Fragment {
 
+    private FragmentJournalBinding binding;
     private JournalViewModel viewModel;
     private EntryAdapter adapter;
-    private View emptyState;
     private MenuItem filterMenuItem;
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.fragment_journal, container, false);
+        binding = FragmentJournalBinding.inflate(inflater, container, false);
+        return binding.getRoot();
     }
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         viewModel = new ViewModelProvider(this).get(JournalViewModel.class);
 
-        emptyState = view.findViewById(R.id.empty_state);
-
-        RecyclerView list = view.findViewById(R.id.entries_list);
-        list.setLayoutManager(new LinearLayoutManager(requireContext()));
+        binding.entriesList.setLayoutManager(new LinearLayoutManager(requireContext()));
         adapter = new EntryAdapter(entry ->
                 EntryEditorActivity.open(requireContext(), entry.getId(), null));
-        list.setAdapter(adapter);
+        binding.entriesList.setAdapter(adapter);
 
-        FloatingActionButton fab = view.findViewById(R.id.fab_new_entry);
-        fab.setOnClickListener(v ->
+        binding.fabNewEntry.setOnClickListener(v ->
                 EntryEditorActivity.open(requireContext(), null, viewModel.notebookForNewEntry()));
 
         viewModel.entries().observe(getViewLifecycleOwner(), entries -> {
             adapter.submitList(entries);
-            emptyState.setVisibility((entries == null || entries.isEmpty()) ? View.VISIBLE : View.GONE);
+            binding.emptyState.setVisibility((entries == null || entries.isEmpty()) ? View.VISIBLE : View.GONE);
         });
 
         viewModel.selectedNotebookId().observe(getViewLifecycleOwner(), id -> updateFilterIcon());
         viewModel.selectedTagIds().observe(getViewLifecycleOwner(), ids -> updateFilterIcon());
 
         setupToolbarMenu();
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        binding = null;
     }
 
     private void setupToolbarMenu() {
@@ -113,8 +115,7 @@ public class JournalFragment extends Fragment {
         Drawable icon = filterMenuItem.getIcon();
         if (icon == null) return;
         Drawable wrapped = DrawableCompat.wrap(icon.mutate());
-        int color = ContextCompat.getColor(requireContext(),
-                active ? R.color.md_theme_primary : R.color.md_theme_onSurfaceVariant);
+        int color = ContextCompat.getColor(requireContext(), active ? R.color.md_theme_primary: R.color.md_theme_onSurfaceVariant);
         DrawableCompat.setTint(wrapped, color);
         filterMenuItem.setIcon(wrapped);
     }
