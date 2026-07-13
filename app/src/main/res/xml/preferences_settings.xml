@@ -1,7 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto">
+<PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <PreferenceCategory app:title="@string/settings_cat_lock">
+    <PreferenceCategory
+        app:title="@string/settings_cat_lock"
+        app:iconSpaceReserved="false">
 
         <ListPreference
             app:key="pref_lock_timeout"
@@ -9,67 +12,82 @@
             app:entries="@array/lock_timeout_entries"
             app:entryValues="@array/lock_timeout_values"
             app:persistent="false"
+            app:iconSpaceReserved="false"
             app:useSimpleSummaryProvider="true" />
 
         <SwitchPreferenceCompat
             app:key="pref_biometric"
             app:title="@string/settings_biometric"
             app:summary="@string/settings_biometric_summary"
+            app:widgetLayout="@layout/view_preference_switch"
+            app:iconSpaceReserved="false"
             app:persistent="false" />
 
         <Preference
             app:key="pref_lock_now"
+            app:iconSpaceReserved="false"
             app:title="@string/settings_lock_now"
             app:summary="@string/settings_lock_now_summary" />
     </PreferenceCategory>
 
-    <PreferenceCategory app:title="@string/settings_cat_security">
+    <PreferenceCategory
+        app:title="@string/settings_cat_security"
+        app:iconSpaceReserved="false">
 
         <Preference
             app:key="pref_change_passphrase"
+            app:iconSpaceReserved="false"
             app:title="@string/settings_change_passphrase" />
     </PreferenceCategory>
 
-    <PreferenceCategory app:title="@string/settings_cat_organization">
+    <PreferenceCategory
+        app:title="@string/settings_cat_organization"
+        app:iconSpaceReserved="false">
 
         <Preference
             app:key="pref_manage_tags"
+            app:iconSpaceReserved="false"
             app:title="@string/settings_manage_tags" />
     </PreferenceCategory>
 
-    <PreferenceCategory app:title="@string/settings_cat_reminders">
+    <PreferenceCategory
+        app:title="@string/settings_cat_reminders"
+        app:iconSpaceReserved="false">
 
         <SwitchPreferenceCompat
             app:key="pref_daily_reminder"
             app:title="@string/settings_daily_reminder"
             app:summary="@string/settings_daily_reminder_summary"
+            app:widgetLayout="@layout/view_preference_switch"
+            app:iconSpaceReserved="false"
             app:persistent="false" />
 
         <Preference
             app:key="pref_reminder_time"
+            app:iconSpaceReserved="false"
             app:title="@string/settings_reminder_time"
             app:persistent="false" />
     </PreferenceCategory>
 
-    <PreferenceCategory app:title="@string/settings_cat_data">
+    <PreferenceCategory
+        app:title="@string/settings_cat_data"
+        app:iconSpaceReserved="false">
 
         <Preference
             app:key="pref_backup_export"
+            app:iconSpaceReserved="false"
             app:title="@string/settings_backup_export"
             app:summary="@string/settings_backup_export_summary" />
     </PreferenceCategory>
 
-    <PreferenceCategory app:title="@string/settings_cat_about">
+    <PreferenceCategory
+        app:title="@string/settings_cat_about"
+        app:iconSpaceReserved="false">
 
         <Preference
             app:key="pref_version"
+            app:iconSpaceReserved="false"
             app:title="@string/settings_version"
-            app:selectable="false" />
-
-        <Preference
-            app:key="pref_offline"
-            app:title="@string/settings_offline"
-            app:summary="@string/settings_offline_summary"
             app:selectable="false" />
     </PreferenceCategory>
 </PreferenceScreen>

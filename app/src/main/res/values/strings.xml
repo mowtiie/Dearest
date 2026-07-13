@@ -81,8 +81,6 @@
     <string name="settings_backup_export_summary">Encrypted backup, or export as text, CSV, or JSON</string>
     <string name="settings_cat_about">About</string>
     <string name="settings_version">Version</string>
-    <string name="settings_offline">Offline by design</string>
-    <string name="settings_offline_summary">Dearest has no internet permission — your journal never leaves this device.</string>
 
     <!-- Change passphrase -->
     <string name="change_pass_title">Change passphrase</string>
