@@ -33,7 +33,7 @@
     <string name="unlock_action_create">Create journal</string>
     <string name="unlock_hint_passphrase">Passphrase</string>
     <string name="unlock_hint_confirm">Confirm passphrase</string>
-    <string name="unlock_locked_out">Too many attempts. Try again in %1$d s.</string>
+    <string name="unlock_locked_out">Too many attempts. Try again in %1$d seconds.</string>
     <string name="unlock_error_empty_passphrase">Please enter your passphrase.</string>
     <string name="unlock_error_empty_confirm">Please confirm your passphrase.</string>
     <string name="setup_explainer">Dearest has no account and no way to reset this passphrase. It is the only key to your journal — if you forget it, your entries cannot be recovered. Choose something memorable.</string>
@@ -60,16 +60,14 @@
 
     <!-- Placeholders -->
     <string name="placeholder_calendar">Calendar — coming soon</string>
-    <string name="placeholder_settings">Settings — coming soon</string>
 
     <!-- Settings -->
     <string name="coming_soon">Coming soon</string>
     <string name="settings_cat_lock">App lock</string>
     <string name="settings_lock_timeout">Auto-lock</string>
-    <string name="settings_biometric">Unlock with biometrics</string>
-    <string name="settings_biometric_pending">Available in a future update</string>
+    <string name="settings_biometric">Unlock with fingerprint or face</string>
     <string name="settings_biometric_summary">Unlock without typing your passphrase</string>
-    <string name="settings_biometric_unavailable">No biometrics enrolled on this device</string>
+    <string name="settings_biometric_unavailable">No fingerprint or face unlock set up on this device</string>
     <string name="settings_lock_now">Lock now</string>
     <string name="settings_lock_now_summary">Lock the app immediately</string>
     <string name="settings_cat_security">Security</string>
@@ -78,11 +76,9 @@
     <string name="settings_cat_organization">Organization</string>
     <string name="settings_manage_tags">Manage tags</string>
     <string name="settings_manage_tags_summary">Rename or delete existing tags</string>
-    <string name="settings_cat_notebooks">Notebooks</string>
-    <string name="settings_manage_notebooks">Manage notebooks</string>
     <string name="settings_cat_data">Data</string>
     <string name="settings_backup_export">Back up &amp; export</string>
-    <string name="settings_backup_export_summary">Encrypted backup, or export as text, CSV, or JSON</string>
+    <string name="settings_backup_export_summary">Create an encrypted backup, or export your entries as text, CSV, or JSON</string>
     <string name="settings_cat_about">About</string>
     <string name="settings_version">Version</string>
     <string name="settings_offline">Offline by design</string>
@@ -90,7 +86,7 @@
 
     <!-- Change passphrase -->
     <string name="change_pass_title">Change passphrase</string>
-    <string name="change_pass_explainer">Your entries are re-secured instantly — only the key is rewrapped, so the journal itself is never re-encrypted. There is still no way to recover a forgotten passphrase.</string>
+    <string name="change_pass_explainer">Your journal stays exactly as protected as it is now — only the key guarding it changes, instantly. As always, there\'s no way to recover a forgotten passphrase.</string>
     <string name="change_pass_current_hint">Current passphrase</string>
     <string name="change_pass_new_hint">New passphrase</string>
     <string name="change_pass_confirm_hint">Confirm new passphrase</string>
@@ -107,7 +103,7 @@
     <string name="reminder_channel_description">A daily nudge to write in your journal</string>
     <string name="reminder_notification_title">Time to write</string>
     <string name="reminder_notification_text">Take a moment to reflect on your day.</string>
-    <string name="reminder_permission_denied">Notifications are off for Dearest — enable them in system settings to use reminders.</string>
+    <string name="reminder_permission_denied">Notifications are turned off for Dearest. Turn them on in system settings if you\'d like reminders.</string>
     <string name="exact_alarm_prompt_title">Get reminders right on time?</string>
     <string name="exact_alarm_prompt_message">To help save battery, Android may deliver this reminder a little later than the time you picked. If you\'d rather it arrive right on time, you can grant exact alarm access — this is optional, and your reminder keeps working either way.</string>
     <string name="exact_alarm_prompt_grant">Grant access</string>
@@ -137,7 +133,7 @@
     <string name="delete_notebook_message">It\'s empty, so nothing will be lost.</string>
     <string name="delete_notebook_move_title">Where should its entries go?</string>
     <string name="delete_notebook_move_message">This notebook still has %1$d entries. Pick another notebook for them, and this one will be deleted right after.</string>
-    <string name="cannot_delete_last">You need at least one notebook.</string>
+    <string name="cannot_delete_last">You\'ll need to keep at least one notebook.</string>
     <string name="notebook_deleted">Notebook deleted</string>
     <string name="cd_drag_handle">Reorder</string>
     <string name="cd_delete_notebook">Delete notebook</string>
@@ -145,18 +141,18 @@
     <!-- Biometrics -->
     <string name="biometric_title">Unlock Dearest</string>
     <string name="biometric_subtitle">Confirm it\'s you</string>
-    <string name="biometric_button">Unlock with biometrics</string>
+    <string name="biometric_button">Unlock with fingerprint or face</string>
     <string name="biometric_use_passphrase">Use passphrase</string>
-    <string name="biometric_reset">Biometrics changed. Please use your passphrase.</string>
-    <string name="biometric_failed">Couldn\'t unlock with biometrics.</string>
-    <string name="biometric_enroll_failed">Couldn\'t enable biometric unlock.</string>
-    <string name="biometric_enabled">Biometric unlock enabled</string>
+    <string name="biometric_reset">Your fingerprint or face data changed — please use your passphrase this time.</string>
+    <string name="biometric_failed">Couldn\'t unlock with fingerprint or face.</string>
+    <string name="biometric_enroll_failed">Couldn\'t turn on fingerprint or face unlock.</string>
+    <string name="biometric_enabled">Fingerprint or face unlock turned on</string>
 
     <!-- Backup / export -->
     <string name="backup_import_failed">Wrong password, or the file isn\'t a valid backup.</string>
     <string name="backup_title">Backup &amp; export</string>
-    <string name="backup_section_backup">Backup</string>
-    <string name="backup_section_export">Export</string>
+    <string name="backup_section_backup">Back up your journal</string>
+    <string name="backup_section_export">Export your entries</string>
     <string name="backup_create">Create encrypted backup</string>
     <string name="backup_create_summary">Recommended — protected with a password you choose. Store it anywhere, even a synced cloud folder; it stays encrypted.</string>
     <string name="backup_restore">Restore from backup</string>
