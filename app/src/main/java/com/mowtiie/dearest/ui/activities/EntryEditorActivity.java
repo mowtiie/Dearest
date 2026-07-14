@@ -127,6 +127,7 @@ public class EntryEditorActivity extends DearestActivity {
                 Chip chip = (Chip) getLayoutInflater().inflate(R.layout.item_tag_chip, binding.tagChipGroup, false);
                 chip.setText(name);
                 chip.setChipIconResource(R.drawable.ic_tag);
+                chip.setChipIconTintResource(R.color.md_theme_onSurfaceVariant);
                 chip.setChipIconVisible(true);
                 chip.setCloseIconVisible(true);
                 chip.setOnCloseIconClickListener(v -> viewModel.removeTag(name));
@@ -140,6 +141,7 @@ public class EntryEditorActivity extends DearestActivity {
         Chip chip = (Chip) getLayoutInflater().inflate(R.layout.item_tag_chip, binding.tagChipGroup, false);
         chip.setText(R.string.editor_add_tag);
         chip.setChipIconResource(R.drawable.ic_add);
+        chip.setChipIconTintResource(R.color.md_theme_onSurfaceVariant);
         chip.setChipIconVisible(true);
         chip.setCloseIconVisible(false);
         chip.setOnClickListener(v -> openTagPicker());
