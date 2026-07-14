@@ -62,11 +62,11 @@ public class EntryEditorActivity extends DearestActivity {
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         }
-
         InsetsUtil.applyToolbarAndBottom(binding.editorRoot, binding.editorAppBar);
 
         viewModel = new ViewModelProvider(this).get(EntryEditorViewModel.class);
         viewModel.init(getIntent().getStringExtra(EXTRA_ENTRY_ID), getIntent().getStringExtra(EXTRA_NOTEBOOK_ID));
+        setTitle(viewModel.isNew() ? R.string.editor_title_new : R.string.editor_title_edit);
 
         shouldPopulate = (savedInstanceState == null);
         viewModel.entry().observe(this, entry -> {
@@ -115,9 +115,7 @@ public class EntryEditorActivity extends DearestActivity {
 
         boolean hasDescription = currentDescription != null && !currentDescription.trim().isEmpty();
         binding.notebookDescriptionHint.setVisibility(hasDescription ? View.VISIBLE : View.GONE);
-        if (hasDescription) {
-            binding.notebookDescriptionHint.setText(currentDescription);
-        }
+        if (hasDescription) binding.notebookDescriptionHint.setText(currentDescription);
     }
 
     private void renderTagChips(@Nullable List<String> tagNames) {

@@ -57,6 +57,8 @@
     <string name="editor_delete_confirm_title">Delete this entry?</string>
     <string name="editor_delete_confirm_message">This entry will be gone for good — there\'s no way to bring it back.</string>
     <string name="editor_notebook_hint">Notebook</string>
+    <string name="editor_title_new">New entry</string>
+    <string name="editor_title_edit">Edit entry</string>
 
     <!-- Placeholders -->
     <string name="placeholder_calendar">Calendar — coming soon</string>
