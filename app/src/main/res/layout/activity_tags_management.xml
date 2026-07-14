@@ -15,7 +15,6 @@
             android:id="@+id/tags_toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
-            android:background="?attr/colorSurface"
             app:titleTextColor="?attr/colorOnSurface"
             app:title="@string/manage_tags_title" />
     </com.google.android.material.appbar.AppBarLayout>
@@ -36,8 +35,7 @@
             android:id="@+id/tags_empty"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
-            android:layout_marginTop="32dp"
+            android:layout_gravity="center"
             android:gravity="center"
             android:padding="24dp"
             android:text="@string/tags_empty"
