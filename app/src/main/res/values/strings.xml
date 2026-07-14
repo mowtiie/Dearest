@@ -55,7 +55,7 @@
     <string name="editor_body_hint">Write your thoughts…</string>
     <string name="editor_delete">Delete</string>
     <string name="editor_delete_confirm_title">Delete this entry?</string>
-    <string name="editor_delete_confirm_message">This can\'t be undone.</string>
+    <string name="editor_delete_confirm_message">This entry will be gone for good — there\'s no way to bring it back.</string>
     <string name="editor_notebook_hint">Notebook</string>
 
     <!-- Placeholders -->
@@ -109,13 +109,13 @@
     <string name="reminder_notification_text">Take a moment to reflect on your day.</string>
     <string name="reminder_permission_denied">Notifications are off for Dearest — enable them in system settings to use reminders.</string>
     <string name="exact_alarm_prompt_title">Get reminders right on time?</string>
-    <string name="exact_alarm_prompt_message">By default, Android may deliver this reminder a bit late to save battery. Granting exact alarm access lets Dearest notify you at the exact time you chose — this is optional, and the reminder works either way.</string>
+    <string name="exact_alarm_prompt_message">To help save battery, Android may deliver this reminder a little later than the time you picked. If you\'d rather it arrive right on time, you can grant exact alarm access — this is optional, and your reminder keeps working either way.</string>
     <string name="exact_alarm_prompt_grant">Grant access</string>
     <string name="exact_alarm_prompt_not_now">Not now</string>
 
     <!-- Crash reporting -->
     <string name="dialog_title_crash">Dearest ran into a problem</string>
-    <string name="dialog_message_crash">The app closed unexpectedly last time. A technical report was saved on this device — nothing from your journal is included. You can copy or export it to share with the developer, or dismiss it.</string>
+    <string name="dialog_message_crash">It looks like Dearest closed unexpectedly last time. We saved a technical report on this device to help figure out what happened — nothing from your journal is in it. Feel free to copy or export it to share with the developer, or just dismiss it.</string>
     <string name="crash_action_copy">Copy to clipboard</string>
     <string name="crash_action_export">Export to file</string>
     <string name="crash_action_dismiss">Dismiss</string>
@@ -134,9 +134,9 @@
     <string name="notebook_description_hint">Description (optional)</string>
     <string name="action_save">Save</string>
     <string name="delete_notebook_title">Delete notebook?</string>
-    <string name="delete_notebook_message">This notebook has no entries.</string>
-    <string name="delete_notebook_move_title">Move entries first</string>
-    <string name="delete_notebook_move_message">This notebook has %1$d entries. Choose where to move them, then it will be deleted.</string>
+    <string name="delete_notebook_message">It\'s empty, so nothing will be lost.</string>
+    <string name="delete_notebook_move_title">Where should its entries go?</string>
+    <string name="delete_notebook_move_message">This notebook still has %1$d entries. Pick another notebook for them, and this one will be deleted right after.</string>
     <string name="cannot_delete_last">You need at least one notebook.</string>
     <string name="notebook_deleted">Notebook deleted</string>
     <string name="cd_drag_handle">Reorder</string>
@@ -163,15 +163,15 @@
     <string name="backup_export_plain">Export as a plain file</string>
     <string name="backup_export_plain_summary">Unencrypted — readable by any app or person who opens it. Choose text, CSV, or JSON.</string>
     <string name="backup_format_text">Plain text</string>
-    <string name="backup_choose_format">Choose a format</string>
-    <string name="backup_password_title">Choose a backup password</string>
+    <string name="backup_choose_format">Choose an export format</string>
+    <string name="backup_password_title">Choose a password for this backup</string>
     <string name="backup_password_hint">Backup password</string>
     <string name="backup_password_confirm_hint">Confirm password</string>
-    <string name="backup_password_explainer">You\'ll need this password to restore. It\'s separate from your app passphrase and, like it, can\'t be recovered.</string>
+    <string name="backup_password_explainer">You\'ll need this exact password later to restore the backup. It\'s separate from your journal passphrase, and just like it, there\'s no way to recover it if you forget — so keep it somewhere safe.</string>
     <string name="backup_password_mismatch">Passwords don\'t match.</string>
     <string name="backup_password_short">Use at least %1$d characters.</string>
     <string name="backup_export_warning_title">Export without encryption?</string>
-    <string name="backup_export_warning_message">This file will be readable by any app or person who opens it — it is not protected. Only continue if you understand the risk.</string>
+    <string name="backup_export_warning_message">Anyone who opens this file will be able to read everything in it — there\'s no password or protection on it. Make sure that\'s really what you want before continuing.</string>
     <string name="backup_export_warning_continue">Continue</string>
     <string name="backup_saved">Backup saved</string>
     <string name="backup_restored">Backup restored</string>
@@ -180,7 +180,7 @@
     <string name="import_password_hint">Backup password</string>
     <string name="import_password_required">Enter the backup password.</string>
     <string name="import_replace">Replace existing entries instead of merging</string>
-    <string name="import_explainer">Merging keeps your current entries and adds the backup\'s (newer versions win). Replace deletes everything first.</string>
+    <string name="import_explainer">Merging keeps everything you already have and adds in what\'s from the backup — if an entry exists in both, whichever was edited more recently wins. Replacing clears your current entries first, then restores only what\'s in the backup.</string>
     <string name="import_action">Restore</string>
 
     <!-- Calendar -->
@@ -202,6 +202,6 @@
     <string name="tag_picker_empty">No tags yet — tap + to create one</string>
     <string name="action_done">Done</string>
     <string name="delete_tag_title">Delete tag?</string>
-    <string name="delete_tag_message">\"%1$s\" will be removed from every entry it\'s on. Entries themselves are not affected.</string>
+    <string name="delete_tag_message">“%1$s” will be removed from every entry that has it — your entries themselves won\'t be touched.</string>
     <string name="cd_delete_tag">Delete tag</string>
 </resources>
