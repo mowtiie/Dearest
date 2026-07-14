@@ -16,6 +16,7 @@
             android:id="@+id/tag_picker_toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
+            app:titleTextColor="?attr/colorOnSurface"
             app:title="@string/tag_picker_title" />
     </com.google.android.material.appbar.AppBarLayout>
 

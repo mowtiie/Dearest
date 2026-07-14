@@ -14,8 +14,8 @@
         <com.google.android.material.appbar.MaterialToolbar
             android:id="@+id/editor_toolbar"
             android:layout_width="match_parent"
-            android:layout_height="?attr/actionBarSize"
-            android:background="?attr/colorSurface" />
+            app:titleTextColor="?attr/colorOnSurface"
+            android:layout_height="?attr/actionBarSize"/>
     </com.google.android.material.appbar.AppBarLayout>
 
     <ScrollView
