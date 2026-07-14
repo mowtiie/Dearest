@@ -6,8 +6,7 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
-
-import androidx.core.app.NotificationManagerCompat;
+import android.os.Build;
 
 import com.mowtiie.dearest.R;
 
@@ -32,6 +31,12 @@ public final class ReminderScheduler {
         }
     }
 
+    public static boolean canScheduleExact(Context context) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return true;
+        AlarmManager alarmManager = context.getSystemService(AlarmManager.class);
+        return alarmManager.canScheduleExactAlarms();
+    }
+
     public static void schedule(Context context, int hour, int minute) {
         Calendar next = Calendar.getInstance();
         next.set(Calendar.HOUR_OF_DAY, hour);
@@ -43,8 +48,11 @@ public final class ReminderScheduler {
         }
 
         AlarmManager alarmManager = context.getSystemService(AlarmManager.class);
-        alarmManager.setAndAllowWhileIdle(
-                AlarmManager.RTC_WAKEUP, next.getTimeInMillis(), pendingIntent(context));
+        if (canScheduleExact(context)) {
+            alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, next.getTimeInMillis(), pendingIntent(context));
+        } else {
+            alarmManager.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, next.getTimeInMillis(), pendingIntent(context));
+        }
     }
 
     public static void cancel(Context context) {

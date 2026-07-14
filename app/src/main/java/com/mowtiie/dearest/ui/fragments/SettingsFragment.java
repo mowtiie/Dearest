@@ -3,8 +3,10 @@ package com.mowtiie.dearest.ui.fragments;
 import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.text.format.DateFormat;
 import android.util.Log;
 import android.widget.Toast;
@@ -28,6 +30,7 @@ import com.mowtiie.dearest.security.BiometricGate;
 import com.mowtiie.dearest.ui.activities.BackupActivity;
 import com.mowtiie.dearest.ui.activities.ChangePassphraseActivity;
 import com.mowtiie.dearest.ui.activities.TagsManagementActivity;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.timepicker.MaterialTimePicker;
 import com.google.android.material.timepicker.TimeFormat;
 
@@ -68,6 +71,14 @@ public class SettingsFragment extends PreferenceFragmentCompat {
         wireBackupExport();
         wireDailyReminder();
         wireVersion();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (reminderPrefs != null && reminderPrefs.isEnabled()) {
+            ReminderScheduler.schedule(requireContext(), reminderPrefs.getHour(), reminderPrefs.getMinute());
+        }
     }
 
     private void wireLockTimeout(DearestApp app) {
@@ -184,6 +195,7 @@ public class SettingsFragment extends PreferenceFragmentCompat {
         }
     }
 
+
     private void wireDailyReminder() {
         SwitchPreferenceCompat toggle = findPreference("pref_daily_reminder");
         Preference timePref = findPreference("pref_reminder_time");
@@ -204,6 +216,7 @@ public class SettingsFragment extends PreferenceFragmentCompat {
                 return false;
             } else {
                 reminderPrefs.setEnabled(false);
+                reminderPrefs.setPromptedExactAlarm(false);
                 ReminderScheduler.cancel(requireContext());
                 timePref.setEnabled(false);
                 return true;
@@ -228,6 +241,26 @@ public class SettingsFragment extends PreferenceFragmentCompat {
         if (toggle != null) toggle.setChecked(true);
         Preference timePref = findPreference("pref_reminder_time");
         if (timePref != null) timePref.setEnabled(true);
+
+        maybePromptForExactAlarm();
+    }
+
+    private void maybePromptForExactAlarm() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return;
+        if (ReminderScheduler.canScheduleExact(requireContext())) return;
+        if (reminderPrefs.hasPromptedExactAlarm()) return;
+
+        reminderPrefs.setPromptedExactAlarm(true);
+        new MaterialAlertDialogBuilder(requireContext())
+                .setTitle(R.string.exact_alarm_prompt_title)
+                .setMessage(R.string.exact_alarm_prompt_message)
+                .setNegativeButton(R.string.exact_alarm_prompt_not_now, null)
+                .setPositiveButton(R.string.exact_alarm_prompt_grant, (d, w) -> {
+                    Intent intent = new Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM,
+                            Uri.parse("package:" + requireContext().getPackageName()));
+                    startActivity(intent);
+                })
+                .show();
     }
 
     private void showTimePicker(Preference timePref) {
