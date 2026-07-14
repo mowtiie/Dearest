@@ -184,6 +184,13 @@
     <string name="cd_prev_month">Previous month</string>
     <string name="cd_next_month">Next month</string>
 
+    <!-- Empty-state kaomoji — decorative, not translatable content -->
+    <string name="empty_kaomoji_journal" translatable="false">(｡•̀ᴗ•́)و</string>
+    <string name="empty_kaomoji_notebooks" translatable="false">(・_・;)</string>
+    <string name="empty_kaomoji_tags" translatable="false">(＾▽＾)</string>
+    <string name="empty_kaomoji_tag_picker" translatable="false">( ´ ▽ ｀ )ﾉ</string>
+    <string name="empty_kaomoji_calendar_day" translatable="false">(´・ω・｀)</string>
+
     <!-- Tags -->
     <string name="editor_add_tag">Add tag</string>
     <string name="editor_tags_label">Tags</string>
