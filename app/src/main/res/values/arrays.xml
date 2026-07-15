@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string-array name="lock_timeout_entries">
         <item>Immediately</item>
@@ -5,11 +6,32 @@
         <item>After 5 minutes</item>
         <item>After 15 minutes</item>
     </string-array>
-
     <string-array name="lock_timeout_values">
         <item>0</item>
         <item>60000</item>
         <item>300000</item>
         <item>900000</item>
+    </string-array>
+
+    <string-array name="theme_entries">
+        <item>System default</item>
+        <item>Light</item>
+        <item>Dark</item>
+    </string-array>
+    <string-array name="theme_values">
+        <item>system</item>
+        <item>light</item>
+        <item>dark</item>
+    </string-array>
+
+    <string-array name="contrast_entries">
+        <item>Standard</item>
+        <item>Medium</item>
+        <item>High</item>
+    </string-array>
+    <string-array name="contrast_values">
+        <item>standard</item>
+        <item>medium</item>
+        <item>high</item>
     </string-array>
 </resources>

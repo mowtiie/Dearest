@@ -7,6 +7,7 @@ import android.os.Handler;
 import android.os.Looper;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatDelegate;
 import androidx.lifecycle.DefaultLifecycleObserver;
 import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.LifecycleOwner;
@@ -18,9 +19,13 @@ import com.mowtiie.dearest.backup.BackupManager;
 import com.mowtiie.dearest.crash.CrashHandler;
 import com.mowtiie.dearest.data.db.DearestDatabase;
 import com.mowtiie.dearest.data.repository.DearestRepository;
+import com.mowtiie.dearest.display.DisplayPrefs;
+import com.mowtiie.dearest.display.PrivacyScreenGuard;
 import com.mowtiie.dearest.notification.ReminderScheduler;
 import com.mowtiie.dearest.security.BiometricGate;
 import com.mowtiie.dearest.security.KeyManager;
+import com.google.android.material.color.DynamicColors;
+import com.google.android.material.color.DynamicColorsOptions;
 
 public class DearestApp extends Application implements DefaultLifecycleObserver {
 
@@ -39,6 +44,7 @@ public class DearestApp extends Application implements DefaultLifecycleObserver 
     private DearestRepository repository;
     private BiometricGate biometricGate;
     private BackupManager backupManager;
+    private DisplayPrefs displayPrefs;
     private SharedPreferences settings;
 
     @Override
@@ -47,8 +53,10 @@ public class DearestApp extends Application implements DefaultLifecycleObserver 
 
         CrashHandler.install(this);
 
-        DearestDatabase.loadLibrary();
+        displayPrefs = new DisplayPrefs(this);
 
+        applyThemeMode(displayPrefs.getThemeMode());
+        DearestDatabase.loadLibrary();
         ReminderScheduler.ensureChannel(this);
 
         settings   = getSharedPreferences(PREFS, MODE_PRIVATE);
@@ -57,7 +65,24 @@ public class DearestApp extends Application implements DefaultLifecycleObserver 
         biometricGate = new BiometricGate(this, keyManager);
         backupManager = new BackupManager(this, repository);
 
+        DynamicColors.applyToActivitiesIfAvailable(this,
+                new DynamicColorsOptions.Builder()
+                        .setPrecondition((activity, provider) -> displayPrefs.isDynamicColorEnabled())
+                        .build());
+
+        PrivacyScreenGuard.install(this, displayPrefs);
+
         ProcessLifecycleOwner.get().getLifecycle().addObserver(this);
+    }
+
+    private static void applyThemeMode(String mode) {
+        int nightMode;
+        switch (mode) {
+            case DisplayPrefs.THEME_LIGHT: nightMode = AppCompatDelegate.MODE_NIGHT_NO; break;
+            case DisplayPrefs.THEME_DARK:  nightMode = AppCompatDelegate.MODE_NIGHT_YES; break;
+            default:                       nightMode = AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM; break;
+        }
+        AppCompatDelegate.setDefaultNightMode(nightMode);
     }
 
     public static DearestApp from(Context context) {
@@ -78,6 +103,15 @@ public class DearestApp extends Application implements DefaultLifecycleObserver 
 
     public BackupManager backupManager() {
         return backupManager;
+    }
+
+    public DisplayPrefs displayPrefs() {
+        return displayPrefs;
+    }
+
+    public void setThemeMode(String mode) {
+        displayPrefs.setThemeMode(mode);
+        applyThemeMode(mode);
     }
 
     public LiveData<Boolean> lockState() {

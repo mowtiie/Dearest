@@ -18,18 +18,21 @@ import androidx.annotation.Nullable;
 import androidx.biometric.BiometricManager;
 import androidx.biometric.BiometricPrompt;
 import androidx.core.content.ContextCompat;
+import androidx.preference.ListPreference;
 import androidx.preference.Preference;
 import androidx.preference.PreferenceFragmentCompat;
 import androidx.preference.SwitchPreferenceCompat;
 
 import com.mowtiie.dearest.DearestApp;
 import com.mowtiie.dearest.R;
+import com.mowtiie.dearest.display.DisplayPrefs;
 import com.mowtiie.dearest.notification.ReminderPrefs;
 import com.mowtiie.dearest.notification.ReminderScheduler;
 import com.mowtiie.dearest.security.BiometricGate;
 import com.mowtiie.dearest.ui.activities.BackupActivity;
 import com.mowtiie.dearest.ui.activities.ChangePassphraseActivity;
 import com.mowtiie.dearest.ui.activities.TagsManagementActivity;
+import com.google.android.material.color.DynamicColors;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.timepicker.MaterialTimePicker;
 import com.google.android.material.timepicker.TimeFormat;
@@ -43,6 +46,7 @@ public class SettingsFragment extends PreferenceFragmentCompat {
     private static final String TAG = "SettingsFragment";
 
     private ReminderPrefs reminderPrefs;
+    private DisplayPrefs displayPrefs;
 
     private final ActivityResultLauncher<String> notificationPermissionLauncher =
             registerForActivityResult(new ActivityResultContracts.RequestPermission(), granted -> {
@@ -62,10 +66,13 @@ public class SettingsFragment extends PreferenceFragmentCompat {
 
         DearestApp app = DearestApp.from(requireContext());
         reminderPrefs = new ReminderPrefs(requireContext());
+        displayPrefs = app.displayPrefs();
 
+        wireAppearance(app);
         wireLockTimeout(app);
         wireBiometric(app);
         wireLockNow(app);
+        wirePrivacyScreen();
         wireChangePassphrase();
         wireManageTags();
         wireBackupExport();
@@ -79,6 +86,50 @@ public class SettingsFragment extends PreferenceFragmentCompat {
         if (reminderPrefs != null && reminderPrefs.isEnabled()) {
             ReminderScheduler.schedule(requireContext(), reminderPrefs.getHour(), reminderPrefs.getMinute());
         }
+    }
+
+    private void wireAppearance(DearestApp app) {
+        ListPreference theme = findPreference("pref_theme");
+        if (theme != null) {
+            theme.setValue(displayPrefs.getThemeMode());
+            theme.setOnPreferenceChangeListener((pref, newValue) -> {
+                app.setThemeMode((String) newValue);
+                return true;
+            });
+        }
+
+        ListPreference contrast = findPreference("pref_contrast");
+        if (contrast != null) {
+            contrast.setValue(displayPrefs.getContrast());
+            contrast.setOnPreferenceChangeListener((pref, newValue) -> {
+                displayPrefs.setContrast((String) newValue);
+                requireActivity().recreate();
+                return true;
+            });
+        }
+
+        SwitchPreferenceCompat dynamicColor = findPreference("pref_dynamic_color");
+        if (dynamicColor != null) {
+            boolean available = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && DynamicColors.isDynamicColorAvailable();
+            dynamicColor.setEnabled(available);
+            dynamicColor.setChecked(displayPrefs.isDynamicColorEnabled());
+            if (!available) dynamicColor.setSummary(R.string.settings_dynamic_color_unavailable);
+            dynamicColor.setOnPreferenceChangeListener((pref, newValue) -> {
+                displayPrefs.setDynamicColorEnabled((Boolean) newValue);
+                requireActivity().recreate();
+                return true;
+            });
+        }
+    }
+
+    private void wirePrivacyScreen() {
+        SwitchPreferenceCompat privacyScreen = findPreference("pref_privacy_screen");
+        if (privacyScreen == null) return;
+        privacyScreen.setChecked(displayPrefs.isPrivacyScreenEnabled());
+        privacyScreen.setOnPreferenceChangeListener((pref, newValue) -> {
+            displayPrefs.setPrivacyScreenEnabled((Boolean) newValue);
+            return true;
+        });
     }
 
     private void wireLockTimeout(DearestApp app) {
@@ -194,7 +245,6 @@ public class SettingsFragment extends PreferenceFragmentCompat {
             });
         }
     }
-
 
     private void wireDailyReminder() {
         SwitchPreferenceCompat toggle = findPreference("pref_daily_reminder");

@@ -65,6 +65,13 @@
 
     <!-- Settings -->
     <string name="coming_soon">Coming soon</string>
+    <string name="settings_cat_appearance">Appearance</string>
+    <string name="settings_theme">Theme</string>
+    <string name="settings_contrast">Contrast</string>
+    <string name="settings_contrast_summary">Increase contrast between text and backgrounds</string>
+    <string name="settings_dynamic_color">Dynamic color</string>
+    <string name="settings_dynamic_color_summary">Match colors to your device\'s wallpaper</string>
+    <string name="settings_dynamic_color_unavailable">Not available on this device</string>
     <string name="settings_cat_lock">App lock</string>
     <string name="settings_lock_timeout">Auto-lock</string>
     <string name="settings_biometric">Unlock with fingerprint or face</string>
@@ -75,6 +82,8 @@
     <string name="settings_cat_security">Security</string>
     <string name="settings_change_passphrase">Change passphrase</string>
     <string name="settings_change_passphrase_summary">Update the passphrase that protects your journal</string>
+    <string name="settings_privacy_screen">Privacy screen</string>
+    <string name="settings_privacy_screen_summary">Cover your journal the instant you switch away, before the app-switcher animation plays</string>
     <string name="settings_cat_organization">Organization</string>
     <string name="settings_manage_tags">Manage tags</string>
     <string name="settings_manage_tags_summary">Rename or delete existing tags</string>
