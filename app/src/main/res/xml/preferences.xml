@@ -153,7 +153,6 @@
         <Preference
             app:key="pref_version"
             app:iconSpaceReserved="false"
-            app:title="@string/settings_version"
-            app:selectable="false" />
+            app:title="@string/settings_version"/>
     </PreferenceCategory>
 </PreferenceScreen>

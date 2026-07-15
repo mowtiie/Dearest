@@ -48,6 +48,7 @@ public class SettingsFragment extends PreferenceFragmentCompat {
 
     private ReminderPrefs reminderPrefs;
     private DisplayPrefs displayPrefs;
+    private int versionTapCount;
 
     private final ActivityResultLauncher<String> notificationPermissionLauncher =
             registerForActivityResult(new ActivityResultContracts.RequestPermission(), granted -> {
@@ -112,7 +113,8 @@ public class SettingsFragment extends PreferenceFragmentCompat {
 
         SwitchPreferenceCompat dynamicColor = findPreference("pref_dynamic_color");
         if (dynamicColor != null) {
-            boolean available = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && DynamicColors.isDynamicColorAvailable();
+            boolean available = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
+                    && DynamicColors.isDynamicColorAvailable();
             dynamicColor.setEnabled(available);
             dynamicColor.setChecked(displayPrefs.isDynamicColorEnabled());
             if (!available) dynamicColor.setSummary(R.string.settings_dynamic_color_unavailable);
@@ -345,6 +347,14 @@ public class SettingsFragment extends PreferenceFragmentCompat {
         Preference version = findPreference("pref_version");
         if (version != null) {
             version.setSummary(appVersion());
+            version.setOnPreferenceClickListener(p -> {
+                versionTapCount++;
+                if (versionTapCount >= 7) {
+                    versionTapCount = 0;
+                    Toast.makeText(requireContext(), R.string.app_easter_egg, Toast.LENGTH_LONG).show();
+                }
+                return true;
+            });
         }
     }
 

@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Dearest</string>
+    <string name="app_easter_egg">I guess congrats on finding this?</string>
 
     <!-- Bottom-nav / destination titles (also used as toolbar titles) -->
     <string name="title_journal">Journal</string>
