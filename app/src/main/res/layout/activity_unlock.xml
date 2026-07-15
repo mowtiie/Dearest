@@ -14,8 +14,8 @@
         android:padding="@dimen/screen_margin">
 
         <ImageView
-            android:layout_width="125dp"
-            android:layout_height="125dp"
+            android:layout_width="100dp"
+            android:layout_height="100dp"
             android:layout_gravity="center_horizontal"
             android:contentDescription="@null"
             android:src="@drawable/ic_lock"
