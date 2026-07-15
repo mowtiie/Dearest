@@ -13,22 +13,61 @@
         android:gravity="center_vertical"
         android:padding="@dimen/screen_margin">
 
+        <ImageView
+            android:layout_width="125dp"
+            android:layout_height="125dp"
+            android:layout_gravity="center_horizontal"
+            android:contentDescription="@null"
+            android:src="@drawable/ic_lock"
+            app:tint="?attr/colorPrimary" />
+
         <TextView
             android:id="@+id/heading"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:fontFamily="serif"
+            android:gravity="center"
             android:textAppearance="?attr/textAppearanceHeadlineMedium"
             android:text="@string/unlock_heading" />
 
-        <TextView
+        <com.google.android.material.card.MaterialCardView
             android:id="@+id/setup_explainer"
+            android:clickable="true"
+            android:focusable="true"
+            style="@style/Widget.Material3.CardView.Filled"
+            app:cardElevation="0dp"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="8dp"
+            app:cardBackgroundColor="?attr/colorTertiaryContainer"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/field_spacing"
-            android:textAppearance="?attr/textAppearanceBodyMedium"
-            android:textColor="?attr/colorOnSurfaceVariant"
-            android:visibility="gone"
-            android:text="@string/setup_explainer" />
+            android:visibility="gone">
+
+            <LinearLayout
+                android:padding="16dp"
+                android:gravity="center"
+                android:orientation="horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <ImageView
+                    android:src="@drawable/ic_lightbulb"
+                    android:scaleType="centerCrop"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="8dp"
+                    android:contentDescription="@null"
+                    app:tint="?attr/colorOnTertiaryContainer" />
+
+                <com.google.android.material.textview.MaterialTextView
+                    android:text="@string/setup_explainer"
+                    android:textColor="?attr/colorOnTertiaryContainer"
+                    android:textAppearance="?attr/textAppearanceTitleSmall"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"/>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
 
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/passphrase_layout"
