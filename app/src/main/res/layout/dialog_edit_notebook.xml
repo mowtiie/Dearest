@@ -34,7 +34,6 @@
             android:layout_height="wrap_content"
             android:importantForAutofill="no"
             android:inputType="textCapSentences|textMultiLine"
-            android:minLines="2"
             android:maxLines="4" />
     </com.google.android.material.textfield.TextInputLayout>
 </LinearLayout>
