@@ -45,7 +45,7 @@ public class DisplayPrefs {
     }
 
     public boolean isDynamicColorEnabled() {
-        return prefs.getBoolean(KEY_DYNAMIC_COLOR, true);
+        return prefs.getBoolean(KEY_DYNAMIC_COLOR, false);
     }
 
     public void setDynamicColorEnabled(boolean enabled) {
