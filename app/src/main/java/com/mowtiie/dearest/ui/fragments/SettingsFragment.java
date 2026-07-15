@@ -75,6 +75,7 @@ public class SettingsFragment extends PreferenceFragmentCompat {
         wireBiometric(app);
         wireLockNow(app);
         wirePrivacyScreen();
+        wireAllowScreenshots();
         wireChangePassphrase();
         wireManageTags();
         wireBackupExport();
@@ -113,8 +114,7 @@ public class SettingsFragment extends PreferenceFragmentCompat {
 
         SwitchPreferenceCompat dynamicColor = findPreference("pref_dynamic_color");
         if (dynamicColor != null) {
-            boolean available = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
-                    && DynamicColors.isDynamicColorAvailable();
+            boolean available = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && DynamicColors.isDynamicColorAvailable();
             dynamicColor.setEnabled(available);
             dynamicColor.setChecked(displayPrefs.isDynamicColorEnabled());
             if (!available) dynamicColor.setSummary(R.string.settings_dynamic_color_unavailable);
@@ -132,6 +132,17 @@ public class SettingsFragment extends PreferenceFragmentCompat {
         privacyScreen.setChecked(displayPrefs.isPrivacyScreenEnabled());
         privacyScreen.setOnPreferenceChangeListener((pref, newValue) -> {
             displayPrefs.setPrivacyScreenEnabled((Boolean) newValue);
+            return true;
+        });
+    }
+
+    private void wireAllowScreenshots() {
+        SwitchPreferenceCompat allowScreenshots = findPreference("pref_allow_screenshots");
+        if (allowScreenshots == null) return;
+        allowScreenshots.setChecked(displayPrefs.isScreenshotsAllowed());
+        allowScreenshots.setOnPreferenceChangeListener((pref, newValue) -> {
+            displayPrefs.setScreenshotsAllowed((Boolean) newValue);
+            requireActivity().recreate();
             return true;
         });
     }
@@ -342,6 +353,7 @@ public class SettingsFragment extends PreferenceFragmentCompat {
         cal.set(Calendar.MINUTE, reminderPrefs.getMinute());
         timePref.setSummary(DateFormat.getTimeFormat(requireContext()).format(cal.getTime()));
     }
+
 
     private void wireVersion() {
         Preference version = findPreference("pref_version");

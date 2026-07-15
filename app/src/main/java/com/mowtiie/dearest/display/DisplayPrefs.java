@@ -11,6 +11,7 @@ public class DisplayPrefs {
     private static final String KEY_CONTRAST = "contrast";
     private static final String KEY_DYNAMIC_COLOR = "dynamic_color";
     private static final String KEY_PRIVACY_SCREEN = "privacy_screen";
+    private static final String KEY_ALLOW_SCREENSHOTS = "allow_screenshots";
 
     public static final String THEME_SYSTEM = "system";
     public static final String THEME_LIGHT  = "light";
@@ -57,5 +58,13 @@ public class DisplayPrefs {
 
     public void setPrivacyScreenEnabled(boolean enabled) {
         prefs.edit().putBoolean(KEY_PRIVACY_SCREEN, enabled).apply();
+    }
+
+    public boolean isScreenshotsAllowed() {
+        return prefs.getBoolean(KEY_ALLOW_SCREENSHOTS, false);
+    }
+
+    public void setScreenshotsAllowed(boolean allowed) {
+        prefs.edit().putBoolean(KEY_ALLOW_SCREENSHOTS, allowed).apply();
     }
 }

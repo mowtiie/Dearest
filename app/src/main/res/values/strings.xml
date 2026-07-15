@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Dearest</string>
-    <string name="app_easter_egg">I guess c finding this?</string>
+    <string name="app_easter_egg">I guess congrats finding this?</string>
 
     <!-- Bottom-nav / destination titles (also used as toolbar titles) -->
     <string name="title_journal">Journal</string>
@@ -86,6 +86,8 @@
     <string name="settings_change_passphrase_summary">Update the passphrase that protects your journal</string>
     <string name="settings_privacy_screen">Privacy screen</string>
     <string name="settings_privacy_screen_summary">Cover your journal the instant you switch away, before the app-switcher animation plays</string>
+    <string name="settings_allow_screenshots">Allow screenshots</string>
+    <string name="settings_allow_screenshots_summary">Off by default. Turning this on also shows your journal in the recent-apps preview — only enable it if you understand the risk.</string>
     <string name="settings_cat_organization">Organization</string>
     <string name="settings_manage_tags">Manage tags</string>
     <string name="settings_manage_tags_summary">Rename or delete existing tags</string>
