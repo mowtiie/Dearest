@@ -65,7 +65,8 @@ public class EntryEditorActivity extends DearestActivity {
         InsetsUtil.applyToolbarAndBottom(binding.editorRoot, binding.editorAppBar);
 
         viewModel = new ViewModelProvider(this).get(EntryEditorViewModel.class);
-        viewModel.init(getIntent().getStringExtra(EXTRA_ENTRY_ID), getIntent().getStringExtra(EXTRA_NOTEBOOK_ID));
+        viewModel.init(getIntent().getStringExtra(EXTRA_ENTRY_ID),
+                getIntent().getStringExtra(EXTRA_NOTEBOOK_ID));
         setTitle(viewModel.isNew() ? R.string.editor_title_new : R.string.editor_title_edit);
 
         shouldPopulate = (savedInstanceState == null);
@@ -122,10 +123,10 @@ public class EntryEditorActivity extends DearestActivity {
         binding.tagChipGroup.removeAllViews();
         if (tagNames != null) {
             for (String name : tagNames) {
-                Chip chip = (Chip) getLayoutInflater().inflate(R.layout.item_tag_chip, binding.tagChipGroup, false);
+                Chip chip = (Chip) getLayoutInflater()
+                        .inflate(R.layout.item_tag_chip, binding.tagChipGroup, false);
                 chip.setText(name);
                 chip.setChipIconResource(R.drawable.ic_tag);
-                chip.setChipIconTintResource(R.color.md_theme_onSurfaceVariant);
                 chip.setChipIconVisible(true);
                 chip.setCloseIconVisible(true);
                 chip.setOnCloseIconClickListener(v -> viewModel.removeTag(name));
@@ -139,7 +140,6 @@ public class EntryEditorActivity extends DearestActivity {
         Chip chip = (Chip) getLayoutInflater().inflate(R.layout.item_tag_chip, binding.tagChipGroup, false);
         chip.setText(R.string.editor_add_tag);
         chip.setChipIconResource(R.drawable.ic_add);
-        chip.setChipIconTintResource(R.color.md_theme_onSurfaceVariant);
         chip.setChipIconVisible(true);
         chip.setCloseIconVisible(false);
         chip.setOnClickListener(v -> openTagPicker());
@@ -148,7 +148,8 @@ public class EntryEditorActivity extends DearestActivity {
 
     private void openTagPicker() {
         List<String> current = viewModel.tagNames().getValue();
-        Intent intent = TagPickerActivity.createIntent(this, current != null ? current : Collections.emptyList());
+        Intent intent = TagPickerActivity.createIntent(this,
+                current != null ? current : Collections.emptyList());
         tagPickerLauncher.launch(intent);
     }
 
@@ -164,8 +165,11 @@ public class EntryEditorActivity extends DearestActivity {
 
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
+        boolean existingEntry = !viewModel.isNew();
+        MenuItem share = menu.findItem(R.id.action_share);
+        if (share != null) share.setVisible(existingEntry);
         MenuItem delete = menu.findItem(R.id.action_delete);
-        if (delete != null) delete.setVisible(!viewModel.isNew());
+        if (delete != null) delete.setVisible(existingEntry);
         return super.onPrepareOptionsMenu(menu);
     }
 
@@ -176,11 +180,30 @@ public class EntryEditorActivity extends DearestActivity {
             saveAndFinish();
             return true;
         }
+        if (id == R.id.action_share) {
+            shareEntry();
+            return true;
+        }
         if (id == R.id.action_delete) {
             confirmDelete();
             return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    private void shareEntry() {
+        String title = binding.editorTitle.getText().toString().trim();
+        String body = binding.editorBody.getText().toString().trim();
+
+        StringBuilder text = new StringBuilder();
+        if (!title.isEmpty()) text.append(title).append("\n\n");
+        text.append(body);
+
+        Intent shareIntent = new Intent(Intent.ACTION_SEND);
+        shareIntent.setType("text/plain");
+        if (!title.isEmpty()) shareIntent.putExtra(Intent.EXTRA_SUBJECT, title);
+        shareIntent.putExtra(Intent.EXTRA_TEXT, text.toString());
+        startActivity(Intent.createChooser(shareIntent, getString(R.string.editor_share)));
     }
 
     private void confirmDelete() {

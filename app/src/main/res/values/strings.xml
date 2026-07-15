@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Dearest</string>
-    <string name="app_easter_egg">I guess congrats on finding this?</string>
+    <string name="app_easter_egg">I guess c finding this?</string>
 
     <!-- Bottom-nav / destination titles (also used as toolbar titles) -->
     <string name="title_journal">Journal</string>
@@ -52,6 +52,7 @@
     <string name="search_no_results">No matching entries</string>
 
     <!-- Entry editor -->
+    <string name="editor_share">Share</string>
     <string name="editor_title_hint">Title</string>
     <string name="editor_body_hint">Write your thoughts…</string>
     <string name="editor_delete">Delete</string>

@@ -16,7 +16,8 @@
         android:label="@string/app_name"
         android:roundIcon="${appRoundIcon}"
         android:supportsRtl="true"
-        android:theme="@style/Theme.Dearest">
+        android:theme="@style/Theme.Dearest"
+        tools:targetApi="33">
         <activity
             android:name=".ui.activities.TagPickerActivity"
             android:parentActivityName=".ui.activities.EntryEditorActivity"

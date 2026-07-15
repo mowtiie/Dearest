@@ -2,7 +2,6 @@ package com.mowtiie.dearest.display;
 
 import android.app.Activity;
 import android.app.Application;
-import android.content.Context;
 import android.os.Bundle;
 import android.view.View;
 import android.view.ViewGroup;
@@ -10,6 +9,9 @@ import android.widget.FrameLayout;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
+
+import com.mowtiie.dearest.R;
 
 import java.util.WeakHashMap;
 import java.util.Map;
@@ -48,7 +50,7 @@ public final class PrivacyScreenGuard {
         if (root == null) return;
 
         View cover = new View(activity);
-        cover.setBackgroundColor(resolveSurfaceColor(activity));
+        cover.setBackgroundColor(ContextCompat.getColor(activity, R.color.md_theme_surface));
         root.addView(cover, new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
         overlays.put(activity, cover);
     }
@@ -58,11 +60,5 @@ public final class PrivacyScreenGuard {
         if (cover != null && cover.getParent() != null) {
             ((ViewGroup) cover.getParent()).removeView(cover);
         }
-    }
-
-    private static int resolveSurfaceColor(Context context) {
-        android.util.TypedValue value = new android.util.TypedValue();
-        context.getTheme().resolveAttribute(com.google.android.material.R.attr.colorSurface, value, true);
-        return value.data;
     }
 }
