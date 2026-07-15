@@ -3,18 +3,18 @@
 
     <item
         android:id="@+id/journalFragment"
-        android:icon="@drawable/ic_journal_outlined"
+        android:icon="@drawable/ic_journal_selector"
         android:title="@string/title_journal" />
     <item
         android:id="@+id/notebooksFragment"
-        android:icon="@drawable/ic_notebook_outlined"
+        android:icon="@drawable/ic_notebook_selector"
         android:title="@string/title_notebooks" />
     <item
         android:id="@+id/calendarFragment"
-        android:icon="@drawable/ic_calendar_outlined"
+        android:icon="@drawable/ic_calendar_selector"
         android:title="@string/title_calendar" />
     <item
         android:id="@+id/settingsFragment"
-        android:icon="@drawable/ic_settings_outlined"
+        android:icon="@drawable/ic_settings_selector"
         android:title="@string/title_settings" />
 </menu>
