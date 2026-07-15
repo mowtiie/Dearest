@@ -18,6 +18,7 @@ import com.mowtiie.dearest.databinding.ActivityBackupBinding;
 import com.mowtiie.dearest.databinding.DialogBackupPasswordBinding;
 import com.mowtiie.dearest.databinding.DialogImportBinding;
 import com.mowtiie.dearest.ui.InsetsUtil;
+import com.mowtiie.dearest.ui.LoadingDialog;
 import com.mowtiie.dearest.ui.viewmodel.UnlockViewModel;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
@@ -28,6 +29,7 @@ public class BackupActivity extends DearestActivity {
 
     private ActivityBackupBinding binding;
     private BackupManager backupManager;
+    private LoadingDialog loadingDialog;
     private char[] pendingBackupPassword;
     private Uri pendingImportUri;
 
@@ -69,6 +71,7 @@ public class BackupActivity extends DearestActivity {
         InsetsUtil.applyToolbarAndBottom(binding.backupRoot, binding.backupAppBar);
 
         backupManager = DearestApp.from(this).backupManager();
+        loadingDialog = new LoadingDialog(this);
 
         binding.btnCreateBackup.setOnClickListener(v -> promptBackupPassword());
         binding.btnRestore.setOnClickListener(v -> openBackup.launch(new String[]{"*/*"}));
@@ -119,8 +122,11 @@ public class BackupActivity extends DearestActivity {
             wipe(password);
             return;
         }
-        backupManager.exportEncrypted(uri, password, (ok, msg) ->
-                toast(ok ? getString(R.string.backup_saved) : orError(msg)));
+        loadingDialog.show();
+        backupManager.exportEncrypted(uri, password, (ok, msg) -> {
+            loadingDialog.dismiss();
+            toast(ok ? getString(R.string.backup_saved) : orError(msg));
+        });
     }
 
     private void warnThenExportPlain() {
@@ -148,8 +154,11 @@ public class BackupActivity extends DearestActivity {
 
     private void onPlainTarget(@Nullable Uri uri, Format format) {
         if (uri == null) return;
-        backupManager.exportPlain(uri, format, (ok, msg) ->
-                toast(ok ? getString(R.string.export_saved) : orError(msg)));
+        loadingDialog.show();
+        backupManager.exportPlain(uri, format, (ok, msg) -> {
+            loadingDialog.dismiss();
+            toast(ok ? getString(R.string.export_saved) : orError(msg));
+        });
     }
 
     private void onImportSource(@Nullable Uri uri) {
@@ -179,8 +188,11 @@ public class BackupActivity extends DearestActivity {
             Uri source = pendingImportUri;
             pendingImportUri = null;
             dialog.dismiss();
-            backupManager.importEncrypted(source, p, replaceAll, (ok, msg) ->
-                    toast(ok ? getString(R.string.backup_restored) : orError(msg)));
+            loadingDialog.show();
+            backupManager.importEncrypted(source, p, replaceAll, (ok, msg) -> {
+                loadingDialog.dismiss();
+                toast(ok ? getString(R.string.backup_restored) : orError(msg));
+            });
         }));
 
         dialog.show();
@@ -190,6 +202,12 @@ public class BackupActivity extends DearestActivity {
     public boolean onSupportNavigateUp() {
         finish();
         return true;
+    }
+
+    @Override
+    protected void onDestroy() {
+        loadingDialog.dismiss();
+        super.onDestroy();
     }
 
     private String fileName(String prefix, String extension) {
