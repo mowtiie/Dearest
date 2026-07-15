@@ -92,8 +92,17 @@
     <string name="settings_backup_export_summary">Create an encrypted backup, or export your entries as text, CSV, or JSON</string>
     <string name="settings_cat_about">About</string>
     <string name="settings_version">Version</string>
-    <string name="settings_offline">Offline by design</string>
-    <string name="settings_offline_summary">Dearest has no internet permission — your journal never leaves this device.</string>
+    <string name="settings_license">License</string>
+    <string name="settings_license_summary">GNU General Public License v3.0</string>
+    <string name="settings_source_code">Source Code</string>
+    <string name="settings_source_code_summary">View the project on GitHub</string>
+    <string name="settings_support">Support</string>
+    <string name="settings_support_summary">If you enjoy using Dearest, you can support its development</string>
+    <string name="settings_author">Author</string>
+    <string name="settings_author_summary">mowtiie</string>
+    <string name="action_close">Close</string>
+    <string name="license_read_error">Couldn\'t load the license file.</string>
+    <string name="link_open_failed">Couldn\'t open the link.</string>
 
     <!-- Change passphrase -->
     <string name="change_pass_title">Change passphrase</string>

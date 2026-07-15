@@ -1,6 +1,7 @@
 package com.mowtiie.dearest.ui.fragments;
 
 import android.Manifest;
+import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
@@ -62,7 +63,7 @@ public class SettingsFragment extends PreferenceFragmentCompat {
 
     @Override
     public void onCreatePreferences(@Nullable Bundle savedInstanceState, @Nullable String rootKey) {
-        setPreferencesFromResource(R.xml.preferences_settings, rootKey);
+        setPreferencesFromResource(R.xml.preferences, rootKey);
 
         DearestApp app = DearestApp.from(requireContext());
         reminderPrefs = new ReminderPrefs(requireContext());
@@ -78,6 +79,7 @@ public class SettingsFragment extends PreferenceFragmentCompat {
         wireBackupExport();
         wireDailyReminder();
         wireVersion();
+        wireAboutLinks();
     }
 
     @Override
@@ -352,6 +354,61 @@ public class SettingsFragment extends PreferenceFragmentCompat {
             return pm.getPackageInfo(requireContext().getPackageName(), 0).versionName;
         } catch (PackageManager.NameNotFoundException e) {
             return "";
+        }
+    }
+
+    private void wireAboutLinks() {
+        Preference license = findPreference("pref_license");
+        if (license != null) {
+            license.setOnPreferenceClickListener(p -> {
+                showLicenseDialog();
+                return true;
+            });
+        }
+
+        wireExternalLink("pref_source_code", R.string.url_source_code);
+        wireExternalLink("pref_support", R.string.url_support);
+        wireExternalLink("pref_author", R.string.url_author);
+    }
+
+    private void wireExternalLink(String key, int urlRes) {
+        Preference p = findPreference(key);
+        if (p == null) return;
+        p.setOnPreferenceClickListener(pref -> {
+            openUrl(getString(urlRes));
+            return true;
+        });
+    }
+
+    private void openUrl(String url) {
+        try {
+            startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url)));
+        } catch (ActivityNotFoundException e) {
+            toast(R.string.link_open_failed);
+        }
+    }
+
+    private void showLicenseDialog() {
+        new MaterialAlertDialogBuilder(requireContext())
+                .setTitle(R.string.settings_license)
+                .setMessage(readLicenseAsset())
+                .setPositiveButton(R.string.action_close, null)
+                .show();
+    }
+
+    private String readLicenseAsset() {
+        try (java.io.InputStream is = requireContext().getAssets().open("license.txt");
+             java.io.BufferedReader reader = new java.io.BufferedReader(
+                     new java.io.InputStreamReader(is, java.nio.charset.StandardCharsets.UTF_8))) {
+            StringBuilder sb = new StringBuilder();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                sb.append(line).append('\n');
+            }
+            return sb.toString();
+        } catch (java.io.IOException e) {
+            Log.e(TAG, "Failed to read license.txt from assets", e);
+            return getString(R.string.license_read_error);
         }
     }
 

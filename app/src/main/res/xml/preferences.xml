@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto">
+<PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:android="http://schemas.android.com/apk/res/android">
 
     <PreferenceCategory
         app:title="@string/settings_cat_appearance"
@@ -74,9 +75,9 @@
         <SwitchPreferenceCompat
             app:key="pref_privacy_screen"
             app:iconSpaceReserved="false"
-            app:widgetLayout="@layout/view_preference_switch"
             app:title="@string/settings_privacy_screen"
             app:summary="@string/settings_privacy_screen_summary"
+            app:widgetLayout="@layout/view_preference_switch"
             app:persistent="false" />
     </PreferenceCategory>
 
@@ -97,9 +98,9 @@
 
         <SwitchPreferenceCompat
             app:key="pref_daily_reminder"
+            app:iconSpaceReserved="false"
             app:title="@string/settings_daily_reminder"
             app:summary="@string/settings_daily_reminder_summary"
-            app:iconSpaceReserved="false"
             app:widgetLayout="@layout/view_preference_switch"
             app:persistent="false" />
 
@@ -124,6 +125,30 @@
     <PreferenceCategory
         app:title="@string/settings_cat_about"
         app:iconSpaceReserved="false">
+
+        <Preference
+            app:key="pref_license"
+            app:iconSpaceReserved="false"
+            app:summary="@string/settings_license_summary"
+            app:title="@string/settings_license" />
+
+        <Preference
+            app:key="pref_source_code"
+            app:iconSpaceReserved="false"
+            app:summary="@string/settings_source_code_summary"
+            app:title="@string/settings_source_code" />
+
+        <Preference
+            app:key="pref_support"
+            app:iconSpaceReserved="false"
+            app:summary="@string/settings_support_summary"
+            app:title="@string/settings_support" />
+
+        <Preference
+            app:key="pref_author"
+            app:iconSpaceReserved="false"
+            app:summary="@string/settings_author_summary"
+            app:title="@string/settings_author" />
 
         <Preference
             app:key="pref_version"
