@@ -29,6 +29,7 @@
             android:fontFamily="serif"
             android:gravity="center"
             android:textAppearance="?attr/textAppearanceHeadlineMedium"
+            android:textColor="?attr/colorOnSurface"
             android:text="@string/unlock_heading" />
 
         <com.google.android.material.card.MaterialCardView

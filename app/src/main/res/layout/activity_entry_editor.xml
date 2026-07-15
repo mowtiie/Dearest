@@ -31,7 +31,6 @@
             android:orientation="vertical"
             android:padding="16dp">
 
-            <!-- Non-editable dropdown: user picks from the list, never types here. -->
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/notebook_dropdown_layout"
                 style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
@@ -98,8 +97,6 @@
                 android:textAppearance="?attr/textAppearanceLabelLarge"
                 android:textColor="?attr/colorOnSurfaceVariant" />
 
-            <!-- Wraps across lines rather than scrolling horizontally, so any
-                 number of tags stays fully visible without hidden overflow. -->
             <com.google.android.material.chip.ChipGroup
                 android:id="@+id/tag_chip_group"
                 android:layout_width="match_parent"

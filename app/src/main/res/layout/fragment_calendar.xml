@@ -91,6 +91,7 @@
                 android:layout_height="wrap_content"
                 android:importantForAccessibility="no"
                 android:text="@string/empty_kaomoji_calendar_day"
+                android:textColor="?attr/colorOnSurface"
                 android:textSize="32sp" />
 
             <TextView
