@@ -17,7 +17,12 @@ public class DearestDatabase extends SQLiteOpenHelper {
     private static boolean sLibraryLoaded = false;
 
     public DearestDatabase(Context context, byte[] databaseKey) {
-        super(context.getApplicationContext(), DB_NAME, databaseKey, null, DB_VERSION,
+        this(context, DB_NAME, databaseKey);
+    }
+
+    /** For tests, which must never open the real database file. */
+    public DearestDatabase(Context context, String name, byte[] databaseKey) {
+        super(context.getApplicationContext(), name, databaseKey, null, DB_VERSION,
                 0, null, null, true);
     }
 

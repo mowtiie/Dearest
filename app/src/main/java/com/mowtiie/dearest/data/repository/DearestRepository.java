@@ -49,6 +49,7 @@ public final class DearestRepository {
     private final EntryDao entryDao = new EntryDao();
     private final NotebookDao notebookDao = new NotebookDao();
     private final TagDao tagDao = new TagDao();
+    private final BackupImporter backupImporter = new BackupImporter();
     private final ExecutorService io = Executors.newSingleThreadExecutor();
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
     // One refresh signal per group of data, so a write only reloads the lists it can affect.
@@ -173,49 +174,7 @@ public final class DearestRepository {
     // ---- Writes ------------------------------------------------------------------------------
 
     public void importAll(BackupData data, boolean replaceAll, OperationCallback cb) {
-        inTransaction(cb, ALL, d -> {
-            if (replaceAll) {
-                // Entry-tag links go with the entries and tags via ON DELETE CASCADE.
-                d.delete(DatabaseContract.Entries.TABLE, null, null);
-                d.delete(DatabaseContract.Notebooks.TABLE, null, null);
-                d.delete(DatabaseContract.Tags.TABLE, null, null);
-            }
-            for (Notebook n : data.notebooks) {
-                if (notebookDao.getById(d, n.getId()) == null) {
-                    notebookDao.insert(d, n);
-                } else {
-                    notebookDao.update(d, n);
-                }
-            }
-
-            // A backup tag may collide by name with a local one; link entries to whichever survives.
-            Map<String, String> tagIdMap = new HashMap<>();
-            for (Tag t : data.tags) {
-                tagIdMap.put(t.getId(), tagDao.findOrInsert(d, t).getId());
-            }
-
-            for (Entry e : data.entries) {
-                Entry existing = entryDao.getById(d, e.getId());
-                if (existing == null) {
-                    entryDao.insert(d, e);
-                } else if (e.getUpdatedAt() > existing.getUpdatedAt()) {
-                    entryDao.update(d, e);
-                } else {
-                    continue;
-                }
-                if (data.includesTags) {
-                    List<String> tagIds = new ArrayList<>();
-                    Set<String> backupTagIds = data.entryTagIds.get(e.getId());
-                    if (backupTagIds != null) {
-                        for (String backupTagId : backupTagIds) {
-                            String localId = tagIdMap.get(backupTagId);
-                            if (localId != null) tagIds.add(localId);
-                        }
-                    }
-                    tagDao.setTagsForEntry(d, e.getId(), tagIds);
-                }
-            }
-        });
+        inTransaction(cb, ALL, d -> backupImporter.apply(d, data, replaceAll));
     }
 
     public void saveEntryWithTags(Entry entry, List<String> tagNames, OperationCallback cb) {
