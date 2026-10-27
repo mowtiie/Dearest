@@ -29,6 +29,8 @@ public class TagPickerViewModel extends DearestViewModel {
 
     private boolean initialSelectionApplied;
     private List<String> pendingInitialNames = Collections.emptyList();
+    /** Name of a tag just created here; it is selected once the refreshed tag list contains it. */
+    private String pendingSelectName;
 
     public TagPickerViewModel(@NonNull Application application) {
         super(application);
@@ -36,6 +38,7 @@ public class TagPickerViewModel extends DearestViewModel {
 
         visibleTags.addSource(allTags, tags -> {
             applyInitialSelectionIfNeeded(tags);
+            selectPendingTag(tags);
             recompute();
         });
         visibleTags.addSource(query, q -> recompute());
@@ -74,14 +77,8 @@ public class TagPickerViewModel extends DearestViewModel {
         if (trimmed.isEmpty()) return;
         repository().createTag(trimmed, (ok, error) -> {
             if (!ok) return;
-            List<Tag> current = allTags.getValue();
-            if (current == null) return;
-            for (Tag t : current) {
-                if (t.getName().equalsIgnoreCase(trimmed)) {
-                    selectNewly(t.getId());
-                    return;
-                }
-            }
+            pendingSelectName = trimmed;
+            selectPendingTag(allTags.getValue());
         });
     }
 
@@ -95,6 +92,17 @@ public class TagPickerViewModel extends DearestViewModel {
             }
         }
         return names;
+    }
+
+    private void selectPendingTag(@Nullable List<Tag> tags) {
+        if (pendingSelectName == null || tags == null) return;
+        for (Tag t : tags) {
+            if (t.getName().equalsIgnoreCase(pendingSelectName)) {
+                pendingSelectName = null;
+                selectNewly(t.getId());
+                return;
+            }
+        }
     }
 
     private void selectNewly(String tagId) {

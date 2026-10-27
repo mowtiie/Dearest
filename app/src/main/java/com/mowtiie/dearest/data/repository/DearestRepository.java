@@ -51,7 +51,17 @@ public final class DearestRepository {
     private final TagDao tagDao = new TagDao();
     private final ExecutorService io = Executors.newSingleThreadExecutor();
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
-    private final MutableLiveData<Object> refreshTrigger = new MutableLiveData<>();
+    // One refresh signal per group of data, so a write only reloads the lists it can affect.
+    private static final int ENTRIES = 1;
+    private static final int NOTEBOOKS = 1 << 1;
+    private static final int TAGS = 1 << 2;
+    private static final int LINKS = 1 << 3;
+    private static final int ALL = ENTRIES | NOTEBOOKS | TAGS | LINKS;
+
+    private final MutableLiveData<Object> entriesTrigger = new MutableLiveData<>();
+    private final MutableLiveData<Object> notebooksTrigger = new MutableLiveData<>();
+    private final MutableLiveData<Object> tagsTrigger = new MutableLiveData<>();
+    private final MutableLiveData<Object> linksTrigger = new MutableLiveData<>();
 
     private volatile SQLiteDatabase db;
     private DearestDatabase dbHelper;
@@ -59,7 +69,7 @@ public final class DearestRepository {
     private DearestRepository(Context context, KeyManager keyManager) {
         this.appContext = context.getApplicationContext();
         this.keyManager = keyManager;
-        triggerRefresh();
+        invalidate(ALL);
     }
 
     public static DearestRepository getInstance(Context context, KeyManager keyManager) {
@@ -78,7 +88,7 @@ public final class DearestRepository {
             if (db != null || !keyManager.isUnlocked()) return;
             dbHelper = new DearestDatabase(appContext, keyManager.getDatabaseKey());
             db = dbHelper.getWritableDatabase();
-            triggerRefresh();
+            invalidate(ALL);
         });
     }
 
@@ -89,7 +99,7 @@ public final class DearestRepository {
                 db = null;
             }
             dbHelper = null;
-            triggerRefresh();
+            invalidate(ALL);
         });
     }
 
@@ -100,39 +110,39 @@ public final class DearestRepository {
     // ---- Reads -------------------------------------------------------------------------------
 
     public LiveData<List<Notebook>> observeNotebooks() {
-        return observe(Collections.emptyList(), notebookDao::getAll);
+        return observe(NOTEBOOKS, Collections.emptyList(), notebookDao::getAll);
     }
 
     public LiveData<List<Entry>> observeEntries(String notebookId) {
-        return observe(Collections.emptyList(), d -> entryDao.getByNotebook(d, notebookId));
+        return observe(ENTRIES, Collections.emptyList(), d -> entryDao.getByNotebook(d, notebookId));
     }
 
     public LiveData<List<Entry>> observeAllEntries() {
-        return observe(Collections.emptyList(), entryDao::getAll);
+        return observe(ENTRIES, Collections.emptyList(), entryDao::getAll);
     }
 
     public LiveData<List<Long>> observeCreatedAtBetween(long from, long to) {
-        return observe(Collections.emptyList(), d -> entryDao.getCreatedAtBetween(d, from, to));
+        return observe(ENTRIES, Collections.emptyList(), d -> entryDao.getCreatedAtBetween(d, from, to));
     }
 
     public LiveData<List<Entry>> observeEntriesCreatedBetween(long from, long to) {
-        return observe(Collections.emptyList(), d -> entryDao.getCreatedBetween(d, from, to));
+        return observe(ENTRIES, Collections.emptyList(), d -> entryDao.getCreatedBetween(d, from, to));
     }
 
     public LiveData<Entry> observeEntry(String entryId) {
-        return observe(null, d -> entryDao.getById(d, entryId));
+        return observe(ENTRIES, null, d -> entryDao.getById(d, entryId));
     }
 
     public LiveData<List<Entry>> observeSearch(String rawQuery) {
-        return observe(Collections.emptyList(), d -> entryDao.search(d, rawQuery));
+        return observe(ENTRIES, Collections.emptyList(), d -> entryDao.search(d, rawQuery));
     }
 
     public LiveData<List<Tag>> observeTags() {
-        return observe(Collections.emptyList(), tagDao::getAll);
+        return observe(TAGS, Collections.emptyList(), tagDao::getAll);
     }
 
     public LiveData<Map<String, Set<String>>> observeEntryTagLinks() {
-        return observe(Collections.emptyMap(), tagDao::getAllEntryTagLinks);
+        return observe(LINKS, Collections.emptyMap(), tagDao::getAllEntryTagLinks);
     }
 
     public void getEntry(String entryId, ResultCallback<Entry> callback) {
@@ -163,7 +173,7 @@ public final class DearestRepository {
     // ---- Writes ------------------------------------------------------------------------------
 
     public void importAll(BackupData data, boolean replaceAll, OperationCallback cb) {
-        inTransaction(cb, d -> {
+        inTransaction(cb, ALL, d -> {
             if (replaceAll) {
                 // Entry-tag links go with the entries and tags via ON DELETE CASCADE.
                 d.delete(DatabaseContract.Entries.TABLE, null, null);
@@ -209,7 +219,8 @@ public final class DearestRepository {
     }
 
     public void saveEntryWithTags(Entry entry, List<String> tagNames, OperationCallback cb) {
-        inTransaction(cb, d -> {
+        inTransaction(cb, ENTRIES | LINKS, d -> {
+            int tagsBefore = tagDao.count(d);
             if (entryDao.update(d, entry) == 0) {
                 entryDao.insert(d, entry);
             }
@@ -220,19 +231,20 @@ public final class DearestRepository {
                 tagIds.add(tagDao.findOrCreateByName(d, trimmed).getId());
             }
             tagDao.setTagsForEntry(d, entry.getId(), tagIds);
+            if (tagDao.count(d) != tagsBefore) invalidate(TAGS);
         });
     }
 
     public void deleteEntry(String entryId) {
-        write(null, d -> entryDao.delete(d, entryId));
+        write(null, ENTRIES | LINKS, d -> entryDao.delete(d, entryId));
     }
 
     public void createTag(String name, OperationCallback cb) {
-        write(cb, d -> tagDao.findOrCreateByName(d, name.trim()));
+        write(cb, TAGS, d -> tagDao.findOrCreateByName(d, name.trim()));
     }
 
     public void renameTag(String tagId, String newName, OperationCallback cb) {
-        write(cb, d -> {
+        write(cb, TAGS, d -> {
             try {
                 tagDao.update(d, new Tag(tagId, newName.trim(), 0));
             } catch (RuntimeException duplicateName) {
@@ -242,11 +254,11 @@ public final class DearestRepository {
     }
 
     public void deleteTag(String tagId) {
-        write(null, d -> tagDao.delete(d, tagId));
+        write(null, TAGS | LINKS, d -> tagDao.delete(d, tagId));
     }
 
     public void saveNotebook(Notebook notebook) {
-        write(null, d -> {
+        write(null, NOTEBOOKS, d -> {
             if (notebookDao.update(d, notebook) == 0) {
                 notebookDao.insert(d, notebook);
             }
@@ -254,7 +266,7 @@ public final class DearestRepository {
     }
 
     public void deleteNotebook(String notebookId, String moveEntriesToId, OperationCallback cb) {
-        inTransaction(cb, d -> {
+        inTransaction(cb, NOTEBOOKS | ENTRIES, d -> {
             int entryCount = entryDao.countByNotebook(d, notebookId);
             if (entryCount > 0 && moveEntriesToId == null) {
                 throw new UserFacingException(appContext.getResources().getQuantityString(
@@ -284,7 +296,7 @@ public final class DearestRepository {
      * Runs a write on the IO thread, refreshes observers on success and reports the outcome.
      * A locked vault is reported as a failure rather than silently dropped.
      */
-    private void write(OperationCallback cb, DbWork work) {
+    private void write(OperationCallback cb, int tables, DbWork work) {
         io.execute(() -> {
             SQLiteDatabase d = db;
             if (d == null) {
@@ -300,13 +312,13 @@ public final class DearestRepository {
                 postResult(cb, false, appContext.getString(R.string.error_generic));
                 return;
             }
-            triggerRefresh();
+            invalidate(tables);
             postResult(cb, true, null);
         });
     }
 
-    private void inTransaction(OperationCallback cb, DbWork work) {
-        write(cb, d -> {
+    private void inTransaction(OperationCallback cb, int tables, DbWork work) {
+        write(cb, tables, d -> {
             d.beginTransaction();
             try {
                 work.run(d);
@@ -317,8 +329,8 @@ public final class DearestRepository {
         });
     }
 
-    private <T> LiveData<T> observe(T whenLocked, Function<SQLiteDatabase, T> query) {
-        return Transformations.switchMap(refreshTrigger, ignored -> {
+    private <T> LiveData<T> observe(int table, T whenLocked, Function<SQLiteDatabase, T> query) {
+        return Transformations.switchMap(trigger(table), ignored -> {
             MutableLiveData<T> result = new MutableLiveData<>();
             io.execute(() -> {
                 SQLiteDatabase d = db;
@@ -336,8 +348,21 @@ public final class DearestRepository {
         });
     }
 
-    private void triggerRefresh() {
-        refreshTrigger.postValue(new Object());
+    private LiveData<Object> trigger(int table) {
+        switch (table) {
+            case NOTEBOOKS: return notebooksTrigger;
+            case TAGS:      return tagsTrigger;
+            case LINKS:     return linksTrigger;
+            default:        return entriesTrigger;
+        }
+    }
+
+    /** Tells observers of the given data groups to reload. Safe from any thread. */
+    private void invalidate(int tables) {
+        if ((tables & ENTRIES) != 0) entriesTrigger.postValue(new Object());
+        if ((tables & NOTEBOOKS) != 0) notebooksTrigger.postValue(new Object());
+        if ((tables & TAGS) != 0) tagsTrigger.postValue(new Object());
+        if ((tables & LINKS) != 0) linksTrigger.postValue(new Object());
     }
 
     private void postResult(OperationCallback cb, boolean success, String error) {

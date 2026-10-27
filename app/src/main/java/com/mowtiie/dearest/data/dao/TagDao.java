@@ -22,6 +22,12 @@ public class TagDao {
             Tags.COL_UUID, Tags.COL_NAME, Tags.COL_CREATED
     };
 
+    public int count(SQLiteDatabase db) {
+        try (Cursor c = db.rawQuery("SELECT COUNT(*) FROM " + Tags.TABLE, null)) {
+            return c.moveToFirst() ? c.getInt(0) : 0;
+        }
+    }
+
     public List<Tag> getAll(SQLiteDatabase db) {
         try (Cursor c = db.query(Tags.TABLE, TAG_COLUMNS,
                 null, null, null, null, Tags.COL_NAME + " COLLATE NOCASE ASC")) {
