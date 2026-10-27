@@ -74,6 +74,13 @@ public class EntryEditorViewModel extends DearestViewModel {
         return entryId == null;
     }
 
+    /** A new entry opened without a notebook goes into the first one, so it is never dropped on save. */
+    public void ensureNotebook(@Nullable List<Notebook> available) {
+        if (notebookId.getValue() == null && available != null && !available.isEmpty()) {
+            notebookId.setValue(available.get(0).getId());
+        }
+    }
+
     public void setNotebook(String id) {
         if (id != null && !id.equals(notebookId.getValue())) {
             notebookId.setValue(id);

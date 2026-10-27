@@ -90,7 +90,10 @@ public class EntryEditorActivity extends DearestActivity {
             if (Boolean.TRUE.equals(done)) finish();
         });
 
-        viewModel.notebooks().observe(this, notebooks -> bindNotebookDropdown());
+        viewModel.notebooks().observe(this, notebooks -> {
+            viewModel.ensureNotebook(notebooks);
+            bindNotebookDropdown();
+        });
         viewModel.notebookId().observe(this, id -> bindNotebookDropdown());
 
         viewModel.tagNames().observe(this, this::renderTagChips);

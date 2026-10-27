@@ -54,6 +54,9 @@ public class JournalViewModel extends DearestViewModel {
         selectedNotebook = Transformations.switchMap(selectedNotebookId, id ->
                 Transformations.map(notebooks, list -> findById(list, id)));
 
+        // notebooks() is a switchMap, so it only holds a value while something observes it. Keep it
+        // active so notebookForNewEntry() can fall back to the first notebook.
+        entries.addSource(notebooks, n -> {});
         entries.addSource(notebookEntries, e -> recompute());
         entries.addSource(entryTagLinks, m -> recompute());
         entries.addSource(selectedTagIds, s -> recompute());
