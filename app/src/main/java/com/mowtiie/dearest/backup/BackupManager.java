@@ -38,12 +38,12 @@ public final class BackupManager {
     }
 
     public void exportEncrypted(Uri target, char[] password, Callback cb) {
-        repository.loadAll((notebooks, entries) -> io.execute(() -> {
+        repository.loadAll(data -> io.execute(() -> {
             boolean ok = false;
             String message = null;
             try (OutputStream os = appContext.getContentResolver().openOutputStream(target)) {
                 if (os == null) throw new IOException("Could not open the file");
-                byte[] json = BackupSerializer.toJson(new BackupData(notebooks, entries))
+                byte[] json = BackupSerializer.toJson(data)
                         .getBytes(StandardCharsets.UTF_8);
                 String envelope = BackupCrypto.encrypt(json, password);
                 os.write(envelope.getBytes(StandardCharsets.UTF_8));
@@ -56,13 +56,11 @@ public final class BackupManager {
     }
 
     public void exportPlain(Uri target, Format format, Callback cb) {
-        repository.loadAll((notebooks, entries) -> io.execute(() -> {
+        repository.loadAll(data -> io.execute(() -> {
             boolean ok = false;
             String message = null;
             try (OutputStream os = appContext.getContentResolver().openOutputStream(target)) {
-                if (os == null) throw new IOException("Could not open the file");
-                BackupData data = new BackupData(notebooks, entries);
-                String content;
+                if (os == null) throw new IOException("Could not open the file");                String content;
                 switch (format) {
                     case JSON: content = BackupSerializer.toJson(data); break;
                     case CSV:  content = BackupSerializer.toCsv(data); break;
@@ -84,7 +82,7 @@ public final class BackupManager {
                 byte[] json = BackupCrypto.decrypt(envelope, password);
                 BackupData data = BackupSerializer.fromJson(
                         new String(json, StandardCharsets.UTF_8));
-                repository.importAll(data.notebooks, data.entries, replaceAll, cb::onComplete);
+                repository.importAll(data, replaceAll, cb::onComplete);
             } catch (Exception e) {
                 done(cb, false, appContext.getString(R.string.backup_import_failed));
             }

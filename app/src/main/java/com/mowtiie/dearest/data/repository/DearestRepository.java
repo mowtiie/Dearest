@@ -9,6 +9,7 @@ import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.Transformations;
 
 import com.mowtiie.dearest.R;
+import com.mowtiie.dearest.backup.BackupData;
 import com.mowtiie.dearest.data.dao.EntryDao;
 import com.mowtiie.dearest.data.dao.NotebookDao;
 import com.mowtiie.dearest.data.dao.TagDao;
@@ -23,10 +24,10 @@ import net.zetetic.database.sqlcipher.SQLiteDatabase;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -138,38 +139,62 @@ public final class DearestRepository {
         read(0, d -> entryDao.countByNotebook(d, notebookId), callback);
     }
 
-    /** Full entry bodies, for backup and export. */
-    public void loadAll(BiConsumer<List<Notebook>, List<Entry>> callback) {
+    /** Everything, with full entry bodies, for backup and export. */
+    public void loadAll(ResultCallback<BackupData> callback) {
         io.execute(() -> {
             SQLiteDatabase d = db;
-            List<Notebook> notebooks = (d == null) ? Collections.emptyList() : notebookDao.getAll(d);
-            List<Entry> entries = (d == null) ? Collections.emptyList() : entryDao.getAllFull(d);
-            mainHandler.post(() -> callback.accept(notebooks, entries));
+            BackupData data = (d == null)
+                    ? new BackupData(Collections.emptyList(), Collections.emptyList(),
+                            Collections.emptyList(), Collections.emptyMap())
+                    : new BackupData(notebookDao.getAll(d), entryDao.getAllFull(d),
+                            tagDao.getAll(d), tagDao.getAllEntryTagLinks(d));
+            mainHandler.post(() -> callback.onResult(data));
         });
     }
 
     // ---- Writes ------------------------------------------------------------------------------
 
-    public void importAll(List<Notebook> notebooks, List<Entry> entries,
-                          boolean replaceAll, OperationCallback cb) {
+    public void importAll(BackupData data, boolean replaceAll, OperationCallback cb) {
         inTransaction(cb, d -> {
             if (replaceAll) {
+                // Entry-tag links go with the entries and tags via ON DELETE CASCADE.
                 d.delete(DatabaseContract.Entries.TABLE, null, null);
                 d.delete(DatabaseContract.Notebooks.TABLE, null, null);
+                d.delete(DatabaseContract.Tags.TABLE, null, null);
             }
-            for (Notebook n : notebooks) {
+            for (Notebook n : data.notebooks) {
                 if (notebookDao.getById(d, n.getId()) == null) {
                     notebookDao.insert(d, n);
                 } else {
                     notebookDao.update(d, n);
                 }
             }
-            for (Entry e : entries) {
+
+            // A backup tag may collide by name with a local one; link entries to whichever survives.
+            Map<String, String> tagIdMap = new HashMap<>();
+            for (Tag t : data.tags) {
+                tagIdMap.put(t.getId(), tagDao.findOrInsert(d, t).getId());
+            }
+
+            for (Entry e : data.entries) {
                 Entry existing = entryDao.getById(d, e.getId());
                 if (existing == null) {
                     entryDao.insert(d, e);
                 } else if (e.getUpdatedAt() > existing.getUpdatedAt()) {
                     entryDao.update(d, e);
+                } else {
+                    continue;
+                }
+                if (data.includesTags) {
+                    List<String> tagIds = new ArrayList<>();
+                    Set<String> backupTagIds = data.entryTagIds.get(e.getId());
+                    if (backupTagIds != null) {
+                        for (String backupTagId : backupTagIds) {
+                            String localId = tagIdMap.get(backupTagId);
+                            if (localId != null) tagIds.add(localId);
+                        }
+                    }
+                    tagDao.setTagsForEntry(d, e.getId(), tagIds);
                 }
             }
         });

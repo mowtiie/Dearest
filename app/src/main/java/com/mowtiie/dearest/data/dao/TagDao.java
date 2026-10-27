@@ -45,6 +45,27 @@ public class TagDao {
         return created;
     }
 
+    /**
+     * Maps a tag from a backup onto this database: same id wins, then same name (names are unique,
+     * case-insensitive), otherwise it is inserted with its original id.
+     */
+    public Tag findOrInsert(SQLiteDatabase db, Tag tag) {
+        try (Cursor c = db.query(Tags.TABLE, TAG_COLUMNS,
+                Tags.COL_UUID + " = ?", new String[]{ tag.getId() }, null, null, null)) {
+            if (c.moveToFirst()) return fromCursor(c);
+        }
+        try (Cursor c = db.query(Tags.TABLE, TAG_COLUMNS,
+                Tags.COL_NAME + " = ?", new String[]{ tag.getName() }, null, null, null)) {
+            if (c.moveToFirst()) return fromCursor(c);
+        }
+        ContentValues values = new ContentValues();
+        values.put(Tags.COL_UUID, tag.getId());
+        values.put(Tags.COL_NAME, tag.getName());
+        values.put(Tags.COL_CREATED, tag.getCreatedAt());
+        db.insertOrThrow(Tags.TABLE, null, values);
+        return tag;
+    }
+
     public int update(SQLiteDatabase db, Tag tag) {
         ContentValues values = new ContentValues();
         values.put(Tags.COL_NAME, tag.getName());
