@@ -140,7 +140,7 @@ public class EntryDao {
         );
     }
 
-    private static String toFtsQuery(String raw) {
+    static String toFtsQuery(String raw) {
         if (raw == null) return null;
         StringBuilder sb = new StringBuilder();
         for (String token : raw.trim().split("\\s+")) {
