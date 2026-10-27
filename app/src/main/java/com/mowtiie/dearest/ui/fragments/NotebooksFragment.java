@@ -20,6 +20,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.mowtiie.dearest.R;
+import com.mowtiie.dearest.ui.InsetsUtil;
 import com.mowtiie.dearest.data.model.Notebook;
 import com.mowtiie.dearest.databinding.DialogEditNotebookBinding;
 import com.mowtiie.dearest.databinding.FragmentNotebooksBinding;
@@ -54,6 +55,7 @@ public class NotebooksFragment extends Fragment implements NotebookAdapter.Liste
         adapter = new NotebookAdapter(this);
 
         binding.notebooksList.setLayoutManager(new LinearLayoutManager(requireContext()));
+        InsetsUtil.limitContentWidth(binding.notebooksList);
         binding.notebooksList.setAdapter(adapter);
 
         touchHelper = new ItemTouchHelper(dragCallback());

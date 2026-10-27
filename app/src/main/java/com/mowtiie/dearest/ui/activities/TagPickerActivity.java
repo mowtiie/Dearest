@@ -64,6 +64,7 @@ public class TagPickerActivity extends DearestActivity implements TagPickerAdapt
 
         adapter = new TagPickerAdapter(this);
         binding.tagPickerList.setLayoutManager(new LinearLayoutManager(this));
+        InsetsUtil.limitContentWidth(binding.tagPickerList);
         binding.tagPickerList.setAdapter(adapter);
 
         viewModel.visibleTags().observe(this, tags -> {

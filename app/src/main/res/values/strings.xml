@@ -231,6 +231,8 @@
     <string name="delete_tag_title">Delete tag?</string>
     <string name="delete_tag_message">“%1$s” will be removed from every entry that has it — your entries themselves won\'t be touched.</string>
     <string name="cd_delete_tag">Delete tag</string>
+    <string name="cd_calendar_day_has_entries">%1$s, has entries</string>
+    <string name="state_selected">Selected</string>
     <string name="error_vault_locked">Your journal is locked. Unlock it and try again.</string>
     <string name="error_tag_name_in_use">That tag name is already in use</string>
     <string name="error_generic">Something went wrong. Please try again.</string>

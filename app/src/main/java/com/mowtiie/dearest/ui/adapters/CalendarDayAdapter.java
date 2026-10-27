@@ -1,5 +1,6 @@
 package com.mowtiie.dearest.ui.adapters;
 
+import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Typeface;
 import android.view.LayoutInflater;
@@ -11,12 +12,15 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.content.res.AppCompatResources;
 import androidx.core.content.ContextCompat;
+import androidx.core.view.ViewCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.mowtiie.dearest.R;
 import com.google.android.material.color.MaterialColors;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.format.FormatStyle;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -85,6 +89,8 @@ public class CalendarDayAdapter extends RecyclerView.Adapter<CalendarDayAdapter.
         void bind(Day day, LocalDate selected, LocalDate today, OnDayClick listener) {
             if (day.date == null) {
                 number.setText("");
+                itemView.setContentDescription(null);
+                ViewCompat.setStateDescription(itemView, null);
                 dot.setVisibility(View.INVISIBLE);
                 cell.setBackground(null);
                 itemView.setClickable(false);
@@ -106,6 +112,13 @@ public class CalendarDayAdapter extends RecyclerView.Adapter<CalendarDayAdapter.
                 number.setTextColor(ContextCompat.getColor(itemView.getContext(), isToday ? R.color.md_theme_primary : R.color.md_theme_onSurface));
             }
             number.setTypeface(null, isToday ? Typeface.BOLD : Typeface.NORMAL);
+
+            Context context = itemView.getContext();
+            String label = day.date.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.FULL));
+            if (day.hasEntries) label = context.getString(R.string.cd_calendar_day_has_entries, label);
+            itemView.setContentDescription(label);
+            ViewCompat.setStateDescription(itemView, isSelected ? context.getString(R.string.state_selected) : null);
+            itemView.setSelected(isSelected);
 
             itemView.setClickable(true);
             itemView.setOnClickListener(v -> listener.onDayClick(day.date));

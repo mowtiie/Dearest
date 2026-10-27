@@ -71,6 +71,7 @@ public class EntryEditorActivity extends DearestActivity {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         }
         InsetsUtil.applyToolbarAndBottom(binding.editorRoot, binding.editorAppBar);
+        InsetsUtil.limitContentWidth(binding.editorScroll);
 
         viewModel = new ViewModelProvider(this).get(EntryEditorViewModel.class);
         viewModel.init(getIntent().getStringExtra(EXTRA_ENTRY_ID),

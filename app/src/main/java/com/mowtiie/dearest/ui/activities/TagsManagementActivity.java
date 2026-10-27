@@ -38,6 +38,7 @@ public class TagsManagementActivity extends DearestActivity implements TagAdapte
         adapter = new TagAdapter(this);
 
         binding.tagsList.setLayoutManager(new LinearLayoutManager(this));
+        InsetsUtil.limitContentWidth(binding.tagsList);
         binding.tagsList.setAdapter(adapter);
 
         viewModel.tags().observe(this, tags -> {

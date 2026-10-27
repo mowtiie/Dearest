@@ -36,6 +36,7 @@ public class ChangePassphraseActivity extends DearestActivity {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         }
         InsetsUtil.applyToolbarAndBottom(binding.cpRoot, binding.cpAppBar);
+        InsetsUtil.limitContentWidth(binding.cpScroll);
 
         loadingDialog = new LoadingDialog(this);
 

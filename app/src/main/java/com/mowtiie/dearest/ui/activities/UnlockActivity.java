@@ -17,6 +17,7 @@ import androidx.lifecycle.ViewModelProvider;
 
 import com.mowtiie.dearest.DearestApp;
 import com.mowtiie.dearest.R;
+import com.mowtiie.dearest.ui.InsetsUtil;
 import com.mowtiie.dearest.databinding.ActivityUnlockBinding;
 import com.mowtiie.dearest.security.BiometricGate;
 import com.mowtiie.dearest.ui.LoadingDialog;
@@ -47,6 +48,7 @@ public class UnlockActivity extends DearestActivity {
         super.onCreate(savedInstanceState);
         binding = ActivityUnlockBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
+        InsetsUtil.limitContentWidth(binding.unlockContent);
 
         loadingDialog = new LoadingDialog(this);
 

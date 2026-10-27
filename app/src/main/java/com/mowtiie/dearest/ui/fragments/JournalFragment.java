@@ -20,6 +20,7 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.mowtiie.dearest.R;
+import com.mowtiie.dearest.ui.InsetsUtil;
 import com.mowtiie.dearest.databinding.FragmentJournalBinding;
 import com.mowtiie.dearest.ui.activities.EntryEditorActivity;
 import com.mowtiie.dearest.ui.adapters.EntryAdapter;
@@ -46,6 +47,7 @@ public class JournalFragment extends Fragment {
         viewModel = new ViewModelProvider(this).get(JournalViewModel.class);
 
         binding.entriesList.setLayoutManager(new LinearLayoutManager(requireContext()));
+        InsetsUtil.limitContentWidth(binding.entriesList);
         adapter = new EntryAdapter(entry ->
                 EntryEditorActivity.open(requireContext(), entry.getId(), null));
         binding.entriesList.setAdapter(adapter);

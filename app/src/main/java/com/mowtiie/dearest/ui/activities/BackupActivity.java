@@ -69,6 +69,7 @@ public class BackupActivity extends DearestActivity {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         }
         InsetsUtil.applyToolbarAndBottom(binding.backupRoot, binding.backupAppBar);
+        InsetsUtil.limitContentWidth(binding.backupScroll);
 
         backupManager = DearestApp.from(this).backupManager();
         loadingDialog = new LoadingDialog(this);

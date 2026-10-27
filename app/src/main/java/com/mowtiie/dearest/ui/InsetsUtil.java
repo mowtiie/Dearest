@@ -2,6 +2,8 @@ package com.mowtiie.dearest.ui;
 
 import android.view.View;
 
+import com.mowtiie.dearest.R;
+
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
@@ -9,6 +11,21 @@ import androidx.core.view.WindowInsetsCompat;
 public final class InsetsUtil {
 
     private InsetsUtil() {}
+
+    /**
+     * Keeps content readable on tablets, foldables and landscape by centering it in at most
+     * {@code content_max_width}. Extra width becomes horizontal padding on top of any existing padding.
+     */
+    public static void limitContentWidth(View view) {
+        final int maxWidth = view.getResources().getDimensionPixelSize(R.dimen.content_max_width);
+        final int baseLeft = view.getPaddingLeft(), baseRight = view.getPaddingRight();
+        view.addOnLayoutChangeListener((v, left, top, right, bottom, oldLeft, oldTop, oldRight, oldBottom) -> {
+            int extra = Math.max(0, ((right - left) - maxWidth) / 2);
+            if (v.getPaddingLeft() != baseLeft + extra || v.getPaddingRight() != baseRight + extra) {
+                v.post(() -> v.setPadding(baseLeft + extra, v.getPaddingTop(), baseRight + extra, v.getPaddingBottom()));
+            }
+        });
+    }
 
     public static void applyTop(View view) {
         final int l = view.getPaddingLeft(), t = view.getPaddingTop(),
