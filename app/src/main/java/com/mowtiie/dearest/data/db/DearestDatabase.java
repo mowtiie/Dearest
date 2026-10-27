@@ -2,6 +2,8 @@ package com.mowtiie.dearest.data.db;
 
 import android.content.Context;
 
+import com.mowtiie.dearest.R;
+
 import net.zetetic.database.sqlcipher.SQLiteDatabase;
 import net.zetetic.database.sqlcipher.SQLiteOpenHelper;
 
@@ -12,9 +14,9 @@ public class DearestDatabase extends SQLiteOpenHelper {
     public static final String DB_NAME    = "dearest.db";
     public static final int    DB_VERSION = 3;
 
-    private static final String DEFAULT_NOTEBOOK_NAME = "My Journal";
-
     private static boolean sLibraryLoaded = false;
+
+    private final Context appContext;
 
     public DearestDatabase(Context context, byte[] databaseKey) {
         this(context, DB_NAME, databaseKey);
@@ -24,6 +26,7 @@ public class DearestDatabase extends SQLiteOpenHelper {
     public DearestDatabase(Context context, String name, byte[] databaseKey) {
         super(context.getApplicationContext(), name, databaseKey, null, DB_VERSION,
                 0, null, null, true);
+        this.appContext = context.getApplicationContext();
     }
 
     public static synchronized void loadLibrary() {
@@ -83,7 +86,7 @@ public class DearestDatabase extends SQLiteOpenHelper {
                         DatabaseContract.Notebooks.COL_CREATED  + ") VALUES (?, ?, ?, ?);",
                 new Object[]{
                         UUID.randomUUID().toString(),
-                        DEFAULT_NOTEBOOK_NAME,
+                        appContext.getString(R.string.default_notebook_name),
                         0,
                         System.currentTimeMillis()
                 });

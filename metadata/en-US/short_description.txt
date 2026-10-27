@@ -1,0 +1,1 @@
+A private, offline, encrypted diary. No account, no server, no recovery.
