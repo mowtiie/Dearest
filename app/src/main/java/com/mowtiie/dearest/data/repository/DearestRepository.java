@@ -15,6 +15,7 @@ import com.mowtiie.dearest.data.dao.NotebookDao;
 import com.mowtiie.dearest.data.dao.TagDao;
 import com.mowtiie.dearest.data.db.DatabaseContract;
 import com.mowtiie.dearest.data.db.DearestDatabase;
+import com.mowtiie.dearest.data.model.DeletedEntry;
 import com.mowtiie.dearest.data.model.Entry;
 import com.mowtiie.dearest.data.model.Notebook;
 import com.mowtiie.dearest.data.model.Tag;
@@ -63,6 +64,7 @@ public final class DearestRepository {
     private final MutableLiveData<Object> notebooksTrigger = new MutableLiveData<>();
     private final MutableLiveData<Object> tagsTrigger = new MutableLiveData<>();
     private final MutableLiveData<Object> linksTrigger = new MutableLiveData<>();
+    private final MutableLiveData<DeletedEntry> deletedEntry = new MutableLiveData<>();
 
     private volatile SQLiteDatabase db;
     private DearestDatabase dbHelper;
@@ -100,6 +102,7 @@ public final class DearestRepository {
                 db = null;
             }
             dbHelper = null;
+            deletedEntry.postValue(null);
             invalidate(ALL);
         });
     }
@@ -194,8 +197,31 @@ public final class DearestRepository {
         });
     }
 
+    /** Deletes an entry and publishes what is needed to undo it on {@link #deletedEntry()}. */
     public void deleteEntry(String entryId) {
-        write(null, ENTRIES | LINKS, d -> entryDao.delete(d, entryId));
+        write(null, ENTRIES | LINKS, d -> {
+            Entry full = entryDao.getById(d, entryId);
+            if (full == null) return;
+            List<String> tagNames = new ArrayList<>();
+            for (Tag t : tagDao.getTagsForEntry(d, entryId)) tagNames.add(t.getName());
+            entryDao.delete(d, entryId);
+            deletedEntry.postValue(new DeletedEntry(full, tagNames));
+        });
+    }
+
+    /** Puts a just-deleted entry back with its original id, timestamps and tags. */
+    public void restoreEntry(DeletedEntry deleted, OperationCallback cb) {
+        saveEntryWithTags(deleted.entry, deleted.tagNames, cb);
+    }
+
+    /** Forgets the undo snapshot once its prompt is gone. Main thread only. */
+    public void discardDeleted(DeletedEntry deleted) {
+        if (deletedEntry.getValue() == deleted) deletedEntry.setValue(null);
+    }
+
+    /** The most recently deleted entry while it can still be undone, else null. */
+    public LiveData<DeletedEntry> deletedEntry() {
+        return deletedEntry;
     }
 
     public void createTag(String name, OperationCallback cb) {

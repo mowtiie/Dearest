@@ -6,6 +6,8 @@
     <!-- Bottom-nav / destination titles (also used as toolbar titles) -->
     <string name="title_journal">Journal</string>
     <string name="title_calendar">Calendar</string>
+    <string name="entry_deleted">Entry deleted</string>
+    <string name="action_undo">Undo</string>
     <string name="default_notebook_name">My Journal</string>
     <string name="title_notebooks">Notebooks</string>
     <string name="title_settings">Settings</string>
@@ -59,7 +61,7 @@
     <string name="editor_body_hint">Write your thoughts…</string>
     <string name="editor_delete">Delete</string>
     <string name="editor_delete_confirm_title">Delete this entry?</string>
-    <string name="editor_delete_confirm_message">This entry will be gone for good — there\'s no way to bring it back.</string>
+    <string name="editor_delete_confirm_message">This entry will be deleted. You can undo it right away, but not later.</string>
     <string name="editor_notebook_hint">Notebook</string>
     <string name="editor_title_new">New entry</string>
     <string name="editor_title_edit">Edit entry</string>

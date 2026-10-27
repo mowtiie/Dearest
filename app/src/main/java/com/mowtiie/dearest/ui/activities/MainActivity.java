@@ -18,7 +18,10 @@ import androidx.navigation.ui.NavigationUI;
 import com.mowtiie.dearest.DearestApp;
 import com.mowtiie.dearest.R;
 import com.mowtiie.dearest.crash.CrashReporter;
+import com.mowtiie.dearest.data.model.DeletedEntry;
+import com.mowtiie.dearest.data.repository.DearestRepository;
 import com.mowtiie.dearest.databinding.ActivityMainBinding;
+import com.google.android.material.snackbar.Snackbar;
 
 public class MainActivity extends DearestActivity {
 
@@ -26,6 +29,8 @@ public class MainActivity extends DearestActivity {
     private NavController navController;
     private AppBarConfiguration appBarConfiguration;
     private boolean crashDialogShown;
+    private static final int UNDO_WINDOW_MS = 8000;
+    private Snackbar undoBar;
 
     private final ActivityResultLauncher<Intent> saveCrashLauncher =
             registerForActivityResult(new ActivityResultContracts.StartActivityForResult(),
@@ -60,12 +65,35 @@ public class MainActivity extends DearestActivity {
 
         applyInsets();
 
+        DearestApp.from(this).repository().deletedEntry().observe(this, this::showUndoDelete);
+
         DearestApp.from(this).lockState().observe(this, locked -> {
             if (Boolean.FALSE.equals(locked) && !crashDialogShown) {
                 crashDialogShown = true;
                 CrashReporter.showDialogIfPending(this, saveCrashLauncher);
             }
         });
+    }
+
+    private void showUndoDelete(DeletedEntry deleted) {
+        if (deleted == null) {
+            // Locked or discarded: the snapshot is gone, so the prompt must go too.
+            if (undoBar != null) undoBar.dismiss();
+            return;
+        }
+        DearestRepository repository = DearestApp.from(this).repository();
+        undoBar = Snackbar.make(binding.getRoot(), R.string.entry_deleted, UNDO_WINDOW_MS)
+                .setAnchorView(binding.bottomNav)
+                .setAction(R.string.action_undo, v -> repository.restoreEntry(deleted, (ok, error) -> {
+                    if (!ok) Toast.makeText(this, error, Toast.LENGTH_SHORT).show();
+                }))
+                .addCallback(new Snackbar.Callback() {
+                    @Override
+                    public void onDismissed(Snackbar bar, int event) {
+                        repository.discardDeleted(deleted);
+                    }
+                });
+        undoBar.show();
     }
 
     private void applyInsets() {

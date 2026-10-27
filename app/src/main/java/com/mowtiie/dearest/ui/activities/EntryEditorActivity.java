@@ -94,9 +94,15 @@ public class EntryEditorActivity extends DearestActivity {
             viewModel.ensureNotebook(notebooks);
             bindNotebookDropdown();
         });
-        viewModel.notebookId().observe(this, id -> bindNotebookDropdown());
+        viewModel.notebookId().observe(this, id -> {
+            bindNotebookDropdown();
+            scheduleAutosave();
+        });
 
-        viewModel.tagNames().observe(this, this::renderTagChips);
+        viewModel.tagNames().observe(this, names -> {
+            renderTagChips(names);
+            scheduleAutosave();
+        });
 
         TextWatcher autosaveWatcher = new TextWatcher() {
             @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
