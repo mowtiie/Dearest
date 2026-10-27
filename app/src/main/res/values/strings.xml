@@ -231,4 +231,11 @@
     <string name="delete_tag_title">Delete tag?</string>
     <string name="delete_tag_message">“%1$s” will be removed from every entry that has it — your entries themselves won\'t be touched.</string>
     <string name="cd_delete_tag">Delete tag</string>
+    <string name="error_vault_locked">Your journal is locked. Unlock it and try again.</string>
+    <string name="error_tag_name_in_use">That tag name is already in use</string>
+    <string name="error_generic">Something went wrong. Please try again.</string>
+    <plurals name="error_notebook_not_empty">
+        <item quantity="one">Notebook still contains %d entry</item>
+        <item quantity="other">Notebook still contains %d entries</item>
+    </plurals>
 </resources>

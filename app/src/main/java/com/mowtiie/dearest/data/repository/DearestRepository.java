@@ -8,6 +8,7 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.Transformations;
 
+import com.mowtiie.dearest.R;
 import com.mowtiie.dearest.data.dao.EntryDao;
 import com.mowtiie.dearest.data.dao.NotebookDao;
 import com.mowtiie.dearest.data.dao.TagDao;
@@ -20,11 +21,13 @@ import com.mowtiie.dearest.security.KeyManager;
 
 import net.zetetic.database.sqlcipher.SQLiteDatabase;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.BiConsumer;
+import java.util.function.Function;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -93,275 +96,210 @@ public final class DearestRepository {
         return db != null;
     }
 
+    // ---- Reads -------------------------------------------------------------------------------
+
     public LiveData<List<Notebook>> observeNotebooks() {
-        return Transformations.switchMap(refreshTrigger, ignored -> {
-            MutableLiveData<List<Notebook>> result = new MutableLiveData<>();
-            io.execute(() -> result.postValue(
-                    db == null ? Collections.emptyList() : notebookDao.getAll(db)));
-            return result;
-        });
+        return observe(Collections.emptyList(), notebookDao::getAll);
     }
 
     public LiveData<List<Entry>> observeEntries(String notebookId) {
-        return Transformations.switchMap(refreshTrigger, ignored -> {
-            MutableLiveData<List<Entry>> result = new MutableLiveData<>();
-            io.execute(() -> result.postValue(
-                    db == null ? Collections.emptyList() : entryDao.getByNotebook(db, notebookId)));
-            return result;
-        });
+        return observe(Collections.emptyList(), d -> entryDao.getByNotebook(d, notebookId));
     }
 
     public LiveData<List<Entry>> observeAllEntries() {
-        return Transformations.switchMap(refreshTrigger, ignored -> {
-            MutableLiveData<List<Entry>> result = new MutableLiveData<>();
-            io.execute(() -> result.postValue(
-                    db == null ? Collections.emptyList() : entryDao.getAll(db)));
-            return result;
-        });
+        return observe(Collections.emptyList(), entryDao::getAll);
     }
 
     public LiveData<Entry> observeEntry(String entryId) {
-        return Transformations.switchMap(refreshTrigger, ignored -> {
-            MutableLiveData<Entry> result = new MutableLiveData<>();
-            io.execute(() -> result.postValue(
-                    db == null ? null : entryDao.getById(db, entryId)));
-            return result;
-        });
+        return observe(null, d -> entryDao.getById(d, entryId));
     }
 
     public LiveData<List<Entry>> observeSearch(String rawQuery) {
-        return Transformations.switchMap(refreshTrigger, ignored -> {
-            MutableLiveData<List<Entry>> result = new MutableLiveData<>();
-            io.execute(() -> result.postValue(
-                    db == null ? Collections.emptyList() : entryDao.search(db, rawQuery)));
-            return result;
-        });
+        return observe(Collections.emptyList(), d -> entryDao.search(d, rawQuery));
     }
 
     public LiveData<List<Tag>> observeTags() {
-        return Transformations.switchMap(refreshTrigger, ignored -> {
-            MutableLiveData<List<Tag>> result = new MutableLiveData<>();
-            io.execute(() -> result.postValue(
-                    db == null ? Collections.emptyList() : tagDao.getAll(db)));
-            return result;
-        });
+        return observe(Collections.emptyList(), tagDao::getAll);
     }
 
     public LiveData<Map<String, Set<String>>> observeEntryTagLinks() {
-        return Transformations.switchMap(refreshTrigger, ignored -> {
-            MutableLiveData<Map<String, Set<String>>> result = new MutableLiveData<>();
-            io.execute(() -> result.postValue(
-                    db == null ? Collections.emptyMap() : tagDao.getAllEntryTagLinks(db)));
-            return result;
-        });
+        return observe(Collections.emptyMap(), tagDao::getAllEntryTagLinks);
     }
 
     public void getEntry(String entryId, ResultCallback<Entry> callback) {
-        io.execute(() -> {
-            Entry entry = (db == null) ? null : entryDao.getById(db, entryId);
-            mainHandler.post(() -> callback.onResult(entry));
-        });
+        read(null, d -> entryDao.getById(d, entryId), callback);
     }
 
     public void getTagsForEntry(String entryId, ResultCallback<List<Tag>> callback) {
-        io.execute(() -> {
-            List<Tag> tags = (db == null) ? Collections.emptyList() : tagDao.getTagsForEntry(db, entryId);
-            mainHandler.post(() -> callback.onResult(tags));
-        });
+        read(Collections.emptyList(), d -> tagDao.getTagsForEntry(d, entryId), callback);
     }
 
     public void countEntries(String notebookId, ResultCallback<Integer> callback) {
-        io.execute(() -> {
-            int count = (db == null) ? 0 : entryDao.countByNotebook(db, notebookId);
-            mainHandler.post(() -> callback.onResult(count));
-        });
+        read(0, d -> entryDao.countByNotebook(d, notebookId), callback);
     }
 
+    /** Full entry bodies, for backup and export. */
     public void loadAll(BiConsumer<List<Notebook>, List<Entry>> callback) {
         io.execute(() -> {
-            List<Notebook> notebooks = (db == null) ? Collections.emptyList() : notebookDao.getAll(db);
-            List<Entry> entries = (db == null) ? Collections.emptyList() : entryDao.getAllFull(db);
+            SQLiteDatabase d = db;
+            List<Notebook> notebooks = (d == null) ? Collections.emptyList() : notebookDao.getAll(d);
+            List<Entry> entries = (d == null) ? Collections.emptyList() : entryDao.getAllFull(d);
             mainHandler.post(() -> callback.accept(notebooks, entries));
         });
     }
 
+    // ---- Writes ------------------------------------------------------------------------------
+
     public void importAll(List<Notebook> notebooks, List<Entry> entries,
                           boolean replaceAll, OperationCallback cb) {
-        io.execute(() -> {
-            if (db == null) {
-                postResult(cb, false, "Database is locked");
-                return;
+        inTransaction(cb, d -> {
+            if (replaceAll) {
+                d.delete(DatabaseContract.Entries.TABLE, null, null);
+                d.delete(DatabaseContract.Notebooks.TABLE, null, null);
             }
-            boolean ok = false;
-            String error = null;
-            try {
-                db.beginTransaction();
-                try {
-                    if (replaceAll) {
-                        db.delete(DatabaseContract.Entries.TABLE, null, null);
-                        db.delete(DatabaseContract.Notebooks.TABLE, null, null);
-                    }
-                    for (Notebook n : notebooks) {
-                        if (notebookDao.getById(db, n.getId()) == null) {
-                            notebookDao.insert(db, n);
-                        } else {
-                            notebookDao.update(db, n);
-                        }
-                    }
-                    for (Entry e : entries) {
-                        Entry existing = entryDao.getById(db, e.getId());
-                        if (existing == null) {
-                            entryDao.insert(db, e);
-                        } else if (e.getUpdatedAt() > existing.getUpdatedAt()) {
-                            entryDao.update(db, e);
-                        }
-                    }
-                    db.setTransactionSuccessful();
-                    ok = true;
-                } finally {
-                    db.endTransaction();
+            for (Notebook n : notebooks) {
+                if (notebookDao.getById(d, n.getId()) == null) {
+                    notebookDao.insert(d, n);
+                } else {
+                    notebookDao.update(d, n);
                 }
-                triggerRefresh();
-            } catch (Exception e) {
-                error = e.getMessage();
             }
-            postResult(cb, ok, error);
-        });
-    }
-
-    public void saveEntry(Entry entry) {
-        io.execute(() -> {
-            if (db == null) return;
-            if (entryDao.update(db, entry) == 0) {
-                entryDao.insert(db, entry);
+            for (Entry e : entries) {
+                Entry existing = entryDao.getById(d, e.getId());
+                if (existing == null) {
+                    entryDao.insert(d, e);
+                } else if (e.getUpdatedAt() > existing.getUpdatedAt()) {
+                    entryDao.update(d, e);
+                }
             }
-            triggerRefresh();
         });
     }
 
     public void saveEntryWithTags(Entry entry, List<String> tagNames, OperationCallback cb) {
-        io.execute(() -> {
-            if (db == null) {
-                postResult(cb, false, "Database is locked");
-                return;
+        inTransaction(cb, d -> {
+            if (entryDao.update(d, entry) == 0) {
+                entryDao.insert(d, entry);
             }
-            boolean ok = false;
-            String error = null;
-            try {
-                db.beginTransaction();
-                try {
-                    if (entryDao.update(db, entry) == 0) {
-                        entryDao.insert(db, entry);
-                    }
-                    List<String> tagIds = new java.util.ArrayList<>();
-                    for (String name : tagNames) {
-                        String trimmed = name == null ? "" : name.trim();
-                        if (trimmed.isEmpty()) continue;
-                        tagIds.add(tagDao.findOrCreateByName(db, trimmed).getId());
-                    }
-                    tagDao.setTagsForEntry(db, entry.getId(), tagIds);
-                    db.setTransactionSuccessful();
-                    ok = true;
-                } finally {
-                    db.endTransaction();
-                }
-                triggerRefresh();
-            } catch (Exception e) {
-                error = e.getMessage();
+            List<String> tagIds = new ArrayList<>();
+            for (String name : tagNames) {
+                String trimmed = name == null ? "" : name.trim();
+                if (trimmed.isEmpty()) continue;
+                tagIds.add(tagDao.findOrCreateByName(d, trimmed).getId());
             }
-            postResult(cb, ok, error);
-        });
-    }
-
-    public void createTag(String name, OperationCallback cb) {
-        io.execute(() -> {
-            boolean ok = false;
-            String error = null;
-            if (db == null) {
-                error = "Database is locked";
-            } else {
-                try {
-                    tagDao.findOrCreateByName(db, name.trim());
-                    triggerRefresh();
-                    ok = true;
-                } catch (Exception e) {
-                    error = e.getMessage();
-                }
-            }
-            postResult(cb, ok, error);
-        });
-    }
-
-    public void renameTag(String tagId, String newName, OperationCallback cb) {
-        io.execute(() -> {
-            boolean ok = false;
-            String error = null;
-            if (db == null) {
-                error = "Database is locked";
-            } else {
-                try {
-                    tagDao.update(db, new Tag(tagId, newName.trim(), 0));
-                    triggerRefresh();
-                    ok = true;
-                } catch (Exception e) {
-                    error = "That tag name is already in use";
-                }
-            }
-            postResult(cb, ok, error);
-        });
-    }
-
-    public void deleteTag(String tagId) {
-        io.execute(() -> {
-            if (db == null) return;
-            tagDao.delete(db, tagId);
-            triggerRefresh();
+            tagDao.setTagsForEntry(d, entry.getId(), tagIds);
         });
     }
 
     public void deleteEntry(String entryId) {
-        io.execute(() -> {
-            if (db == null) return;
-            entryDao.delete(db, entryId);
-            triggerRefresh();
+        write(null, d -> entryDao.delete(d, entryId));
+    }
+
+    public void createTag(String name, OperationCallback cb) {
+        write(cb, d -> tagDao.findOrCreateByName(d, name.trim()));
+    }
+
+    public void renameTag(String tagId, String newName, OperationCallback cb) {
+        write(cb, d -> {
+            try {
+                tagDao.update(d, new Tag(tagId, newName.trim(), 0));
+            } catch (RuntimeException duplicateName) {
+                throw new UserFacingException(appContext.getString(R.string.error_tag_name_in_use));
+            }
         });
     }
 
+    public void deleteTag(String tagId) {
+        write(null, d -> tagDao.delete(d, tagId));
+    }
+
     public void saveNotebook(Notebook notebook) {
-        io.execute(() -> {
-            if (db == null) return;
-            if (notebookDao.update(db, notebook) == 0) {
-                notebookDao.insert(db, notebook);
+        write(null, d -> {
+            if (notebookDao.update(d, notebook) == 0) {
+                notebookDao.insert(d, notebook);
             }
-            triggerRefresh();
         });
     }
 
     public void deleteNotebook(String notebookId, String moveEntriesToId, OperationCallback cb) {
-        io.execute(() -> {
-            boolean success = false;
-            String error = null;
-            try {
-                if (db == null) {
-                    error = "Database is locked";
-                } else {
-                    int entryCount = entryDao.countByNotebook(db, notebookId);
-                    if (entryCount > 0 && moveEntriesToId == null) {
-                        error = "Notebook still contains " + entryCount + " entr"
-                                + (entryCount == 1 ? "y" : "ies");
-                    } else {
-                        if (entryCount > 0) {
-                            entryDao.moveEntries(db, notebookId, moveEntriesToId);
-                        }
-                        notebookDao.delete(db, notebookId);
-                        triggerRefresh();
-                        success = true;
-                    }
-                }
-            } catch (Exception e) {
-                error = e.getMessage();
+        inTransaction(cb, d -> {
+            int entryCount = entryDao.countByNotebook(d, notebookId);
+            if (entryCount > 0 && moveEntriesToId == null) {
+                throw new UserFacingException(appContext.getResources().getQuantityString(
+                        R.plurals.error_notebook_not_empty, entryCount, entryCount));
             }
-            postResult(cb, success, error);
+            if (entryCount > 0) {
+                entryDao.moveEntries(d, notebookId, moveEntriesToId);
+            }
+            notebookDao.delete(d, notebookId);
+        });
+    }
+
+    // ---- Plumbing ----------------------------------------------------------------------------
+
+    private interface DbWork {
+        void run(SQLiteDatabase db) throws Exception;
+    }
+
+    /** An error whose message is already localized and safe to show to the user. */
+    private static final class UserFacingException extends RuntimeException {
+        UserFacingException(String message) {
+            super(message);
+        }
+    }
+
+    /**
+     * Runs a write on the IO thread, refreshes observers on success and reports the outcome.
+     * A locked vault is reported as a failure rather than silently dropped.
+     */
+    private void write(OperationCallback cb, DbWork work) {
+        io.execute(() -> {
+            SQLiteDatabase d = db;
+            if (d == null) {
+                postResult(cb, false, appContext.getString(R.string.error_vault_locked));
+                return;
+            }
+            try {
+                work.run(d);
+            } catch (UserFacingException e) {
+                postResult(cb, false, e.getMessage());
+                return;
+            } catch (Exception e) {
+                postResult(cb, false, appContext.getString(R.string.error_generic));
+                return;
+            }
+            triggerRefresh();
+            postResult(cb, true, null);
+        });
+    }
+
+    private void inTransaction(OperationCallback cb, DbWork work) {
+        write(cb, d -> {
+            d.beginTransaction();
+            try {
+                work.run(d);
+                d.setTransactionSuccessful();
+            } finally {
+                d.endTransaction();
+            }
+        });
+    }
+
+    private <T> LiveData<T> observe(T whenLocked, Function<SQLiteDatabase, T> query) {
+        return Transformations.switchMap(refreshTrigger, ignored -> {
+            MutableLiveData<T> result = new MutableLiveData<>();
+            io.execute(() -> {
+                SQLiteDatabase d = db;
+                result.postValue(d == null ? whenLocked : query.apply(d));
+            });
+            return result;
+        });
+    }
+
+    private <T> void read(T whenLocked, Function<SQLiteDatabase, T> query, ResultCallback<T> callback) {
+        io.execute(() -> {
+            SQLiteDatabase d = db;
+            T value = (d == null) ? whenLocked : query.apply(d);
+            mainHandler.post(() -> callback.onResult(value));
         });
     }
 
