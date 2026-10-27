@@ -78,6 +78,27 @@ public class EntryDao {
         }
     }
 
+    /** Creation times in [from, to), for marking days that have entries. Uses idx_entries_created. */
+    public List<Long> getCreatedAtBetween(SQLiteDatabase db, long from, long to) {
+        try (Cursor c = db.query(Entries.TABLE, new String[]{ Entries.COL_CREATED },
+                Entries.COL_CREATED + " >= ? AND " + Entries.COL_CREATED + " < ?",
+                new String[]{ String.valueOf(from), String.valueOf(to) },
+                null, null, null)) {
+            List<Long> out = new ArrayList<>(c.getCount());
+            while (c.moveToNext()) out.add(c.getLong(0));
+            return out;
+        }
+    }
+
+    public List<Entry> getCreatedBetween(SQLiteDatabase db, long from, long to) {
+        try (Cursor c = db.query(Entries.TABLE, LIST_COLUMNS,
+                Entries.COL_CREATED + " >= ? AND " + Entries.COL_CREATED + " < ?",
+                new String[]{ String.valueOf(from), String.valueOf(to) },
+                null, null, Entries.COL_CREATED + " DESC")) {
+            return collect(c);
+        }
+    }
+
     /** Full bodies; for backup and export only. */
     public List<Entry> getAllFull(SQLiteDatabase db) {
         try (Cursor c = db.query(Entries.TABLE, COLUMNS,

@@ -111,6 +111,14 @@ public final class DearestRepository {
         return observe(Collections.emptyList(), entryDao::getAll);
     }
 
+    public LiveData<List<Long>> observeCreatedAtBetween(long from, long to) {
+        return observe(Collections.emptyList(), d -> entryDao.getCreatedAtBetween(d, from, to));
+    }
+
+    public LiveData<List<Entry>> observeEntriesCreatedBetween(long from, long to) {
+        return observe(Collections.emptyList(), d -> entryDao.getCreatedBetween(d, from, to));
+    }
+
     public LiveData<Entry> observeEntry(String entryId) {
         return observe(null, d -> entryDao.getById(d, entryId));
     }

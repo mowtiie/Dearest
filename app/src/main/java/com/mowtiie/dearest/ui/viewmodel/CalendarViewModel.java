@@ -13,14 +13,12 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.ZoneId;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 public class CalendarViewModel extends DearestViewModel {
 
-    private final LiveData<List<Entry>> allEntries;
     private final MutableLiveData<YearMonth> month = new MutableLiveData<>();
     private final MutableLiveData<LocalDate> selectedDate = new MutableLiveData<>();
     private final LiveData<Set<LocalDate>> daysWithEntries;
@@ -28,10 +26,14 @@ public class CalendarViewModel extends DearestViewModel {
 
     public CalendarViewModel(@NonNull Application application) {
         super(application);
-        allEntries = repository().observeAllEntries();
-        daysWithEntries = Transformations.map(allEntries, this::datesOf);
+        // Only the visible month and the selected day are queried, not the whole journal.
+        daysWithEntries = Transformations.switchMap(month, m -> {
+            LiveData<List<Long>> created = repository().observeCreatedAtBetween(
+                    startOfDay(m.atDay(1)), startOfDay(m.plusMonths(1).atDay(1)));
+            return Transformations.map(created, CalendarViewModel::datesOf);
+        });
         entriesForSelectedDate = Transformations.switchMap(selectedDate, date ->
-                Transformations.map(allEntries, list -> entriesOn(list, date)));
+                repository().observeEntriesCreatedBetween(startOfDay(date), startOfDay(date.plusDays(1))));
 
         LocalDate today = LocalDate.now();
         month.setValue(YearMonth.from(today));
@@ -57,22 +59,16 @@ public class CalendarViewModel extends DearestViewModel {
         selectedDate.setValue(date);
     }
 
-    private Set<LocalDate> datesOf(List<Entry> entries) {
+    private static Set<LocalDate> datesOf(List<Long> createdAt) {
         Set<LocalDate> set = new HashSet<>();
-        if (entries != null) {
-            for (Entry e : entries) set.add(toDate(e.getCreatedAt()));
+        if (createdAt != null) {
+            for (long t : createdAt) set.add(toDate(t));
         }
         return set;
     }
 
-    private List<Entry> entriesOn(List<Entry> entries, LocalDate date) {
-        List<Entry> out = new ArrayList<>();
-        if (entries != null && date != null) {
-            for (Entry e : entries) {
-                if (toDate(e.getCreatedAt()).equals(date)) out.add(e);
-            }
-        }
-        return out;
+    private static long startOfDay(LocalDate date) {
+        return date.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli();
     }
 
     private static LocalDate toDate(long epochMs) {
