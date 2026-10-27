@@ -4,6 +4,7 @@ import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
 
+import androidx.annotation.VisibleForTesting;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.Transformations;
@@ -29,7 +30,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.BooleanSupplier;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -46,7 +49,9 @@ public final class DearestRepository {
     private static volatile DearestRepository instance;
 
     private final Context appContext;
-    private final KeyManager keyManager;
+    private final BooleanSupplier unlocked;
+    private final Supplier<byte[]> databaseKey;
+    private final String dbName;
     private final EntryDao entryDao = new EntryDao();
     private final NotebookDao notebookDao = new NotebookDao();
     private final TagDao tagDao = new TagDao();
@@ -69,17 +74,28 @@ public final class DearestRepository {
     private volatile SQLiteDatabase db;
     private DearestDatabase dbHelper;
 
-    private DearestRepository(Context context, KeyManager keyManager) {
+    private DearestRepository(Context context, BooleanSupplier unlocked,
+                              Supplier<byte[]> databaseKey, String dbName) {
         this.appContext = context.getApplicationContext();
-        this.keyManager = keyManager;
+        this.unlocked = unlocked;
+        this.databaseKey = databaseKey;
+        this.dbName = dbName;
         invalidate(ALL);
+    }
+
+    /** A repository over its own database file, so tests never touch the real journal. */
+    @VisibleForTesting
+    public static DearestRepository createForTest(Context context, BooleanSupplier unlocked,
+                                                  Supplier<byte[]> databaseKey, String dbName) {
+        return new DearestRepository(context, unlocked, databaseKey, dbName);
     }
 
     public static DearestRepository getInstance(Context context, KeyManager keyManager) {
         if (instance == null) {
             synchronized (DearestRepository.class) {
                 if (instance == null) {
-                    instance = new DearestRepository(context, keyManager);
+                    instance = new DearestRepository(context, keyManager::isUnlocked,
+                            keyManager::getDatabaseKey, null);
                 }
             }
         }
@@ -88,8 +104,11 @@ public final class DearestRepository {
 
     public void open() {
         io.execute(() -> {
-            if (db != null || !keyManager.isUnlocked()) return;
-            dbHelper = new DearestDatabase(appContext, keyManager.getDatabaseKey());
+            if (db != null || !unlocked.getAsBoolean()) return;
+            byte[] key = databaseKey.get();
+            dbHelper = dbName == null
+                    ? new DearestDatabase(appContext, key)
+                    : new DearestDatabase(appContext, dbName, key);
             db = dbHelper.getWritableDatabase();
             invalidate(ALL);
         });

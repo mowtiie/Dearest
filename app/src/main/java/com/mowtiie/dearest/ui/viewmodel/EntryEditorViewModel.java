@@ -4,12 +4,14 @@ import android.app.Application;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.VisibleForTesting;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
 import com.mowtiie.dearest.data.model.Entry;
 import com.mowtiie.dearest.data.model.Notebook;
 import com.mowtiie.dearest.data.model.Tag;
+import com.mowtiie.dearest.data.repository.DearestRepository;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -33,7 +35,12 @@ public class EntryEditorViewModel extends DearestViewModel {
     private List<String> originalTagNames = Collections.emptyList();
 
     public EntryEditorViewModel(@NonNull Application application) {
-        super(application);
+        this(application, null);
+    }
+
+    @VisibleForTesting
+    public EntryEditorViewModel(@NonNull Application application, DearestRepository repository) {
+        super(application, repository);
         notebooks = repository().observeNotebooks();
         allTags = repository().observeTags();
     }

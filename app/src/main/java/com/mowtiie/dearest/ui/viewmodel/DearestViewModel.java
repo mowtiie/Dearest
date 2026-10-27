@@ -19,8 +19,16 @@ public abstract class DearestViewModel extends AndroidViewModel {
     protected final ExecutorService io = Executors.newSingleThreadExecutor();
     protected final Handler main = new Handler(Looper.getMainLooper());
 
+    private final DearestRepository repository;
+
     protected DearestViewModel(@NonNull Application application) {
+        this(application, null);
+    }
+
+    /** For tests: use the given repository instead of the application's. */
+    protected DearestViewModel(@NonNull Application application, DearestRepository repository) {
         super(application);
+        this.repository = repository;
     }
 
     protected DearestApp app() {
@@ -32,7 +40,7 @@ public abstract class DearestViewModel extends AndroidViewModel {
     }
 
     protected DearestRepository repository() {
-        return app().repository();
+        return repository != null ? repository : app().repository();
     }
 
     @Override
