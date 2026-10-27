@@ -17,13 +17,14 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
 public class JournalViewModel extends DearestViewModel {
 
     public enum Sort { NEWEST, OLDEST, TITLE }
+
+    private static final long SEARCH_DEBOUNCE_MS = 250L;
 
     private final MutableLiveData<String> selectedNotebookId = new MutableLiveData<>();
     private final MutableLiveData<Set<String>> selectedTagIds = new MutableLiveData<>(new HashSet<>());
@@ -36,6 +37,8 @@ public class JournalViewModel extends DearestViewModel {
     private final LiveData<List<Entry>> notebookEntries;
     private final LiveData<Notebook> selectedNotebook;
     private final MediatorLiveData<List<Entry>> entries = new MediatorLiveData<>();
+    private final Runnable applyQuery = this::commitQuery;
+    private String pendingQuery = "";
 
     public JournalViewModel(@NonNull Application application) {
         super(application);
@@ -44,8 +47,9 @@ public class JournalViewModel extends DearestViewModel {
         tags = repository().observeTags();
         entryTagLinks = repository().observeEntryTagLinks();
 
-        notebookEntries = Transformations.switchMap(selectedNotebookId, id ->
-                id == null ? repository().observeAllEntries() : repository().observeEntries(id));
+        LiveData<List<Entry>> allEntries = repository().observeAllEntries();
+        notebookEntries = Transformations.switchMap(query, q ->
+                q.isEmpty() ? allEntries : repository().observeSearch(q));
 
         selectedNotebook = Transformations.switchMap(selectedNotebookId, id ->
                 Transformations.map(notebooks, list -> findById(list, id)));
@@ -53,6 +57,7 @@ public class JournalViewModel extends DearestViewModel {
         entries.addSource(notebookEntries, e -> recompute());
         entries.addSource(entryTagLinks, m -> recompute());
         entries.addSource(selectedTagIds, s -> recompute());
+        entries.addSource(selectedNotebookId, id -> recompute());
         entries.addSource(query, q -> recompute());
         entries.addSource(sort, s -> recompute());
 
@@ -89,8 +94,14 @@ public class JournalViewModel extends DearestViewModel {
     }
 
     public void setQuery(@Nullable String q) {
-        String v = (q == null) ? "" : q;
-        if (!v.equals(query.getValue())) query.setValue(v);
+        String v = (q == null) ? "" : q.trim();
+        main.removeCallbacks(applyQuery);
+        pendingQuery = v;
+        if (v.isEmpty()) {
+            applyQuery.run();
+        } else {
+            main.postDelayed(applyQuery, SEARCH_DEBOUNCE_MS);
+        }
     }
 
     public void setSort(Sort s) {
@@ -105,11 +116,16 @@ public class JournalViewModel extends DearestViewModel {
         return (list != null && !list.isEmpty()) ? list.get(0).getId() : null;
     }
 
+    private void commitQuery() {
+        if (!pendingQuery.equals(query.getValue())) query.setValue(pendingQuery);
+    }
+
     public void deleteEntry(String entryId) {
         repository().deleteEntry(entryId);
     }
 
     private void recompute() {
+        String notebookId = selectedNotebookId.getValue();
         List<Entry> base = notebookEntries.getValue();
         if (base == null) {
             entries.setValue(Collections.emptyList());
@@ -118,15 +134,13 @@ public class JournalViewModel extends DearestViewModel {
 
         Set<String> wantedTags = selectedTagIds.getValue();
         Map<String, Set<String>> links = entryTagLinks.getValue();
-        String q = query.getValue();
-        String needle = (q == null || q.trim().isEmpty()) ? null : q.trim().toLowerCase(Locale.getDefault());
 
         List<Entry> out = new ArrayList<>();
         for (Entry e : base) {
             if (wantedTags != null && !wantedTags.isEmpty() && !matchesAnyTag(e, wantedTags, links)) {
                 continue;
             }
-            if (needle != null && !matchesText(e, needle)) {
+            if (notebookId != null && !notebookId.equals(e.getNotebookId())) {
                 continue;
             }
             out.add(e);
@@ -144,12 +158,6 @@ public class JournalViewModel extends DearestViewModel {
             if (entryTags.contains(tagId)) return true;
         }
         return false;
-    }
-
-    private static boolean matchesText(Entry e, String needle) {
-        String t = e.getTitle() == null ? "" : e.getTitle().toLowerCase(Locale.getDefault());
-        String b = e.getBody() == null ? "" : e.getBody().toLowerCase(Locale.getDefault());
-        return t.contains(needle) || b.contains(needle);
     }
 
     private static void sortEntries(List<Entry> list, @Nullable Sort sort) {

@@ -24,6 +24,18 @@ public class EntryDao {
             Entries.COL_UPDATED
     };
 
+    /** List screens only render a short preview, so avoid pulling every full body into memory. */
+    public static final int SNIPPET_LENGTH = 240;
+
+    private static final String[] LIST_COLUMNS = {
+            Entries.COL_UUID,
+            Entries.COL_NOTEBOOK,
+            Entries.COL_TITLE,
+            "substr(" + Entries.COL_BODY + ", 1, " + SNIPPET_LENGTH + ") AS " + Entries.COL_BODY,
+            Entries.COL_CREATED,
+            Entries.COL_UPDATED
+    };
+
     public long insert(SQLiteDatabase db, Entry entry) {
         return db.insertOrThrow(Entries.TABLE, null, toValues(entry));
     }
@@ -52,7 +64,7 @@ public class EntryDao {
     }
 
     public List<Entry> getByNotebook(SQLiteDatabase db, String notebookId) {
-        try (Cursor c = db.query(Entries.TABLE, COLUMNS,
+        try (Cursor c = db.query(Entries.TABLE, LIST_COLUMNS,
                 Entries.COL_NOTEBOOK + " = ?", new String[]{ notebookId },
                 null, null, Entries.COL_CREATED + " DESC")) {
             return collect(c);
@@ -60,6 +72,14 @@ public class EntryDao {
     }
 
     public List<Entry> getAll(SQLiteDatabase db) {
+        try (Cursor c = db.query(Entries.TABLE, LIST_COLUMNS,
+                null, null, null, null, Entries.COL_CREATED + " DESC")) {
+            return collect(c);
+        }
+    }
+
+    /** Full bodies; for backup and export only. */
+    public List<Entry> getAllFull(SQLiteDatabase db) {
         try (Cursor c = db.query(Entries.TABLE, COLUMNS,
                 null, null, null, null, Entries.COL_CREATED + " DESC")) {
             return collect(c);
@@ -72,7 +92,7 @@ public class EntryDao {
 
         final String sql =
                 "SELECT e." + Entries.COL_UUID + ", e." + Entries.COL_NOTEBOOK +
-                        ", e." + Entries.COL_TITLE + ", e." + Entries.COL_BODY +
+                        ", e." + Entries.COL_TITLE + ", substr(e." + Entries.COL_BODY + ", 1, " + SNIPPET_LENGTH + ") AS " + Entries.COL_BODY +
                         ", e." + Entries.COL_CREATED + ", e." + Entries.COL_UPDATED +
                         " FROM " + EntriesFts.TABLE + " f" +
                         " JOIN " + Entries.TABLE + " e ON e." + Entries._ID + " = f.rowid" +

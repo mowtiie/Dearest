@@ -180,7 +180,7 @@ public final class DearestRepository {
     public void loadAll(BiConsumer<List<Notebook>, List<Entry>> callback) {
         io.execute(() -> {
             List<Notebook> notebooks = (db == null) ? Collections.emptyList() : notebookDao.getAll(db);
-            List<Entry> entries = (db == null) ? Collections.emptyList() : entryDao.getAll(db);
+            List<Entry> entries = (db == null) ? Collections.emptyList() : entryDao.getAllFull(db);
             mainHandler.post(() -> callback.accept(notebooks, entries));
         });
     }
