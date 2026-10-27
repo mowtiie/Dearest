@@ -19,7 +19,10 @@ import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
+import java.util.List;
+
 import com.mowtiie.dearest.R;
+import com.mowtiie.dearest.data.model.Entry;
 import com.mowtiie.dearest.ui.InsetsUtil;
 import com.mowtiie.dearest.databinding.FragmentJournalBinding;
 import com.mowtiie.dearest.ui.activities.EntryEditorActivity;
@@ -57,8 +60,9 @@ public class JournalFragment extends Fragment {
 
         viewModel.entries().observe(getViewLifecycleOwner(), entries -> {
             adapter.submitList(entries);
-            binding.emptyState.setVisibility((entries == null || entries.isEmpty()) ? View.VISIBLE : View.GONE);
+            updateEmptyState();
         });
+        viewModel.filtering().observe(getViewLifecycleOwner(), filtering -> updateEmptyState());
 
         viewModel.selectedNotebookId().observe(getViewLifecycleOwner(), id -> updateFilterIcon());
         viewModel.selectedTagIds().observe(getViewLifecycleOwner(), ids -> updateFilterIcon());
@@ -70,6 +74,18 @@ public class JournalFragment extends Fragment {
     public void onDestroyView() {
         super.onDestroyView();
         binding = null;
+    }
+
+    /** Tells "your journal is empty" apart from "nothing matches the search or filters". */
+    private void updateEmptyState() {
+        if (binding == null) return;
+        List<Entry> entries = viewModel.entries().getValue();
+        boolean empty = entries == null || entries.isEmpty();
+        binding.emptyState.setVisibility(empty ? View.VISIBLE : View.GONE);
+        if (!empty) return;
+        boolean filtering = Boolean.TRUE.equals(viewModel.filtering().getValue());
+        binding.emptyTitle.setText(filtering ? R.string.search_no_results : R.string.journal_empty_title);
+        binding.emptySubtitle.setText(filtering ? R.string.search_no_results_hint : R.string.journal_empty_subtitle);
     }
 
     private void setupToolbarMenu() {

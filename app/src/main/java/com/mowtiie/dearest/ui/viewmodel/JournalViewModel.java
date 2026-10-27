@@ -37,6 +37,7 @@ public class JournalViewModel extends DearestViewModel {
     private final LiveData<List<Entry>> notebookEntries;
     private final LiveData<Notebook> selectedNotebook;
     private final MediatorLiveData<List<Entry>> entries = new MediatorLiveData<>();
+    private final MediatorLiveData<Boolean> filtering = new MediatorLiveData<>();
     private final Runnable applyQuery = this::commitQuery;
     private String pendingQuery = "";
 
@@ -64,12 +65,18 @@ public class JournalViewModel extends DearestViewModel {
         entries.addSource(query, q -> recompute());
         entries.addSource(sort, s -> recompute());
 
+        filtering.addSource(selectedNotebookId, id -> updateFiltering());
+        filtering.addSource(selectedTagIds, ids -> updateFiltering());
+        filtering.addSource(query, q -> updateFiltering());
+
         selectedNotebookId.setValue(null);
     }
 
     public LiveData<List<Notebook>>            notebooks()          { return notebooks; }
     public LiveData<List<Tag>>                 tags()               { return tags; }
     public LiveData<List<Entry>>               entries()            { return entries; }
+    /** True while a search, notebook or tag filter is narrowing the list. */
+    public LiveData<Boolean>                   filtering()          { return filtering; }
     public LiveData<Notebook>                  selectedNotebook()   { return selectedNotebook; }
     public LiveData<String>                    selectedNotebookId() { return selectedNotebookId; }
     public LiveData<Set<String>>               selectedTagIds()     { return selectedTagIds; }
@@ -117,6 +124,15 @@ public class JournalViewModel extends DearestViewModel {
         if (id != null) return id;
         List<Notebook> list = notebooks.getValue();
         return (list != null && !list.isEmpty()) ? list.get(0).getId() : null;
+    }
+
+    private void updateFiltering() {
+        Set<String> tagIds = selectedTagIds.getValue();
+        String q = query.getValue();
+        boolean active = selectedNotebookId.getValue() != null
+                || (tagIds != null && !tagIds.isEmpty())
+                || (q != null && !q.isEmpty());
+        filtering.setValue(active);
     }
 
     private void commitQuery() {

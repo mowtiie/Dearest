@@ -50,6 +50,7 @@
     <string name="search_hint">Search your entries</string>
     <string name="search_prompt">Search your entries</string>
     <string name="search_no_results">No matching entries</string>
+    <string name="search_no_results_hint">Try different words, or clear the search and filters.</string>
 
     <!-- Entry editor -->
     <string name="editor_share">Share</string>
