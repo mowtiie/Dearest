@@ -3,6 +3,10 @@ package com.mowtiie.dearest.ui.activities;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -41,6 +45,10 @@ public class EntryEditorActivity extends DearestActivity {
 
     private ActivityEntryEditorBinding binding;
     private EntryEditorViewModel viewModel;
+    private static final long AUTOSAVE_DELAY_MS = 2000L;
+
+    private final Handler autosaveHandler = new Handler(Looper.getMainLooper());
+    private final Runnable autosaveRunnable = this::autosave;
     private boolean shouldPopulate;
 
     private final List<String> notebookIdsForDropdown = new ArrayList<>();
@@ -85,6 +93,14 @@ public class EntryEditorActivity extends DearestActivity {
         viewModel.notebookId().observe(this, id -> bindNotebookDropdown());
 
         viewModel.tagNames().observe(this, this::renderTagChips);
+
+        TextWatcher autosaveWatcher = new TextWatcher() {
+            @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            @Override public void onTextChanged(CharSequence s, int start, int before, int count) {}
+            @Override public void afterTextChanged(Editable s) { scheduleAutosave(); }
+        };
+        binding.editorTitle.addTextChangedListener(autosaveWatcher);
+        binding.editorBody.addTextChangedListener(autosaveWatcher);
 
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override public void handleOnBackPressed() { saveAndFinish(); }
@@ -154,7 +170,27 @@ public class EntryEditorActivity extends DearestActivity {
         tagPickerLauncher.launch(intent);
     }
 
+    private void scheduleAutosave() {
+        autosaveHandler.removeCallbacks(autosaveRunnable);
+        autosaveHandler.postDelayed(autosaveRunnable, AUTOSAVE_DELAY_MS);
+    }
+
+    private void autosave() {
+        boolean wasNew = viewModel.isNew();
+        viewModel.autosave(binding.editorTitle.getText().toString(),
+                binding.editorBody.getText().toString());
+        if (wasNew && !viewModel.isNew()) invalidateOptionsMenu();
+    }
+
+    @Override
+    protected void onStop() {
+        autosaveHandler.removeCallbacks(autosaveRunnable);
+        if (!isFinishing()) autosave();
+        super.onStop();
+    }
+
     private void saveAndFinish() {
+        autosaveHandler.removeCallbacks(autosaveRunnable);
         viewModel.save(binding.editorTitle.getText().toString(), binding.editorBody.getText().toString());
     }
 
@@ -212,7 +248,10 @@ public class EntryEditorActivity extends DearestActivity {
                 .setTitle(R.string.editor_delete_confirm_title)
                 .setMessage(R.string.editor_delete_confirm_message)
                 .setNegativeButton(android.R.string.cancel, null)
-                .setPositiveButton(R.string.editor_delete, (d, w) -> viewModel.delete())
+                .setPositiveButton(R.string.editor_delete, (d, w) -> {
+                    autosaveHandler.removeCallbacks(autosaveRunnable);
+                    viewModel.delete();
+                })
                 .show();
     }
 }

@@ -1,5 +1,6 @@
 package com.mowtiie.dearest.ui.activities;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.WindowManager;
 
@@ -19,6 +20,19 @@ public abstract class DearestActivity extends AppCompatActivity {
         applySecureFlag();
         applyContrastOverlay();
         super.onCreate(savedInstanceState);
+        if (requiresUnlock()) {
+            DearestApp.from(this).lockState().observe(this, locked -> {
+                if (Boolean.TRUE.equals(locked)) {
+                    startActivity(new Intent(this, UnlockActivity.class)
+                            .addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP));
+                }
+            });
+        }
+    }
+
+    /** Screens that show journal data must cover themselves with the unlock screen whenever the app locks. */
+    protected boolean requiresUnlock() {
+        return true;
     }
 
     private void applySecureFlag() {

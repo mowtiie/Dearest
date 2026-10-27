@@ -105,47 +105,56 @@ public class EntryEditorViewModel extends DearestViewModel {
     }
 
     public void save(String title, String body) {
+        persist(title, body);
+        finished.setValue(true);
+    }
+
+    /** Saves without closing the editor. Safe to call repeatedly; no-ops when nothing changed. */
+    public void autosave(String title, String body) {
+        if (!isNew() && original == null) return;
+        persist(title, body);
+    }
+
+    private void persist(String title, String body) {
         String t = normalize(title);
         String b = normalize(body);
         String nb = notebookId.getValue();
         List<String> tags = tagNames.getValue();
         if (tags == null) tags = Collections.emptyList();
 
+        final Entry previous = original;
+        final List<String> previousTags = originalTagNames;
+        final String previousId = entryId;
+
+        Entry toSave;
         if (isNew()) {
-            if (t.isEmpty() && b.isEmpty()) {
-                finished.setValue(true);
-                return;
-            }
-            if (nb == null) {
-                finished.setValue(true);
-                return;
-            }
-            Entry created = Entry.createNew(nb, t, b);
-            entryId = created.getId();
-            original = created;
-            originalTagNames = tags;
-            repository().saveEntryWithTags(created, tags, (ok, err) -> { /* best-effort */ });
+            if ((t.isEmpty() && b.isEmpty()) || nb == null) return;
+            toSave = Entry.createNew(nb, t, b);
+            entryId = toSave.getId();
         } else {
             boolean notebookChanged = original != null && !equal(original.getNotebookId(), nb);
             boolean tagsChanged = !sameTags(originalTagNames, tags);
             if (original != null && !notebookChanged && !tagsChanged
                     && equal(original.getTitle(), t) && equal(original.getBody(), b)) {
-                finished.setValue(true);
                 return;
             }
-            Entry base = (original != null)
-                    ? original
-                    : new Entry(entryId, nb, t, b,
-                    System.currentTimeMillis(), System.currentTimeMillis());
-            base.setTitle(t);
-            base.setBody(b);
-            if (nb != null) base.setNotebookId(nb);
-            base.touch();
-            original = base;
-            originalTagNames = tags;
-            repository().saveEntryWithTags(base, tags, (ok, err) -> { /* best-effort */ });
+            long now = System.currentTimeMillis();
+            toSave = (original != null)
+                    ? new Entry(entryId, nb != null ? nb : original.getNotebookId(), t, b,
+                            original.getCreatedAt(), now)
+                    : new Entry(entryId, nb, t, b, now, now);
         }
-        finished.setValue(true);
+        original = toSave;
+        originalTagNames = tags;
+
+        // Roll back the optimistic state if the write fails (e.g. the vault locked meanwhile),
+        // so the next autosave or save retries instead of assuming the change is stored.
+        repository().saveEntryWithTags(toSave, tags, (ok, err) -> {
+            if (ok || original != toSave) return;
+            original = previous;
+            originalTagNames = previousTags;
+            entryId = previousId;
+        });
     }
 
     public void delete() {

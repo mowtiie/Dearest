@@ -29,6 +29,11 @@ import javax.crypto.Cipher;
 
 public class UnlockActivity extends DearestActivity {
 
+    @Override
+    protected boolean requiresUnlock() {
+        return false;
+    }
+
     private ActivityUnlockBinding binding;
     private UnlockViewModel viewModel;
     private LoadingDialog loadingDialog;

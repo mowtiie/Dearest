@@ -61,9 +61,7 @@ public class MainActivity extends DearestActivity {
         applyInsets();
 
         DearestApp.from(this).lockState().observe(this, locked -> {
-            if (Boolean.TRUE.equals(locked)) {
-                startActivity(new Intent(this, UnlockActivity.class).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP));
-            } else if (!crashDialogShown) {
+            if (Boolean.FALSE.equals(locked) && !crashDialogShown) {
                 crashDialogShown = true;
                 CrashReporter.showDialogIfPending(this, saveCrashLauncher);
             }
