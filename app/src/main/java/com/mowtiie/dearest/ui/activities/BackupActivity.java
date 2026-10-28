@@ -123,6 +123,11 @@ public class BackupActivity extends DearestActivity {
             wipe(password);
             return;
         }
+        if (password == null) {
+            // This screen was recreated while the picker was open, so the password is gone.
+            toast(getString(R.string.error_generic));
+            return;
+        }
         loadingDialog.show();
         backupManager.exportEncrypted(uri, password, (ok, msg) -> {
             loadingDialog.dismiss();
@@ -207,6 +212,9 @@ public class BackupActivity extends DearestActivity {
 
     @Override
     protected void onDestroy() {
+        // A password still waiting for the file picker must not outlive this screen.
+        wipe(pendingBackupPassword);
+        pendingBackupPassword = null;
         loadingDialog.dismiss();
         super.onDestroy();
     }

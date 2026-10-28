@@ -26,34 +26,41 @@ public final class KeyManager {
 
     public void setup(char[] passphrase) {
         if (isInitialized()) {
+            CryptoPrimitives.zero(passphrase);
             throw new KeyManagerException("Vault already initialised");
         }
         byte[] salt   = CryptoPrimitives.randomBytes(CryptoPrimitives.SALT_LENGTH_BYTES);
         byte[] newDek = CryptoPrimitives.randomBytes(CryptoPrimitives.DEK_LENGTH_BYTES);
-        byte[] kek    = CryptoPrimitives.deriveKek(passphrase, salt, PBKDF2_ITERATIONS);
+        byte[] kek = null;
+        boolean adopted = false;
         try {
+            kek = CryptoPrimitives.deriveKek(passphrase, salt, PBKDF2_ITERATIONS);
             byte[] wrapped = CryptoPrimitives.aesGcmEncrypt(kek, newDek);
             storage.saveVault(salt, PBKDF2_ITERATIONS, wrapped);
-            this.dek = newDek;
+            replaceDek(newDek);
+            adopted = true;
         } finally {
             CryptoPrimitives.zero(kek);
             CryptoPrimitives.zero(passphrase);
+            if (!adopted) CryptoPrimitives.zero(newDek);
         }
     }
 
     public boolean unlock(char[] passphrase) {
         if (!isInitialized()) {
+            CryptoPrimitives.zero(passphrase);
             throw new KeyManagerException("Vault not initialised");
         }
         byte[] salt       = storage.getSalt();
         int    iterations = storage.getIterations();
         byte[] wrapped    = storage.getWrappedDek();
-        byte[] kek        = CryptoPrimitives.deriveKek(passphrase, salt, iterations);
+        byte[] kek = null;
         try {
-            this.dek = CryptoPrimitives.aesGcmDecrypt(kek, wrapped);
+            kek = CryptoPrimitives.deriveKek(passphrase, salt, iterations);
+            replaceDek(CryptoPrimitives.aesGcmDecrypt(kek, wrapped));
             return true;
         } catch (GeneralSecurityException wrongPassphrase) {
-            this.dek = null;
+            replaceDek(null);
             return false;
         } finally {
             CryptoPrimitives.zero(kek);
@@ -63,17 +70,21 @@ public final class KeyManager {
 
     public boolean changePassphrase(char[] currentPassphrase, char[] newPassphrase) {
         if (!isInitialized()) {
+            CryptoPrimitives.zero(currentPassphrase);
+            CryptoPrimitives.zero(newPassphrase);
             throw new KeyManagerException("Vault not initialised");
         }
         byte[] salt       = storage.getSalt();
         int    iterations = storage.getIterations();
         byte[] wrapped    = storage.getWrappedDek();
 
-        byte[] oldKek = CryptoPrimitives.deriveKek(currentPassphrase, salt, iterations);
+        byte[] oldKek = null;
         byte[] currentDek;
         try {
+            oldKek = CryptoPrimitives.deriveKek(currentPassphrase, salt, iterations);
             currentDek = CryptoPrimitives.aesGcmDecrypt(oldKek, wrapped);
         } catch (GeneralSecurityException wrongPassphrase) {
+            CryptoPrimitives.zero(newPassphrase);
             return false;
         } finally {
             CryptoPrimitives.zero(oldKek);
@@ -81,15 +92,19 @@ public final class KeyManager {
         }
 
         byte[] newSalt = CryptoPrimitives.randomBytes(CryptoPrimitives.SALT_LENGTH_BYTES);
-        byte[] newKek  = CryptoPrimitives.deriveKek(newPassphrase, newSalt, PBKDF2_ITERATIONS);
+        byte[] newKek = null;
+        boolean adopted = false;
         try {
+            newKek = CryptoPrimitives.deriveKek(newPassphrase, newSalt, PBKDF2_ITERATIONS);
             byte[] newWrapped = CryptoPrimitives.aesGcmEncrypt(newKek, currentDek);
             storage.saveVault(newSalt, PBKDF2_ITERATIONS, newWrapped);
-            this.dek = currentDek;
+            replaceDek(currentDek);
+            adopted = true;
             return true;
         } finally {
             CryptoPrimitives.zero(newKek);
             CryptoPrimitives.zero(newPassphrase);
+            if (!adopted) CryptoPrimitives.zero(currentDek);
         }
     }
 
@@ -101,16 +116,22 @@ public final class KeyManager {
     }
 
     void unlockWithDek(byte[] dek) {
-        this.dek = dek.clone();
+        replaceDek(dek.clone());
     }
 
     public void lock() {
-        CryptoPrimitives.zero(dek);
-        dek = null;
+        replaceDek(null);
     }
 
     public void resetVault() {
         lock();
         storage.clear();
+    }
+
+    /** Swaps in a new key (or none), wiping the one it replaces. */
+    private void replaceDek(byte[] next) {
+        byte[] previous = dek;
+        dek = next;
+        if (previous != null && previous != next) CryptoPrimitives.zero(previous);
     }
 }

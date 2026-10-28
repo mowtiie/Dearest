@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -53,6 +54,9 @@ public final class BackupManager {
                 ok = true;
             } catch (Exception e) {
                 message = e.getMessage();
+            } finally {
+                // BackupCrypto wipes it once used; this covers a failure before that point.
+                Arrays.fill(password, '\0');
             }
             done(cb, ok, message);
         }));
@@ -88,6 +92,8 @@ public final class BackupManager {
                 repository.importAll(data, replaceAll, cb::onComplete);
             } catch (Exception e) {
                 done(cb, false, appContext.getString(R.string.backup_import_failed));
+            } finally {
+                Arrays.fill(password, '\0');
             }
         });
     }

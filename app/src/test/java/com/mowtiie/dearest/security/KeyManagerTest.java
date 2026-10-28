@@ -98,4 +98,91 @@ public class KeyManagerTest {
         keys.setup(pw("first passphrase"));
         keys.setup(pw("another passphrase"));
     }
+
+    // ---- Key arrays are wiped, not just dropped ----------------------------------------------
+
+    /** The manager's own key array (not a clone), to check what happens to it. */
+    private byte[] heldKey() throws Exception {
+        java.lang.reflect.Field field = KeyManager.class.getDeclaredField("dek");
+        field.setAccessible(true);
+        return (byte[]) field.get(keys);
+    }
+
+    private static void assertWiped(byte[] array) {
+        assertArrayEquals(new byte[array.length], array);
+    }
+
+    @Test
+    public void lockWipesTheHeldKeyArray() throws Exception {
+        keys.setup(pw("first passphrase"));
+        byte[] held = heldKey();
+
+        keys.lock();
+
+        assertWiped(held);
+    }
+
+    @Test
+    public void changingThePassphraseWipesTheReplacedKeyAndKeepsTheKey() throws Exception {
+        keys.setup(pw("first passphrase"));
+        byte[] before = heldKey();
+        byte[] keyValue = keys.getDatabaseKey();
+
+        assertTrue(keys.changePassphrase(pw("first passphrase"), pw("second passphrase")));
+
+        assertWiped(before);
+        assertArrayEquals(keyValue, keys.getDatabaseKey());
+    }
+
+    @Test
+    public void aWrongCurrentPassphraseWipesBothPassphrasesAndLeavesTheKeyAlone() throws Exception {
+        keys.setup(pw("first passphrase"));
+        byte[] held = heldKey();
+        byte[] keyValue = keys.getDatabaseKey();
+        char[] current = pw("not the passphrase");
+        char[] next = pw("brand new passphrase");
+
+        assertFalse(keys.changePassphrase(current, next));
+
+        assertArrayEquals(new char[current.length], current);
+        assertArrayEquals(new char[next.length], next);
+        assertArrayEquals(keyValue, held);
+    }
+
+    @Test
+    public void aFailedUnlockWhileUnlockedWipesTheHeldKey() throws Exception {
+        keys.setup(pw("first passphrase"));
+        byte[] held = heldKey();
+
+        assertFalse(keys.unlock(pw("not the passphrase")));
+
+        assertWiped(held);
+        assertFalse(keys.isUnlocked());
+    }
+
+    @Test
+    public void unlockingWithABiometricKeyWipesTheOneItReplaces() throws Exception {
+        keys.setup(pw("first passphrase"));
+        byte[] held = heldKey();
+
+        keys.unlockWithDek(new byte[32]);
+
+        assertWiped(held);
+        assertTrue(keys.isUnlocked());
+    }
+
+    @Test
+    public void aRejectedSecondSetupStillWipesThePassphrase() {
+        keys.setup(pw("first passphrase"));
+        char[] again = pw("another passphrase");
+
+        try {
+            keys.setup(again);
+            org.junit.Assert.fail("expected the second setup to be rejected");
+        } catch (KeyManagerException expected) {
+            // rejected
+        }
+
+        assertArrayEquals(new char[again.length], again);
+    }
 }
