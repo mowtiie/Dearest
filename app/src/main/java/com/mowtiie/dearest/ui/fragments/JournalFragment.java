@@ -30,7 +30,9 @@ import com.mowtiie.dearest.ui.adapters.EntryAdapter;
 import com.mowtiie.dearest.ui.viewmodel.JournalViewModel;
 import com.mowtiie.dearest.ui.viewmodel.JournalViewModel.Sort;
 
-public class JournalFragment extends Fragment {
+public class JournalFragment extends Fragment implements EntryEditorFragment.Host {
+
+    private static final String DETAIL_TAG = "entry_detail";
 
     private FragmentJournalBinding binding;
     private JournalViewModel viewModel;
@@ -51,12 +53,12 @@ public class JournalFragment extends Fragment {
 
         binding.entriesList.setLayoutManager(new LinearLayoutManager(requireContext()));
         InsetsUtil.limitContentWidth(binding.entriesList);
-        adapter = new EntryAdapter(entry ->
-                EntryEditorActivity.open(requireContext(), entry.getId(), null));
+        removeStaleDetail();
+        adapter = new EntryAdapter(entry -> openEntry(entry.getId(), null));
         binding.entriesList.setAdapter(adapter);
 
         binding.fabNewEntry.setOnClickListener(v ->
-                EntryEditorActivity.open(requireContext(), null, viewModel.notebookForNewEntry()));
+                openEntry(null, viewModel.notebookForNewEntry()));
 
         viewModel.entries().observe(getViewLifecycleOwner(), entries -> {
             adapter.submitList(entries);
@@ -67,6 +69,7 @@ public class JournalFragment extends Fragment {
         viewModel.selectedNotebookId().observe(getViewLifecycleOwner(), id -> updateFilterIcon());
         viewModel.selectedTagIds().observe(getViewLifecycleOwner(), ids -> updateFilterIcon());
 
+        showDetailPlaceholderIfEmpty();
         setupToolbarMenu();
     }
 
@@ -74,6 +77,53 @@ public class JournalFragment extends Fragment {
     public void onDestroyView() {
         super.onDestroyView();
         binding = null;
+    }
+
+    private boolean isTwoPane() {
+        return binding != null && binding.detailContainer != null;
+    }
+
+    /** Opens an entry (or a new one in the given notebook) in the detail pane, or full screen. */
+    private void openEntry(@Nullable String entryId, @Nullable String notebookId) {
+        if (!isTwoPane()) {
+            EntryEditorActivity.open(requireContext(), entryId, notebookId);
+            return;
+        }
+        Fragment current = getChildFragmentManager().findFragmentByTag(DETAIL_TAG);
+        if (current instanceof EntryEditorFragment && entryId != null
+                && entryId.equals(((EntryEditorFragment) current).entryId())) {
+            return;
+        }
+        getChildFragmentManager().beginTransaction()
+                .replace(R.id.detail_container, EntryEditorFragment.newInstance(entryId, notebookId, false), DETAIL_TAG)
+                .commit();
+        binding.detailPlaceholder.setVisibility(View.GONE);
+    }
+
+    @Override
+    public void onEditorFinished() {
+        Fragment detail = getChildFragmentManager().findFragmentByTag(DETAIL_TAG);
+        if (detail != null) {
+            getChildFragmentManager().beginTransaction().remove(detail).commit();
+        }
+        if (binding != null && binding.detailPlaceholder != null) {
+            binding.detailPlaceholder.setVisibility(View.VISIBLE);
+        }
+    }
+
+    private void showDetailPlaceholderIfEmpty() {
+        if (!isTwoPane()) return;
+        boolean hasDetail = getChildFragmentManager().findFragmentByTag(DETAIL_TAG) != null;
+        binding.detailPlaceholder.setVisibility(hasDetail ? View.GONE : View.VISIBLE);
+    }
+
+    /** A detail editor restored after the window shrank to one pane has no container to live in. */
+    private void removeStaleDetail() {
+        if (isTwoPane()) return;
+        Fragment stale = getChildFragmentManager().findFragmentByTag(DETAIL_TAG);
+        if (stale != null) {
+            getChildFragmentManager().beginTransaction().remove(stale).commit();
+        }
     }
 
     /** Tells "your journal is empty" apart from "nothing matches the search or filters". */

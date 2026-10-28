@@ -47,7 +47,9 @@
     <string name="entry_untitled">(untitled)</string>
     <string name="journal_empty_title">No entries yet</string>
     <string name="journal_empty_subtitle">Tap + to write your first entry.</string>
+    <string name="journal_select_entry">Select an entry to read it, or tap + to write a new one.</string>
     <string name="cd_new_entry">New entry</string>
+    <string name="cd_navigate_up">Navigate up</string>
 
     <!-- Search -->
     <string name="search_hint">Search your entries</string>

@@ -18,6 +18,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.mowtiie.dearest.R;
 import com.mowtiie.dearest.databinding.FragmentCalendarBinding;
+import com.mowtiie.dearest.ui.InsetsUtil;
 import com.mowtiie.dearest.ui.activities.EntryEditorActivity;
 import com.mowtiie.dearest.ui.adapters.CalendarDayAdapter;
 import com.mowtiie.dearest.ui.adapters.EntryAdapter;
@@ -57,6 +58,8 @@ public class CalendarFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         viewModel = new ViewModelProvider(this).get(CalendarViewModel.class);
 
+        InsetsUtil.limitContentWidth(binding.calendarPanel);
+        InsetsUtil.limitContentWidth(binding.dayEntries);
         buildWeekdayHeader();
 
         binding.calendarGrid.setLayoutManager(new GridLayoutManager(requireContext(), 7));
