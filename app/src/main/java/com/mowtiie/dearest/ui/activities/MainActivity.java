@@ -29,7 +29,6 @@ public class MainActivity extends DearestActivity {
     private NavController navController;
     private AppBarConfiguration appBarConfiguration;
     private boolean crashDialogShown;
-    private static final int UNDO_WINDOW_MS = 8000;
     private Snackbar undoBar;
 
     private final ActivityResultLauncher<Intent> saveCrashLauncher =
@@ -82,18 +81,34 @@ public class MainActivity extends DearestActivity {
             return;
         }
         DearestRepository repository = DearestApp.from(this).repository();
-        undoBar = Snackbar.make(binding.getRoot(), R.string.entry_deleted, UNDO_WINDOW_MS)
+        // A snapshot redelivered after a rotation only gets what is left of its window.
+        int remainingMs = (int) deleted.remainingMs();
+        if (remainingMs <= 0) {
+            repository.discardDeleted(deleted);
+            return;
+        }
+        Snackbar bar = Snackbar.make(binding.getRoot(), R.string.entry_deleted, remainingMs)
                 .setAnchorView(binding.bottomNav)
                 .setAction(R.string.action_undo, v -> repository.restoreEntry(deleted, (ok, error) -> {
                     if (!ok) Toast.makeText(this, error, Toast.LENGTH_SHORT).show();
                 }))
                 .addCallback(new Snackbar.Callback() {
                     @Override
-                    public void onDismissed(Snackbar bar, int event) {
-                        repository.discardDeleted(deleted);
+                    public void onDismissed(Snackbar dismissed, int event) {
+                        if (undoBar == dismissed) undoBar = null;
+                        // Dismissed in code (lock, or this activity going away) leaves the
+                        // snapshot for the next prompt; the repository expires it on its own.
+                        if (event != DISMISS_EVENT_MANUAL) repository.discardDeleted(deleted);
                     }
                 });
-        undoBar.show();
+        undoBar = bar;
+        bar.show();
+    }
+
+    @Override
+    protected void onDestroy() {
+        undoBar = null;
+        super.onDestroy();
     }
 
     private void applyInsets() {

@@ -71,6 +71,7 @@ public final class DearestRepository {
     private final MutableLiveData<Object> linksTrigger = new MutableLiveData<>();
     private final MutableLiveData<DeletedEntry> deletedEntry = new MutableLiveData<>();
 
+    private volatile long undoExpiryMs = DeletedEntry.UNDO_WINDOW_MS;
     private volatile SQLiteDatabase db;
     private DearestDatabase dbHelper;
 
@@ -200,37 +201,69 @@ public final class DearestRepository {
     }
 
     public void saveEntryWithTags(Entry entry, List<String> tagNames, OperationCallback cb) {
-        inTransaction(cb, ENTRIES | LINKS, d -> {
-            int tagsBefore = tagDao.count(d);
-            if (entryDao.update(d, entry) == 0) {
-                entryDao.insert(d, entry);
-            }
-            List<String> tagIds = new ArrayList<>();
-            for (String name : tagNames) {
-                String trimmed = name == null ? "" : name.trim();
-                if (trimmed.isEmpty()) continue;
-                tagIds.add(tagDao.findOrCreateByName(d, trimmed).getId());
-            }
-            tagDao.setTagsForEntry(d, entry.getId(), tagIds);
-            if (tagDao.count(d) != tagsBefore) invalidate(TAGS);
-        });
+        inTransaction(cb, ENTRIES | LINKS, d -> saveEntryWithTags(d, entry, tagNames));
     }
 
-    /** Deletes an entry and publishes what is needed to undo it on {@link #deletedEntry()}. */
+    private void saveEntryWithTags(SQLiteDatabase d, Entry entry, List<String> tagNames) {
+        int tagsBefore = tagDao.count(d);
+        if (entryDao.update(d, entry) == 0) {
+            entryDao.insert(d, entry);
+        }
+        List<String> tagIds = new ArrayList<>();
+        for (String name : tagNames) {
+            String trimmed = name == null ? "" : name.trim();
+            if (trimmed.isEmpty()) continue;
+            tagIds.add(tagDao.findOrCreateByName(d, trimmed).getId());
+        }
+        tagDao.setTagsForEntry(d, entry.getId(), tagIds);
+        if (tagDao.count(d) != tagsBefore) invalidate(TAGS);
+    }
+
     public void deleteEntry(String entryId) {
-        write(null, ENTRIES | LINKS, d -> {
+        deleteEntry(entryId, null);
+    }
+
+    /**
+     * Deletes an entry and publishes what is needed to undo it on {@link #deletedEntry()}. The
+     * snapshot expires on its own after {@link DeletedEntry#UNDO_WINDOW_MS}, whether or not any
+     * screen is showing the prompt.
+     */
+    public void deleteEntry(String entryId, OperationCallback cb) {
+        write(cb, ENTRIES | LINKS, d -> {
             Entry full = entryDao.getById(d, entryId);
             if (full == null) return;
             List<String> tagNames = new ArrayList<>();
             for (Tag t : tagDao.getTagsForEntry(d, entryId)) tagNames.add(t.getName());
             entryDao.delete(d, entryId);
-            deletedEntry.postValue(new DeletedEntry(full, tagNames));
+            DeletedEntry deleted = new DeletedEntry(full, tagNames);
+            deletedEntry.postValue(deleted);
+            mainHandler.postDelayed(() -> discardDeleted(deleted), undoExpiryMs);
         });
     }
 
-    /** Puts a just-deleted entry back with its original id, timestamps and tags. */
+    /**
+     * Puts a just-deleted entry back with its original id, timestamps and tags. If its notebook
+     * was deleted in the meantime it goes into the first remaining notebook.
+     */
     public void restoreEntry(DeletedEntry deleted, OperationCallback cb) {
-        saveEntryWithTags(deleted.entry, deleted.tagNames, cb);
+        inTransaction(cb, ENTRIES | LINKS, d -> {
+            Entry entry = deleted.entry;
+            if (notebookDao.getById(d, entry.getNotebookId()) == null) {
+                List<Notebook> notebooks = notebookDao.getAll(d);
+                if (notebooks.isEmpty()) {
+                    throw new UserFacingException(appContext.getString(R.string.error_generic));
+                }
+                entry = new Entry(entry.getId(), notebooks.get(0).getId(), entry.getTitle(),
+                        entry.getBody(), entry.getCreatedAt(), entry.getUpdatedAt());
+            }
+            saveEntryWithTags(d, entry, deleted.tagNames);
+        });
+    }
+
+    /** Shortens how long a deleted entry stays undoable, so tests need not wait it out. */
+    @VisibleForTesting
+    void setUndoExpiryMs(long ms) {
+        undoExpiryMs = ms;
     }
 
     /** Forgets the undo snapshot once its prompt is gone. Main thread only. */

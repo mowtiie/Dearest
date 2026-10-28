@@ -12,6 +12,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
@@ -116,6 +117,11 @@ public class EntryEditorFragment extends Fragment {
                 shouldPopulate = false;
             }
         });
+        viewModel.deleteError().observe(getViewLifecycleOwner(), message -> {
+            if (message == null) return;
+            Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show();
+            viewModel.deleteErrorShown();
+        });
         viewModel.finished().observe(getViewLifecycleOwner(), done -> {
             if (Boolean.TRUE.equals(done)) {
                 finishing = true;
@@ -176,7 +182,12 @@ public class EntryEditorFragment extends Fragment {
 
     /** Saves and closes the editor, as the up button and back do. */
     public void saveAndFinish() {
-        if (binding == null) return;
+        if (binding == null) {
+            // No view yet, so nothing typed to save; back must still leave the editor.
+            Host host = host();
+            if (host != null) host.onEditorFinished();
+            return;
+        }
         autosaveHandler.removeCallbacks(autosaveRunnable);
         viewModel.save(binding.editorTitle.getText().toString(), binding.editorBody.getText().toString());
     }

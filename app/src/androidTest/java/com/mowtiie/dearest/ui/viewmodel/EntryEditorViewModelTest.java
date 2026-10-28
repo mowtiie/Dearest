@@ -235,7 +235,7 @@ public class EntryEditorViewModelTest {
 
         onMain(() -> vm.delete());
 
-        assertEquals(Boolean.TRUE, vm.finished().getValue());
+        TestRepository.await("editor finishes", () -> Boolean.TRUE.equals(vm.finished().getValue()));
         DeletedEntry deleted = t.observeOnce(t.repository.deletedEntry(),
                 v -> v.entry.getId().equals("e-1"));
         assertEquals(Collections.singletonList("alpha"), deleted.tagNames);
@@ -246,6 +246,26 @@ public class EntryEditorViewModelTest {
         assertEquals(Collections.singletonList("alpha"), t.getTagNames("e-1"));
     }
 
+
+    @Test
+    public void aFailedDeleteKeepsTheEditorOpenAndReportsWhy() {
+        seed("e-1", "title");
+        openExisting("e-1");
+        t.lock();
+
+        onMain(() -> vm.delete());
+        TestRepository.await("error reported", () -> vm.deleteError().getValue() != null);
+
+        assertEquals(t.context.getString(com.mowtiie.dearest.R.string.error_vault_locked),
+                vm.deleteError().getValue());
+        assertEquals(Boolean.FALSE, vm.finished().getValue());
+
+        onMain(() -> vm.deleteErrorShown());
+        assertNull(vm.deleteError().getValue());
+
+        t.open();
+        assertNotNull(t.getEntry("e-1"));
+    }
     @Test
     public void deletingAnUnsavedNewEntryOnlyFinishes() {
         openNew();

@@ -24,6 +24,7 @@ public class EntryEditorViewModel extends DearestViewModel {
 
     private final MutableLiveData<Entry> entry = new MutableLiveData<>();
     private final MutableLiveData<Boolean> finished = new MutableLiveData<>(false);
+    private final MutableLiveData<String> deleteError = new MutableLiveData<>();
     private final MutableLiveData<String> notebookId = new MutableLiveData<>();
     private final MutableLiveData<List<String>> tagNames = new MutableLiveData<>(Collections.emptyList());
     private final LiveData<List<Notebook>> notebooks;
@@ -171,11 +172,26 @@ public class EntryEditorViewModel extends DearestViewModel {
         });
     }
 
+    /** Deletes the entry and closes the editor once that has actually succeeded. */
     public void delete() {
-        if (!isNew() && entryId != null) {
-            repository().deleteEntry(entryId);
+        if (isNew() || entryId == null) {
+            finished.setValue(true);
+            return;
         }
-        finished.setValue(true);
+        repository().deleteEntry(entryId, (ok, err) -> {
+            if (ok) {
+                finished.setValue(true);
+            } else {
+                deleteError.setValue(err);
+            }
+        });
+    }
+
+    /** A message to show once for a failed delete; the editor stays open. */
+    public LiveData<String> deleteError() { return deleteError; }
+
+    public void deleteErrorShown() {
+        deleteError.setValue(null);
     }
 
     public boolean hasUnsavedChanges(String title, String body) {

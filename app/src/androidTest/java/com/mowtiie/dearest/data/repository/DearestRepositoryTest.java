@@ -275,6 +275,60 @@ public class DearestRepositoryTest {
         assertEquals(t.context.getString(R.string.error_vault_locked), outcome.error);
     }
 
+    @Test
+    public void deleteReportsSuccessAndFailure() {
+        t.save(entry("e-1", "t"));
+
+        Outcome ok = t.blocking(cb -> repo.deleteEntry("e-1",
+                (success, err) -> cb.set(new Outcome(success, err))));
+        assertTrue(ok.success);
+        assertNull(t.getEntry("e-1"));
+
+        t.lock();
+        Outcome locked = t.blocking(cb -> repo.deleteEntry("e-1",
+                (success, err) -> cb.set(new Outcome(success, err))));
+        assertFalse(locked.success);
+        assertEquals(t.context.getString(R.string.error_vault_locked), locked.error);
+    }
+
+    @Test
+    public void theUndoSnapshotExpiresOnItsOwn() {
+        repo.setUndoExpiryMs(300);
+        t.save(entry("e-1", "t"));
+
+        deleteAndAwait("e-1");
+
+        TestRepository.await("snapshot expires", () -> repo.deletedEntry().getValue() == null);
+    }
+
+    @Test
+    public void aSnapshotKnowsHowMuchOfItsWindowIsLeft() {
+        t.save(entry("e-1", "t"));
+        DeletedEntry deleted = deleteAndAwait("e-1");
+
+        long remaining = deleted.remainingMs();
+
+        assertTrue(remaining > 0 && remaining <= DeletedEntry.UNDO_WINDOW_MS);
+    }
+
+    @Test
+    public void restoringAfterItsNotebookWasDeletedUsesAnotherNotebook() {
+        Notebook other = addNotebook();
+        t.save(new Entry("e-1", other.getId(), "t", "b", 1L, 1L), "tag");
+        DeletedEntry deleted = deleteAndAwait("e-1");
+        Outcome removed = t.blocking(cb -> repo.deleteNotebook(other.getId(), null,
+                (ok, err) -> cb.set(new Outcome(ok, err))));
+        assertTrue(removed.success);
+
+        Outcome outcome = t.restore(deleted);
+
+        assertTrue(outcome.success);
+        Entry restored = t.getEntry("e-1");
+        assertEquals(nb, restored.getNotebookId());
+        assertEquals("t", restored.getTitle());
+        assertEquals(Collections.singletonList("tag"), t.getTagNames("e-1"));
+    }
+
     // ---- Notebooks ---------------------------------------------------------------------------
 
     private Notebook addNotebook() {
