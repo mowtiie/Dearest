@@ -1,49 +1,47 @@
 <div align="center">
 
-<img width="" src="metadata/en-US/images/icon.png"  width=160 height=160  align="center">
+<img src="metadata/en-US/images/icon.png" width="160" height="160" alt="Dearest icon">
 
 # Dearest
 
 **Your diary. Your device. Nobody else's.**
 
-Dearest is a simple, open-source diary and journaling app built to be fully private and fully offline. Every entry is encrypted on your device with a passphrase only you know — there's no account, no server, and no way for anyone (including the developer) to read your journal.
+Dearest is a simple, open-source diary app built to be fully private and fully offline. Every entry is encrypted on your device with a passphrase only you know. There is no account and no server, and nobody, including the developer, can read your journal.
 
 </div>
 
 ## Features
 
-* **Free and Open Source:** Enjoy complete transparency and community-driven development.
-* **Encrypted at Rest:** Your entire journal is encrypted with AES-256 (via SQLCipher), keyed by a passphrase only you know.
-* **No Recovery, By Design:** There is no account, no password reset, and no backdoor. Your passphrase is the only key — that's what makes the privacy guarantee real, not just a policy.
-* **Optional Biometric Unlock:** Unlock with fingerprint or face as a convenience layer on top of your passphrase, which always remains the master credential and always works as a fallback.
-* **Fully Offline:** Dearest requests no internet permission at all — it is architecturally incapable of sending your data anywhere. You can verify this yourself in your system's app settings.
-* **App Lock:** Configurable auto-lock timeout, a privacy screen that covers your journal the instant you switch away — before the app-switcher animation even plays — screenshot/screen-recording blocked on every screen, and an escalating delay after repeated failed passphrase attempts.
-* **Appearance:** Choose System, Light, or Dark theme; boost contrast for readability; and opt into Material You dynamic color that matches your device's wallpaper.
-* **Notebooks:** Organize entries into separate diaries — personal, work, dreams, whatever suits you — each with an optional description. Deleting a notebook never silently loses entries; you're always asked to move them first.
-* **Tags:** Freeform, multi-select labels that cut across notebooks, for the themes that don't fit neatly into one diary.
-* **Search, Filter & Sort:** Full-text search composed with notebook and tag filtering, plus sorting by newest, oldest, or title.
-* **Calendar View:** See at a glance which days you've written on, and jump straight to any day's entries.
-* **Daily Reminder:** An optional nudge at a time you choose, to help the habit stick.
-* **Backup & Export, Your Way:** Create a self-contained encrypted backup protected by a password you choose, or export your entries as plain text, CSV, or JSON if you'd rather own a portable, readable copy.
-* **Crash Reports:** If the app encounters an unexpected error, a dialog on the next launch lets you copy the technical details to your clipboard or save them to a file — nothing from your journal is ever included, and nothing is sent automatically.
+* **Encrypted, with no recovery:** Your whole journal is encrypted with AES-256 (via SQLCipher) and keyed by your passphrase. There is no reset and no backdoor, which is what makes the privacy real.
+* **Fully offline:** Dearest requests no internet permission, so it cannot send your data anywhere. You can check this in your system's app settings.
+* **App lock:** Auto-lock, a privacy screen that covers the app the moment you switch away, screenshots and screen recording blocked, and an escalating delay after wrong passphrases. Fingerprint or face unlock is optional and always falls back to your passphrase.
+* **Notebooks and tags:** Keep separate diaries, and add tags that cut across them.
+* **Search, filter and calendar:** Full-text search with notebook and tag filters, sorting, and a calendar showing the days you wrote.
+* **Autosave and undo:** Drafts save as you type, and a deleted entry can be undone right away.
+* **Backup and export:** An encrypted backup protected by a password you choose, or an export to plain text, CSV or JSON.
+* **Phones and tablets:** A two-pane layout on large screens, light and dark themes, adjustable contrast and Material You colors.
 
 ## Screenshots
 
 <div align="center">
-	<div>
-	  <img src="metadata/en-US/images/phoneScreenshots/screenshot_1.jpg" width="30%" />
-    <img src="metadata/en-US/images/phoneScreenshots/screenshot_2.jpg" width="30%" />
-    <img src="metadata/en-US/images/phoneScreenshots/screenshot_3.jpg" width="30%" />
-	  <img src="metadata/en-US/images/phoneScreenshots/screenshot_4.jpg" width="30%" />
-    <img src="metadata/en-US/images/phoneScreenshots/screenshot_5.jpg" width="30%" />
-    <img src="metadata/en-US/images/phoneScreenshots/screenshot_6.jpg" width="30%" />
-	</div>
+  <img src="metadata/en-US/images/phoneScreenshots/screenshot_1.jpg" width="30%" alt="Unlock screen" />
+  <img src="metadata/en-US/images/phoneScreenshots/screenshot_2.jpg" width="30%" alt="Journal list" />
+  <img src="metadata/en-US/images/phoneScreenshots/screenshot_3.jpg" width="30%" alt="Entry editor with tags" />
+  <img src="metadata/en-US/images/phoneScreenshots/screenshot_4.jpg" width="30%" alt="Calendar" />
+  <img src="metadata/en-US/images/phoneScreenshots/screenshot_5.jpg" width="30%" alt="Notebooks" />
+  <img src="metadata/en-US/images/phoneScreenshots/screenshot_6.jpg" width="30%" alt="Settings" />
+</div>
+
+On tablets the journal and calendar use two panes:
+
+<div align="center">
+  <img src="metadata/en-US/images/tenInchScreenshots/screenshot_1.jpg" width="48%" alt="Journal list beside the entry editor on a tablet" />
+  <img src="metadata/en-US/images/tenInchScreenshots/screenshot_2.jpg" width="48%" alt="Calendar beside the day's entries on a tablet" />
 </div>
 
 ## Verification
 
-APK releases on GitHub are signed using my key. They can
-be verified using
+APK releases on GitHub are signed with my key. Verify one with
 [apksigner](https://developer.android.com/studio/command-line/apksigner.html#options-verify):
 
 ```
@@ -62,7 +60,7 @@ Verified using v3.2 scheme (APK Signature Scheme v3.2): false
 Verified using v4 scheme (APK Signature Scheme v4): false
 ```
 
-The certificate fingerprints should correspond to the ones listed below:
+The certificate fingerprints should match these:
 
 ```
 Owner: CN=Mowtiie
@@ -74,27 +72,25 @@ Certificate fingerprints:
          SHA256: 8B:67:51:F3:C3:31:85:63:5F:98:95:30:B6:C0:73:A1:39:7B:3D:41:2B:EF:AE:69:06:A2:EB:58:45:D2:DE:63
 ```
 
-**Warning:** Only install Dearest APKs signed with the key above. Verifying the signature confirms you're running a genuine, unmodified build.
+**Warning:** Only install Dearest APKs signed with the key above.
 
 ### PGP Signing
 
-As an additional layer on top of the Android signature above, each release is also signed with my PGP key. While `apksigner` confirms the APK itself is intact, a PGP signature confirms that *I* am the one who published this specific file to GitHub — an independent check that doesn't rely on GitHub's account security alone.
+Each release is also signed with my PGP key. This confirms that I published that exact file, independently of GitHub's account security.
 
 **Public key fingerprint:**
 ```
 9EA2 8F46 7802 5092 7643 1B69 42B5 FA42 AA63 90E1
 ```
 
-Download and import the key from my website, or directly from this repo:
+Import the key, then check that the fingerprint GPG prints matches the one above. That match is what establishes trust.
 
 ```
 curl -O https://mowtiie.cc/PGP_PUBLIC_KEY.asc
 gpg --import PGP_PUBLIC_KEY.asc
 ```
 
-After importing, confirm the fingerprint printed by GPG matches the one listed above — that match is what actually establishes trust, not the import step itself. Fetching the key over HTTPS from a domain you already trust is arguably a stronger anchor than a keyserver, since keyservers accept uploads from anyone and don't vouch for identity.
-
-Each release includes a detached `.asc` signature alongside the APK. Verify a downloaded release with:
+Every release includes a detached `.asc` signature next to the APK. Verify it with:
 
 ```
 gpg --verify dearest-vX.X.apk.asc dearest-vX.X.apk
@@ -106,15 +102,11 @@ A valid signature looks like:
 Good signature from "Mowtiie <mowtiie.dev@gmail.com>"
 ```
 
-**Note:** PGP signing is a supplementary trust measure, not a substitute for the `apksigner` check above — verify both if you want the highest confidence that a release is genuine and unmodified.
+PGP is an extra check, not a replacement for `apksigner`. Verify both for the highest confidence.
 
 ## Mapping Files
 
-Each release on GitHub includes a `mapping-<version>.txt` file alongside the APK. This file is needed to deobfuscate stack traces from crash reports — match the file to the version shown in the crash report header and use it with `retrace` from the Android SDK.
-
-## Contributing
-
-Issues and pull requests are welcome. If you're filing a bug, please include your Android version and the steps to reproduce.
+Each release includes a `mapping-<version>.txt` file next to the APK. Match it to the version in a crash report's header and use it with `retrace` from the Android SDK to read the stack trace.
 
 ## License
 
