@@ -9,6 +9,11 @@ public final class BackupCrypto {
 
     private static final String FORMAT = "dearest-backup";
     private static final int ITERATIONS = 600_000;
+    // Accepted range for the iteration count read from a file, around the 600,000 we write.
+    private static final int MIN_ITERATIONS = 100_000;
+    private static final int MAX_ITERATIONS = 5_000_000;
+    private static final int MAX_SALT_BYTES = 64;
+    private static final int MIN_PAYLOAD_BYTES = 12 + 16; // GCM IV + tag
 
     private BackupCrypto() {}
 
@@ -40,9 +45,15 @@ public final class BackupCrypto {
             int iterations = env.getInt("iterations");
             byte[] salt = CryptoPrimitives.fromBase64(env.getString("salt"));
             byte[] payload = CryptoPrimitives.fromBase64(env.getString("payload"));
+            // The file is untrusted: a huge iteration count would freeze the app on key derivation.
+            if (iterations < MIN_ITERATIONS || iterations > MAX_ITERATIONS
+                    || salt.length < CryptoPrimitives.SALT_LENGTH_BYTES || salt.length > MAX_SALT_BYTES
+                    || payload.length < MIN_PAYLOAD_BYTES) {
+                throw new GeneralSecurityException("Not a valid Dearest backup file");
+            }
             key = CryptoPrimitives.deriveKek(password, salt, iterations);
             return CryptoPrimitives.aesGcmDecrypt(key, payload);
-        } catch (JSONException e) {
+        } catch (JSONException | IllegalArgumentException e) {
             throw new GeneralSecurityException("Not a valid Dearest backup file", e);
         } finally {
             CryptoPrimitives.zero(key);

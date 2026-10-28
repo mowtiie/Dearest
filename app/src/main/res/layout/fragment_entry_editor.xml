@@ -69,6 +69,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:importantForAutofill="no"
+                    android:imeOptions="flagNoPersonalizedLearning"
                     android:inputType="textCapSentences|textShortMessage"
                     android:maxLines="2" />
             </com.google.android.material.textfield.TextInputLayout>
@@ -87,6 +88,7 @@
                     android:minLines="10"
                     android:gravity="top|start"
                     android:importantForAutofill="no"
+                    android:imeOptions="flagNoPersonalizedLearning"
                     android:inputType="textCapSentences|textMultiLine" />
             </com.google.android.material.textfield.TextInputLayout>
 

@@ -14,7 +14,7 @@ import com.mowtiie.dearest.databinding.DialogEditNameBinding;
 import com.mowtiie.dearest.ui.InsetsUtil;
 import com.mowtiie.dearest.ui.adapters.TagAdapter;
 import com.mowtiie.dearest.ui.viewmodel.TagViewModel;
-import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.mowtiie.dearest.ui.SecureDialogBuilder;
 
 public class TagsManagementActivity extends DearestActivity implements TagAdapter.Listener {
 
@@ -52,7 +52,7 @@ public class TagsManagementActivity extends DearestActivity implements TagAdapte
     private void showAddTagDialog() {
         DialogEditNameBinding dialogBinding = DialogEditNameBinding.inflate(getLayoutInflater());
 
-        new MaterialAlertDialogBuilder(this)
+        new SecureDialogBuilder(this)
                 .setTitle(R.string.add_tag_title)
                 .setView(dialogBinding.getRoot())
                 .setNegativeButton(android.R.string.cancel, null)
@@ -71,7 +71,7 @@ public class TagsManagementActivity extends DearestActivity implements TagAdapte
         dialogBinding.nameInput.setText(tag.getName());
         dialogBinding.nameInput.setSelection(dialogBinding.nameInput.getText().length());
 
-        new MaterialAlertDialogBuilder(this)
+        new SecureDialogBuilder(this)
                 .setTitle(R.string.rename_tag_title)
                 .setView(dialogBinding.getRoot())
                 .setNegativeButton(android.R.string.cancel, null)
@@ -86,7 +86,7 @@ public class TagsManagementActivity extends DearestActivity implements TagAdapte
 
     @Override
     public void onDelete(Tag tag) {
-        new MaterialAlertDialogBuilder(this)
+        new SecureDialogBuilder(this)
                 .setTitle(R.string.delete_tag_title)
                 .setMessage(getString(R.string.delete_tag_message, tag.getName()))
                 .setNegativeButton(android.R.string.cancel, null)

@@ -20,6 +20,7 @@ import androidx.appcompat.app.AlertDialog;
 import com.mowtiie.dearest.R;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.mowtiie.dearest.ui.SecureDialogBuilder;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -78,7 +79,7 @@ public class CrashReporter {
         MaterialButton actionExport = crashDialogView.findViewById(R.id.crash_action_export);
         MaterialButton actionDismiss = crashDialogView.findViewById(R.id.crash_action_dismiss);
 
-        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(activity)
+        MaterialAlertDialogBuilder builder = new SecureDialogBuilder(activity)
                 .setTitle(R.string.dialog_title_crash)
                 .setMessage(R.string.dialog_message_crash)
                 .setCancelable(false)

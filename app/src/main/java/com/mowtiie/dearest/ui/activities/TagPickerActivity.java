@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.inputmethod.EditorInfo;
 
 import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
@@ -22,7 +23,7 @@ import com.mowtiie.dearest.ui.InsetsUtil;
 import com.mowtiie.dearest.ui.adapters.TagPickerAdapter;
 import com.mowtiie.dearest.ui.viewmodel.TagPickerViewModel;
 import com.mowtiie.dearest.ui.viewmodel.TagPickerViewModel.Sort;
-import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.mowtiie.dearest.ui.SecureDialogBuilder;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -88,7 +89,7 @@ public class TagPickerActivity extends DearestActivity implements TagPickerAdapt
     private void showAddTagDialog() {
         DialogEditNameBinding dialogBinding = DialogEditNameBinding.inflate(getLayoutInflater());
 
-        new MaterialAlertDialogBuilder(this)
+        new SecureDialogBuilder(this)
                 .setTitle(R.string.add_tag_title)
                 .setView(dialogBinding.getRoot())
                 .setNegativeButton(android.R.string.cancel, null)
@@ -112,6 +113,8 @@ public class TagPickerActivity extends DearestActivity implements TagPickerAdapt
         SearchView search = (SearchView) searchItem.getActionView();
         if (search != null) {
             search.setQueryHint(getString(R.string.tag_picker_search_hint));
+            // Keep what is searched for out of the keyboard's learned suggestions.
+            search.setImeOptions(search.getImeOptions() | EditorInfo.IME_FLAG_NO_PERSONALIZED_LEARNING);
             search.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
                 @Override public boolean onQueryTextSubmit(String q) { return false; }
                 @Override public boolean onQueryTextChange(String q) {

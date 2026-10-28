@@ -17,6 +17,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:importantForAutofill="no"
+            android:imeOptions="flagNoPersonalizedLearning"
             android:inputType="textCapWords"
             android:maxLines="1" />
     </com.google.android.material.textfield.TextInputLayout>
@@ -33,6 +34,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:importantForAutofill="no"
+            android:imeOptions="flagNoPersonalizedLearning"
             android:inputType="textCapSentences|textMultiLine"
             android:maxLines="4" />
     </com.google.android.material.textfield.TextInputLayout>

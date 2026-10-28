@@ -2,6 +2,8 @@ package com.mowtiie.dearest.security;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import android.util.Base64;
 
@@ -52,5 +54,45 @@ public class BackupCryptoTest {
     @Test(expected = GeneralSecurityException.class)
     public void garbageIsRejectedAsNotABackup() throws Exception {
         BackupCrypto.decrypt("not json at all", "whatever-pw".toCharArray());
+    }
+
+    private static String envelopeWith(String field, Object value) throws Exception {
+        JSONObject env = new JSONObject(
+                BackupCrypto.encrypt(new byte[32], "right-password".toCharArray()));
+        env.put(field, value);
+        return env.toString();
+    }
+
+    private static void assertRejected(String envelope) {
+        long start = System.nanoTime();
+        try {
+            BackupCrypto.decrypt(envelope, "right-password".toCharArray());
+            fail("expected the file to be rejected");
+        } catch (GeneralSecurityException expected) {
+            // rejected
+        }
+        // Rejected up front, not after deriving a key with a hostile iteration count.
+        assertTrue((System.nanoTime() - start) < 5_000_000_000L);
+    }
+
+    @Test
+    public void absurdIterationCountsAreRejectedWithoutDerivingAKey() throws Exception {
+        assertRejected(envelopeWith("iterations", Integer.MAX_VALUE));
+        assertRejected(envelopeWith("iterations", 50_000_000));
+    }
+
+    @Test
+    public void tooFewOrNonsenseIterationCountsAreRejected() throws Exception {
+        assertRejected(envelopeWith("iterations", 0));
+        assertRejected(envelopeWith("iterations", -5));
+        assertRejected(envelopeWith("iterations", 1_000));
+    }
+
+    @Test
+    public void badSaltsAndPayloadsAreRejected() throws Exception {
+        assertRejected(envelopeWith("salt", ""));
+        assertRejected(envelopeWith("salt", Base64.encodeToString(new byte[200], Base64.NO_WRAP)));
+        assertRejected(envelopeWith("payload", Base64.encodeToString(new byte[5], Base64.NO_WRAP)));
+        assertRejected(envelopeWith("payload", "***not base64***"));
     }
 }

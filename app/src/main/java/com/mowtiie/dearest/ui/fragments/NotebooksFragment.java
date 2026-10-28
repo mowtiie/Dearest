@@ -6,6 +6,7 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.inputmethod.EditorInfo;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
@@ -27,7 +28,7 @@ import com.mowtiie.dearest.databinding.FragmentNotebooksBinding;
 import com.mowtiie.dearest.ui.adapters.NotebookAdapter;
 import com.mowtiie.dearest.ui.viewmodel.NotebookViewModel;
 import com.mowtiie.dearest.ui.viewmodel.NotebookViewModel.Sort;
-import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.mowtiie.dearest.ui.SecureDialogBuilder;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -92,6 +93,8 @@ public class NotebooksFragment extends Fragment implements NotebookAdapter.Liste
                 SearchView search = (SearchView) menu.findItem(R.id.action_search).getActionView();
                 if (search != null) {
                     search.setQueryHint(getString(R.string.notebooks_search_hint));
+                    // Keep what is searched for out of the keyboard's learned suggestions.
+                    search.setImeOptions(search.getImeOptions() | EditorInfo.IME_FLAG_NO_PERSONALIZED_LEARNING);
                     search.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
                         @Override public boolean onQueryTextSubmit(String q) { return false; }
                         @Override public boolean onQueryTextChange(String q) {
@@ -169,7 +172,7 @@ public class NotebooksFragment extends Fragment implements NotebookAdapter.Liste
         if (prefillDescription != null) {
             dialogBinding.descriptionInput.setText(prefillDescription);
         }
-        new MaterialAlertDialogBuilder(requireContext())
+        new SecureDialogBuilder(requireContext())
                 .setTitle(titleRes)
                 .setView(dialogBinding.getRoot())
                 .setNegativeButton(android.R.string.cancel, null)
@@ -180,7 +183,7 @@ public class NotebooksFragment extends Fragment implements NotebookAdapter.Liste
     }
 
     private void confirmDeleteEmpty(Notebook notebook) {
-        new MaterialAlertDialogBuilder(requireContext())
+        new SecureDialogBuilder(requireContext())
                 .setTitle(R.string.delete_notebook_title)
                 .setMessage(R.string.delete_notebook_message)
                 .setNegativeButton(android.R.string.cancel, null)
@@ -199,7 +202,7 @@ public class NotebooksFragment extends Fragment implements NotebookAdapter.Liste
         String[] names = new String[others.size()];
         for (int i = 0; i < others.size(); i++) names[i] = others.get(i).getName();
 
-        new MaterialAlertDialogBuilder(requireContext())
+        new SecureDialogBuilder(requireContext())
                 .setTitle(R.string.delete_notebook_move_title)
                 .setMessage(getString(R.string.delete_notebook_move_message, count))
                 .setNegativeButton(android.R.string.cancel, null)

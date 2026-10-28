@@ -11,7 +11,6 @@ import androidx.annotation.StringRes;
 import androidx.appcompat.app.AlertDialog;
 
 import com.mowtiie.dearest.R;
-import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
 public final class LoadingDialog {
 
@@ -29,7 +28,7 @@ public final class LoadingDialog {
         messageView = view.findViewById(R.id.loading_message);
         messageView.setText(messageRes);
 
-        dialog = new MaterialAlertDialogBuilder(context)
+        dialog = new SecureDialogBuilder(context)
                 .setView(view)
                 .setCancelable(false)
                 .create();

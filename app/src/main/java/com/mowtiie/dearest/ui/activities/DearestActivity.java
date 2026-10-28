@@ -2,7 +2,6 @@ package com.mowtiie.dearest.ui.activities;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.view.WindowManager;
 
 import androidx.activity.EdgeToEdge;
 import androidx.annotation.Nullable;
@@ -11,6 +10,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.mowtiie.dearest.R;
 import com.mowtiie.dearest.DearestApp;
 import com.mowtiie.dearest.display.DisplayPrefs;
+import com.mowtiie.dearest.display.SecureWindow;
 
 public abstract class DearestActivity extends AppCompatActivity {
 
@@ -36,14 +36,7 @@ public abstract class DearestActivity extends AppCompatActivity {
     }
 
     private void applySecureFlag() {
-        boolean screenshotsAllowed = DearestApp.from(this).displayPrefs().isScreenshotsAllowed();
-        if (screenshotsAllowed) {
-            getWindow().clearFlags(WindowManager.LayoutParams.FLAG_SECURE);
-        } else {
-            getWindow().setFlags(
-                    WindowManager.LayoutParams.FLAG_SECURE,
-                    WindowManager.LayoutParams.FLAG_SECURE);
-        }
+        SecureWindow.apply(this, getWindow());
     }
 
     private void applyContrastOverlay() {

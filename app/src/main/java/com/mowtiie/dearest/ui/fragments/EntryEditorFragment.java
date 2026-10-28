@@ -22,7 +22,7 @@ import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.google.android.material.chip.Chip;
-import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.mowtiie.dearest.ui.SecureDialogBuilder;
 import com.mowtiie.dearest.R;
 import com.mowtiie.dearest.data.model.Notebook;
 import com.mowtiie.dearest.databinding.FragmentEntryEditorBinding;
@@ -309,7 +309,7 @@ public class EntryEditorFragment extends Fragment {
     }
 
     private void confirmDelete() {
-        new MaterialAlertDialogBuilder(requireContext())
+        new SecureDialogBuilder(requireContext())
                 .setTitle(R.string.editor_delete_confirm_title)
                 .setMessage(R.string.editor_delete_confirm_message)
                 .setNegativeButton(android.R.string.cancel, null)

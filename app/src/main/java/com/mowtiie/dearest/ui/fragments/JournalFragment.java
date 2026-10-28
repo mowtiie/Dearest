@@ -7,6 +7,7 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.inputmethod.EditorInfo;
 import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
@@ -147,6 +148,8 @@ public class JournalFragment extends Fragment implements EntryEditorFragment.Hos
                 SearchView search = (SearchView) menu.findItem(R.id.action_search).getActionView();
                 if (search != null) {
                     search.setQueryHint(getString(R.string.journal_search_hint));
+                    // Keep what is searched for out of the keyboard's learned suggestions.
+                    search.setImeOptions(search.getImeOptions() | EditorInfo.IME_FLAG_NO_PERSONALIZED_LEARNING);
                     search.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
                         @Override public boolean onQueryTextSubmit(String q) { return false; }
                         @Override public boolean onQueryTextChange(String q) {

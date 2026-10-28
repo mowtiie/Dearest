@@ -20,7 +20,7 @@ import com.mowtiie.dearest.databinding.DialogImportBinding;
 import com.mowtiie.dearest.ui.InsetsUtil;
 import com.mowtiie.dearest.ui.LoadingDialog;
 import com.mowtiie.dearest.ui.viewmodel.UnlockViewModel;
-import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.mowtiie.dearest.ui.SecureDialogBuilder;
 
 import java.time.LocalDate;
 import java.util.Arrays;
@@ -83,7 +83,7 @@ public class BackupActivity extends DearestActivity {
         DialogBackupPasswordBinding dialogBinding =
                 DialogBackupPasswordBinding.inflate(getLayoutInflater());
 
-        AlertDialog dialog = new MaterialAlertDialogBuilder(this)
+        AlertDialog dialog = new SecureDialogBuilder(this)
                 .setTitle(R.string.backup_password_title)
                 .setView(dialogBinding.getRoot())
                 .setNegativeButton(android.R.string.cancel, null)
@@ -131,7 +131,7 @@ public class BackupActivity extends DearestActivity {
     }
 
     private void warnThenExportPlain() {
-        new MaterialAlertDialogBuilder(this)
+        new SecureDialogBuilder(this)
                 .setTitle(R.string.backup_export_warning_title)
                 .setMessage(R.string.backup_export_warning_message)
                 .setNegativeButton(android.R.string.cancel, null)
@@ -141,7 +141,7 @@ public class BackupActivity extends DearestActivity {
 
     private void chooseFormat() {
         String[] formats = {"JSON", "CSV", getString(R.string.backup_format_text)};
-        new MaterialAlertDialogBuilder(this)
+        new SecureDialogBuilder(this)
                 .setTitle(R.string.backup_choose_format)
                 .setItems(formats, (d, which) -> {
                     switch (which) {
@@ -168,7 +168,7 @@ public class BackupActivity extends DearestActivity {
 
         DialogImportBinding dialogBinding = DialogImportBinding.inflate(getLayoutInflater());
 
-        AlertDialog dialog = new MaterialAlertDialogBuilder(this)
+        AlertDialog dialog = new SecureDialogBuilder(this)
                 .setTitle(R.string.import_title)
                 .setView(dialogBinding.getRoot())
                 .setNegativeButton(android.R.string.cancel, null)

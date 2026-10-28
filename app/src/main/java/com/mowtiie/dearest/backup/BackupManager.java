@@ -21,6 +21,9 @@ import java.util.concurrent.Executors;
 
 public final class BackupManager {
 
+    /** Far above any real journal; stops a huge file from exhausting memory on import. */
+    static final long MAX_BACKUP_BYTES = 64L * 1024 * 1024;
+
     public enum Format { JSON, CSV, TEXT }
 
     public interface Callback {
@@ -92,12 +95,22 @@ public final class BackupManager {
     private String readAll(Uri source) throws IOException {
         try (InputStream is = appContext.getContentResolver().openInputStream(source)) {
             if (is == null) throw new IOException("Could not open the file");
-            ByteArrayOutputStream bos = new ByteArrayOutputStream();
-            byte[] buffer = new byte[8192];
-            int read;
-            while ((read = is.read(buffer)) != -1) bos.write(buffer, 0, read);
-            return new String(bos.toByteArray(), StandardCharsets.UTF_8);
+            return new String(readLimited(is, MAX_BACKUP_BYTES), StandardCharsets.UTF_8);
         }
+    }
+
+    /** Reads a stream fully, refusing anything larger than {@code max} bytes. */
+    static byte[] readLimited(InputStream is, long max) throws IOException {
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        byte[] buffer = new byte[8192];
+        long total = 0;
+        int read;
+        while ((read = is.read(buffer)) != -1) {
+            total += read;
+            if (total > max) throw new IOException("File is too large to be a Dearest backup");
+            bos.write(buffer, 0, read);
+        }
+        return bos.toByteArray();
     }
 
     private void done(Callback cb, boolean ok, @Nullable String message) {

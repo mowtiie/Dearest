@@ -34,7 +34,7 @@ import com.mowtiie.dearest.ui.activities.BackupActivity;
 import com.mowtiie.dearest.ui.activities.ChangePassphraseActivity;
 import com.mowtiie.dearest.ui.activities.TagsManagementActivity;
 import com.google.android.material.color.DynamicColors;
-import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.mowtiie.dearest.ui.SecureDialogBuilder;
 import com.google.android.material.timepicker.MaterialTimePicker;
 import com.google.android.material.timepicker.TimeFormat;
 
@@ -316,7 +316,7 @@ public class SettingsFragment extends PreferenceFragmentCompat {
         if (reminderPrefs.hasPromptedExactAlarm()) return;
 
         reminderPrefs.setPromptedExactAlarm(true);
-        new MaterialAlertDialogBuilder(requireContext())
+        new SecureDialogBuilder(requireContext())
                 .setTitle(R.string.exact_alarm_prompt_title)
                 .setMessage(R.string.exact_alarm_prompt_message)
                 .setNegativeButton(R.string.exact_alarm_prompt_not_now, null)
@@ -411,7 +411,7 @@ public class SettingsFragment extends PreferenceFragmentCompat {
     }
 
     private void showLicenseDialog() {
-        new MaterialAlertDialogBuilder(requireContext())
+        new SecureDialogBuilder(requireContext())
                 .setTitle(R.string.settings_license)
                 .setMessage(readLicenseAsset())
                 .setPositiveButton(R.string.action_close, null)

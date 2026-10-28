@@ -10,13 +10,13 @@ import androidx.annotation.NonNull;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
 
 public class CrashHandler implements Thread.UncaughtExceptionHandler {
+
+    private static final int MAX_CAUSE_DEPTH = 10;
 
     private final Context context;
     private final Thread.UncaughtExceptionHandler defaultHandler;
@@ -58,6 +58,24 @@ public class CrashHandler implements Thread.UncaughtExceptionHandler {
         }
     }
 
+    /**
+     * A stack trace with exception messages left out. Messages can quote user input, such as
+     * the text of a failed search, and the user is invited to copy or share this report.
+     */
+    static String traceWithoutMessages(Throwable throwable) {
+        StringBuilder sb = new StringBuilder();
+        Throwable current = throwable;
+        for (int depth = 0; current != null && depth < MAX_CAUSE_DEPTH; depth++) {
+            sb.append(depth == 0 ? "" : "Caused by: ").append(current.getClass().getName()).append('\n');
+            for (StackTraceElement frame : current.getStackTrace()) {
+                sb.append("\tat ").append(frame).append('\n');
+            }
+            Throwable cause = current.getCause();
+            current = (cause == current) ? null : cause;
+        }
+        return sb.toString();
+    }
+
     private String buildReport(Thread thread, Throwable throwable) {
         StringBuilder sb = new StringBuilder();
 
@@ -82,9 +100,7 @@ public class CrashHandler implements Thread.UncaughtExceptionHandler {
         sb.append("\n");
 
         sb.append("--- Stack Trace ---\n");
-        StringWriter sw = new StringWriter();
-        throwable.printStackTrace(new PrintWriter(sw));
-        sb.append(sw);
+        sb.append(traceWithoutMessages(throwable));
 
         return sb.toString();
     }

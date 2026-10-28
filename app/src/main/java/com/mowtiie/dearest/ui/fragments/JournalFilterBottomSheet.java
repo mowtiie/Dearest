@@ -1,5 +1,6 @@
 package com.mowtiie.dearest.ui.fragments;
 
+import android.app.Dialog;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -13,6 +14,7 @@ import com.mowtiie.dearest.R;
 import com.mowtiie.dearest.data.model.Notebook;
 import com.mowtiie.dearest.data.model.Tag;
 import com.mowtiie.dearest.databinding.BottomSheetJournalFilterBinding;
+import com.mowtiie.dearest.display.SecureWindow;
 import com.mowtiie.dearest.ui.viewmodel.JournalViewModel;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import com.google.android.material.chip.Chip;
@@ -29,6 +31,14 @@ public class JournalFilterBottomSheet extends BottomSheetDialogFragment {
     private JournalViewModel viewModel;
 
     @Nullable
+    @NonNull
+    @Override
+    public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
+        Dialog dialog = super.onCreateDialog(savedInstanceState);
+        SecureWindow.apply(requireContext(), dialog.getWindow());
+        return dialog;
+    }
+
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
