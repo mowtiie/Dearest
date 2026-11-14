@@ -3,7 +3,8 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/sections_root" android:layout_width="match_parent"
     android:layout_height="match_parent" android:orientation="vertical">
-    <com.google.android.material.appbar.AppBarLayout android:layout_width="match_parent" android:layout_height="wrap_content">
+    <com.google.android.material.appbar.AppBarLayout android:id="@+id/sections_app_bar"
+        android:layout_width="match_parent" android:layout_height="wrap_content">
         <com.google.android.material.appbar.MaterialToolbar android:id="@+id/sections_toolbar"
             style="@style/Widget.Dearest.Toolbar" android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize" app:titleTextColor="?attr/colorOnSurface" />

@@ -33,7 +33,7 @@ public final class SectionJournalActivity extends DearestActivity {
         binding.sectionJournalToolbar.setNavigationIcon(R.drawable.ic_arrow_back);
         binding.sectionJournalToolbar.setNavigationContentDescription(R.string.cd_navigate_up);
         binding.sectionJournalToolbar.setNavigationOnClickListener(v -> finish());
-        InsetsUtil.applyToolbarAndBottom(binding.sectionJournalRoot, binding.sectionJournalToolbar);
+        InsetsUtil.applyToolbarAndBottom(binding.sectionJournalRoot, binding.sectionJournalAppBar);
         if (savedInstanceState == null) {
             getSupportFragmentManager().beginTransaction().replace(R.id.section_journal_container,
                     JournalFragment.newSectionInstance(getIntent().getStringExtra(EXTRA_NOTEBOOK_ID),

@@ -49,7 +49,7 @@ public final class NotebookSectionsActivity extends DearestActivity implements S
         binding.sectionsToolbar.setNavigationIcon(R.drawable.ic_arrow_back);
         binding.sectionsToolbar.setNavigationContentDescription(R.string.cd_navigate_up);
         binding.sectionsToolbar.setNavigationOnClickListener(v -> finish());
-        InsetsUtil.applyToolbarAndBottom(binding.sectionsRoot, binding.sectionsToolbar);
+        InsetsUtil.applyToolbarAndBottom(binding.sectionsRoot, binding.sectionsAppBar);
         InsetsUtil.limitContentWidth(binding.sectionsList);
 
         adapter = new SectionAdapter(this);
