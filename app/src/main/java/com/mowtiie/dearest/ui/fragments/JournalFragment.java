@@ -21,7 +21,6 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
 import java.util.List;
-
 import com.mowtiie.dearest.R;
 import com.mowtiie.dearest.data.model.Entry;
 import com.mowtiie.dearest.ui.InsetsUtil;
@@ -33,7 +32,20 @@ import com.mowtiie.dearest.ui.viewmodel.JournalViewModel.Sort;
 
 public class JournalFragment extends Fragment implements EntryEditorFragment.Host {
 
+    public static final String ARG_NOTEBOOK_ID = "notebookId";
+    public static final String ARG_SECTION_ID = "sectionId";
+    public static final String ARG_SECTION_SCOPED = "sectionScoped";
     private static final String DETAIL_TAG = "entry_detail";
+
+    public static JournalFragment newSectionInstance(String notebookId, String sectionId) {
+        Bundle args = new Bundle();
+        args.putString(ARG_NOTEBOOK_ID, notebookId);
+        args.putString(ARG_SECTION_ID, sectionId);
+        args.putBoolean(ARG_SECTION_SCOPED, true);
+        JournalFragment fragment = new JournalFragment();
+        fragment.setArguments(args);
+        return fragment;
+    }
 
     private FragmentJournalBinding binding;
     private JournalViewModel viewModel;
@@ -51,15 +63,19 @@ public class JournalFragment extends Fragment implements EntryEditorFragment.Hos
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         viewModel = new ViewModelProvider(this).get(JournalViewModel.class);
+        Bundle args = getArguments();
+        boolean sectionScoped = args != null && args.getBoolean(ARG_SECTION_SCOPED);
+        if (sectionScoped) viewModel.setScope(args.getString(ARG_NOTEBOOK_ID), args.getString(ARG_SECTION_ID));
 
         binding.entriesList.setLayoutManager(new LinearLayoutManager(requireContext()));
         InsetsUtil.limitContentWidth(binding.entriesList);
         removeStaleDetail();
-        adapter = new EntryAdapter(entry -> openEntry(entry.getId(), null));
+        adapter = new EntryAdapter(entry -> openEntry(entry.getId(), entry.getNotebookId(), entry.getSectionId()));
         binding.entriesList.setAdapter(adapter);
 
         binding.fabNewEntry.setOnClickListener(v ->
-                openEntry(null, viewModel.notebookForNewEntry()));
+                openEntry(null, sectionScoped ? args.getString(ARG_NOTEBOOK_ID) : viewModel.notebookForNewEntry(),
+                        sectionScoped ? args.getString(ARG_SECTION_ID) : viewModel.sectionForNewEntry()));
 
         viewModel.entries().observe(getViewLifecycleOwner(), entries -> {
             adapter.submitList(entries);
@@ -85,9 +101,9 @@ public class JournalFragment extends Fragment implements EntryEditorFragment.Hos
     }
 
     /** Opens an entry (or a new one in the given notebook) in the detail pane, or full screen. */
-    private void openEntry(@Nullable String entryId, @Nullable String notebookId) {
+    private void openEntry(@Nullable String entryId, @Nullable String notebookId, @Nullable String sectionId) {
         if (!isTwoPane()) {
-            EntryEditorActivity.open(requireContext(), entryId, notebookId);
+            EntryEditorActivity.open(requireContext(), entryId, notebookId, sectionId);
             return;
         }
         Fragment current = getChildFragmentManager().findFragmentByTag(DETAIL_TAG);
@@ -96,7 +112,7 @@ public class JournalFragment extends Fragment implements EntryEditorFragment.Hos
             return;
         }
         getChildFragmentManager().beginTransaction()
-                .replace(R.id.detail_container, EntryEditorFragment.newInstance(entryId, notebookId, false), DETAIL_TAG)
+                .replace(R.id.detail_container, EntryEditorFragment.newInstance(entryId, notebookId, sectionId, false), DETAIL_TAG)
                 .commit();
         binding.detailPlaceholder.setVisibility(View.GONE);
     }
@@ -144,6 +160,10 @@ public class JournalFragment extends Fragment implements EntryEditorFragment.Hos
             @Override
             public void onCreateMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
                 inflater.inflate(R.menu.menu_journal, menu);
+                Bundle args = getArguments();
+                boolean sectionScoped = args != null && args.getBoolean(ARG_SECTION_SCOPED);
+                menu.findItem(R.id.action_filter).setVisible(!sectionScoped);
+                if (sectionScoped) menu.findItem(R.id.sort_title).setVisible(false);
 
                 SearchView search = (SearchView) menu.findItem(R.id.action_search).getActionView();
                 if (search != null) {

@@ -42,6 +42,14 @@
             android:exported="false"
             android:parentActivityName=".ui.activities.MainActivity" />
         <activity
+            android:name=".ui.activities.NotebookSectionsActivity"
+            android:exported="false"
+            android:parentActivityName=".ui.activities.MainActivity" />
+        <activity
+            android:name=".ui.activities.SectionJournalActivity"
+            android:exported="false"
+            android:parentActivityName=".ui.activities.NotebookSectionsActivity" />
+        <activity
             android:name=".ui.activities.MainActivity"
             android:exported="true">
             <intent-filter>

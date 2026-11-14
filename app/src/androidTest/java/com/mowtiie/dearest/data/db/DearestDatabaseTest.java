@@ -11,9 +11,11 @@ import androidx.test.ext.junit.runners.AndroidJUnit4;
 import com.mowtiie.dearest.data.TestDatabase;
 import com.mowtiie.dearest.data.dao.EntryDao;
 import com.mowtiie.dearest.data.dao.NotebookDao;
+import com.mowtiie.dearest.data.dao.SectionDao;
 import com.mowtiie.dearest.data.dao.TagDao;
 import com.mowtiie.dearest.data.model.Entry;
 import com.mowtiie.dearest.data.model.Notebook;
+import com.mowtiie.dearest.data.model.Section;
 
 import net.zetetic.database.sqlcipher.SQLiteDatabase;
 import net.zetetic.database.sqlcipher.SQLiteOpenHelper;
@@ -30,6 +32,7 @@ public class DearestDatabaseTest {
 
     private final EntryDao entries = new EntryDao();
     private final NotebookDao notebooks = new NotebookDao();
+    private final SectionDao sections = new SectionDao();
     private final TagDao tags = new TagDao();
 
     private TestDatabase testDb;
@@ -138,6 +141,24 @@ public class DearestDatabaseTest {
         assertEquals("added in v3", notebooks.getById(db, "nb-1").getDescription());
     }
 
+    @Test
+    public void upgradeFromVersion3KeepsEntriesAndAssignsThemToDefaultSection() {
+        createLegacyDatabase(3);
+
+        SQLiteDatabase db = testDb.open();
+
+        Entry kept = entries.getById(db, "e-1");
+        assertNotNull(kept);
+        assertEquals("old entry", kept.getTitle());
+        assertEquals(1, entries.search(db, "legacy").size());
+        assertEquals("existing description", notebooks.getById(db, "nb-1").getDescription());
+
+        List<Section> migrated = sections.getByNotebook(db, "nb-1");
+        assertEquals(1, migrated.size());
+        assertEquals("General", migrated.get(0).getName());
+        assertEquals(migrated.get(0).getId(), kept.getSectionId());
+    }
+
     /**
      * Builds the schema as earlier releases created it (v1: no tags and no notebook description;
      * v2: tags added) with one notebook and one entry, then closes it for the upgrade under test.
@@ -154,6 +175,7 @@ public class DearestDatabaseTest {
             public void onCreate(SQLiteDatabase db) {
                 db.execSQL("CREATE TABLE notebooks (_id INTEGER PRIMARY KEY AUTOINCREMENT, "
                         + "uuid TEXT NOT NULL UNIQUE, name TEXT NOT NULL, "
+                        + (version >= 3 ? "description TEXT, " : "")
                         + "position INTEGER NOT NULL DEFAULT 0, created_at INTEGER NOT NULL);");
                 db.execSQL("CREATE TABLE entries (_id INTEGER PRIMARY KEY AUTOINCREMENT, "
                         + "uuid TEXT NOT NULL UNIQUE, notebook_uuid TEXT NOT NULL, title TEXT, body TEXT, "
@@ -175,8 +197,11 @@ public class DearestDatabaseTest {
                             + "FOREIGN KEY (entry_uuid) REFERENCES entries(uuid) ON DELETE CASCADE, "
                             + "FOREIGN KEY (tag_uuid) REFERENCES tags(uuid) ON DELETE CASCADE);");
                 }
-                db.execSQL("INSERT INTO notebooks (uuid, name, position, created_at) "
-                        + "VALUES ('nb-1', 'Old notebook', 0, 1);");
+                db.execSQL(version >= 3
+                        ? "INSERT INTO notebooks (uuid, name, description, position, created_at) "
+                            + "VALUES ('nb-1', 'Old notebook', 'existing description', 0, 1);"
+                        : "INSERT INTO notebooks (uuid, name, position, created_at) "
+                            + "VALUES ('nb-1', 'Old notebook', 0, 1);");
                 db.execSQL("INSERT INTO entries (uuid, notebook_uuid, title, body, created_at, updated_at) "
                         + "VALUES ('e-1', 'nb-1', 'old entry', 'a legacy body', 1, 1);");
             }

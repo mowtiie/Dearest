@@ -15,7 +15,7 @@ Dearest is a simple, open-source diary app built to be fully private and fully o
 * **Encrypted, with no recovery:** Your whole journal is encrypted with AES-256 (via SQLCipher) and keyed by your passphrase. There is no reset and no backdoor, which is what makes the privacy real.
 * **Fully offline:** Dearest requests no internet permission, so it cannot send your data anywhere. You can check this in your system's app settings.
 * **App lock:** Auto-lock, a privacy screen that covers the app the moment you switch away, screenshots and screen recording blocked, and an escalating delay after wrong passphrases. Fingerprint or face unlock is optional and always falls back to your passphrase.
-* **Notebooks and tags:** Keep separate diaries, and add tags that cut across them.
+* **Notebooks, Sections and tags:** Organize each notebook into Sections, and add tags that cut across them.
 * **Search, filter and calendar:** Full-text search with notebook and tag filters, sorting, and a calendar showing the days you wrote.
 * **Autosave and undo:** Drafts save as you type, and a deleted entry can be undone right away.
 * **Backup and export:** An encrypted backup protected by a password you choose, or an export to plain text, CSV or JSON.

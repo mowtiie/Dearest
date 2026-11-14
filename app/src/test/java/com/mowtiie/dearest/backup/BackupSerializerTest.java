@@ -8,6 +8,7 @@ import static org.junit.Assert.assertTrue;
 import com.mowtiie.dearest.data.model.Entry;
 import com.mowtiie.dearest.data.model.Notebook;
 import com.mowtiie.dearest.data.model.Tag;
+import com.mowtiie.dearest.data.model.Section;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -57,6 +58,18 @@ public class BackupSerializerTest {
         assertNull(back.entries.get(0).getBody());
     }
 
+    @Test
+    public void sectionsAndEntrySectionLinksSurviveRoundTrip() throws Exception {
+        Notebook nb = new Notebook("nb-1", "Journal", null, 0, 1L);
+        Section section = new Section("s-1", "nb-1", "Ideas", 0, 2L);
+        Entry e = new Entry("e-1", "nb-1", "s-1", "Title", "Body", 3L, 4L);
+        BackupData back = BackupSerializer.fromJson(BackupSerializer.toJson(new BackupData(
+                Collections.singletonList(nb), Collections.singletonList(e),
+                Collections.singletonList(section), Collections.emptyList(), Collections.emptyMap())));
+        assertEquals("Ideas", back.sections.get(0).getName());
+        assertEquals("s-1", back.entries.get(0).getSectionId());
+    }
+
     private static BackupData sampleWithTags() {
         Notebook nb = new Notebook("nb-1", "Journal", null, 0, 1L);
         Entry tagged = new Entry("e-1", "nb-1", "Tagged", "body", 1L, 1L);
@@ -95,7 +108,7 @@ public class BackupSerializerTest {
         BackupData data = sampleWithTags();
 
         String csv = BackupSerializer.toCsv(data);
-        assertTrue(csv.startsWith("Notebook,Created,Updated,Title,Body,Tags\r\n"));
+        assertTrue(csv.startsWith("Notebook,Section,Created,Updated,Title,Body,Tags\r\n"));
         assertTrue(csv.contains("\"Ideas, work\""));
 
         assertTrue(BackupSerializer.toPlainText(data).contains("Tags: Ideas, work"));

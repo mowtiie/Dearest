@@ -11,6 +11,9 @@ import androidx.lifecycle.MutableLiveData;
 import com.mowtiie.dearest.data.model.Entry;
 import com.mowtiie.dearest.data.model.Notebook;
 import com.mowtiie.dearest.data.model.Tag;
+import com.mowtiie.dearest.data.model.Section;
+import com.mowtiie.dearest.data.model.SectionAssignment;
+import androidx.lifecycle.Transformations;
 import com.mowtiie.dearest.data.repository.DearestRepository;
 
 import java.util.ArrayList;
@@ -29,6 +32,8 @@ public class EntryEditorViewModel extends DearestViewModel {
     private final MutableLiveData<List<String>> tagNames = new MutableLiveData<>(Collections.emptyList());
     private final LiveData<List<Notebook>> notebooks;
     private final LiveData<List<Tag>> allTags;
+    private final MutableLiveData<String> sectionId = new MutableLiveData<>();
+    private final LiveData<List<Section>> sections;
 
     private boolean initialized;
     private String entryId;
@@ -44,9 +49,16 @@ public class EntryEditorViewModel extends DearestViewModel {
         super(application, repository);
         notebooks = repository().observeNotebooks();
         allTags = repository().observeTags();
+        sections = Transformations.switchMap(notebookId, id -> id == null
+                ? new MutableLiveData<>(Collections.emptyList()) : repository().observeSections(id));
     }
 
     public void init(@Nullable String existingEntryId, @Nullable String targetNotebookId) {
+        init(existingEntryId, targetNotebookId, null);
+    }
+
+    public void init(@Nullable String existingEntryId, @Nullable String targetNotebookId,
+                     @Nullable String targetSectionId) {
         if (initialized) return;
         initialized = true;
         this.entryId = existingEntryId;
@@ -54,11 +66,13 @@ public class EntryEditorViewModel extends DearestViewModel {
         if (existingEntryId == null) {
             entry.setValue(null);
             notebookId.setValue(targetNotebookId);
+            sectionId.setValue(targetSectionId);
         } else {
             repository().getEntry(existingEntryId, loaded -> {
                 original = loaded;
                 if (loaded != null) {
                     notebookId.setValue(loaded.getNotebookId());
+                    sectionId.setValue(loaded.getSectionId());
                 }
                 entry.setValue(loaded);
             });
@@ -77,6 +91,9 @@ public class EntryEditorViewModel extends DearestViewModel {
     public LiveData<List<Notebook>> notebooks()  { return notebooks; }
     public LiveData<List<String>>   tagNames()   { return tagNames; }
     public LiveData<List<Tag>>      allTags()    { return allTags; }
+    public LiveData<List<Section>> sections() { return sections; }
+    public LiveData<String> sectionId() { return sectionId; }
+    public void setSection(String id) { sectionId.setValue(id); }
 
     public boolean isNew() {
         return entryId == null;
@@ -87,11 +104,23 @@ public class EntryEditorViewModel extends DearestViewModel {
         if (notebookId.getValue() == null && available != null && !available.isEmpty()) {
             notebookId.setValue(available.get(0).getId());
         }
+        ensureSectionForNotebook(sections.getValue());
+    }
+
+    public void ensureSectionForNotebook(@Nullable List<Section> availableSections) {
+        String notebook = notebookId.getValue();
+        if (notebook == null || availableSections == null || availableSections.isEmpty()) return;
+        String resolved = SectionAssignment.resolveForNotebook(availableSections, notebook, sectionId.getValue());
+        if (!equal(resolved, sectionId.getValue())) sectionId.setValue(resolved);
     }
 
     public void setNotebook(String id) {
         if (id != null && !id.equals(notebookId.getValue())) {
+            String nextSectionId = SectionAssignment.afterNotebookChange(
+                    notebookId.getValue(), id, sectionId.getValue());
             notebookId.setValue(id);
+            // Clear the old notebook's section immediately; the new section list loads asynchronously.
+            sectionId.setValue(nextSectionId);
         }
     }
 
@@ -134,6 +163,7 @@ public class EntryEditorViewModel extends DearestViewModel {
         String t = normalize(title);
         String b = normalize(body);
         String nb = notebookId.getValue();
+        String sec = sectionId.getValue();
         List<String> tags = tagNames.getValue();
         if (tags == null) tags = Collections.emptyList();
 
@@ -144,20 +174,22 @@ public class EntryEditorViewModel extends DearestViewModel {
         Entry toSave;
         if (isNew()) {
             if ((t.isEmpty() && b.isEmpty()) || nb == null) return;
-            toSave = Entry.createNew(nb, t, b);
+            long now = System.currentTimeMillis();
+            toSave = new Entry(java.util.UUID.randomUUID().toString(), nb, sec, t, b, now, now);
             entryId = toSave.getId();
         } else {
             boolean notebookChanged = original != null && !equal(original.getNotebookId(), nb);
+            boolean sectionChanged = original != null && !equal(original.getSectionId(), sec);
             boolean tagsChanged = !sameTags(originalTagNames, tags);
-            if (original != null && !notebookChanged && !tagsChanged
+            if (original != null && !notebookChanged && !sectionChanged && !tagsChanged
                     && equal(original.getTitle(), t) && equal(original.getBody(), b)) {
                 return;
             }
             long now = System.currentTimeMillis();
             toSave = (original != null)
-                    ? new Entry(entryId, nb != null ? nb : original.getNotebookId(), t, b,
+                    ? new Entry(entryId, nb, sec, t, b,
                             original.getCreatedAt(), now)
-                    : new Entry(entryId, nb, t, b, now, now);
+                    : new Entry(entryId, nb, sec, t, b, now, now);
         }
         original = toSave;
         originalTagNames = tags;
@@ -205,6 +237,7 @@ public class EntryEditorViewModel extends DearestViewModel {
         return !equal(original.getTitle(), t)
                 || !equal(original.getBody(), b)
                 || !equal(original.getNotebookId(), notebookId.getValue())
+                || !equal(original.getSectionId(), sectionId.getValue())
                 || !sameTags(originalTagNames, tags);
     }
 

@@ -14,12 +14,15 @@ import com.mowtiie.dearest.backup.BackupData;
 import com.mowtiie.dearest.data.dao.EntryDao;
 import com.mowtiie.dearest.data.dao.NotebookDao;
 import com.mowtiie.dearest.data.dao.TagDao;
+import com.mowtiie.dearest.data.dao.SectionDao;
 import com.mowtiie.dearest.data.db.DatabaseContract;
 import com.mowtiie.dearest.data.db.DearestDatabase;
 import com.mowtiie.dearest.data.model.DeletedEntry;
 import com.mowtiie.dearest.data.model.Entry;
 import com.mowtiie.dearest.data.model.Notebook;
 import com.mowtiie.dearest.data.model.Tag;
+import com.mowtiie.dearest.data.model.Section;
+import com.mowtiie.dearest.data.model.SectionAssignment;
 import com.mowtiie.dearest.security.KeyManager;
 
 import net.zetetic.database.sqlcipher.SQLiteDatabase;
@@ -55,6 +58,7 @@ public final class DearestRepository {
     private final EntryDao entryDao = new EntryDao();
     private final NotebookDao notebookDao = new NotebookDao();
     private final TagDao tagDao = new TagDao();
+    private final SectionDao sectionDao = new SectionDao();
     private final BackupImporter backupImporter = new BackupImporter();
     private final ExecutorService io = Executors.newSingleThreadExecutor();
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
@@ -141,6 +145,13 @@ public final class DearestRepository {
         return observe(ENTRIES, Collections.emptyList(), d -> entryDao.getByNotebook(d, notebookId));
     }
 
+    public LiveData<List<Section>> observeSections(String notebookId) {
+        return observe(NOTEBOOKS, Collections.emptyList(), d -> sectionDao.getByNotebook(d, notebookId));
+    }
+    public LiveData<List<Entry>> observeSectionEntries(String sectionId) {
+        return observe(ENTRIES, Collections.emptyList(), d -> entryDao.getBySection(d, sectionId));
+    }
+
     public LiveData<List<Entry>> observeAllEntries() {
         return observe(ENTRIES, Collections.emptyList(), entryDao::getAll);
     }
@@ -181,6 +192,10 @@ public final class DearestRepository {
         read(0, d -> entryDao.countByNotebook(d, notebookId), callback);
     }
 
+    public void countEntriesInSection(String sectionId, ResultCallback<Integer> callback) {
+        read(0, d -> entryDao.countBySection(d, sectionId), callback);
+    }
+
     /** Everything, with full entry bodies, for backup and export. */
     public void loadAll(ResultCallback<BackupData> callback) {
         io.execute(() -> {
@@ -189,7 +204,7 @@ public final class DearestRepository {
                     ? new BackupData(Collections.emptyList(), Collections.emptyList(),
                             Collections.emptyList(), Collections.emptyMap())
                     : new BackupData(notebookDao.getAll(d), entryDao.getAllFull(d),
-                            tagDao.getAll(d), tagDao.getAllEntryTagLinks(d));
+                            loadSections(d), tagDao.getAll(d), tagDao.getAllEntryTagLinks(d));
             mainHandler.post(() -> callback.onResult(data));
         });
     }
@@ -200,11 +215,48 @@ public final class DearestRepository {
         inTransaction(cb, ALL, d -> backupImporter.apply(d, data, replaceAll));
     }
 
+    private List<Section> loadSections(SQLiteDatabase d) {
+        List<Section> result = new ArrayList<>();
+        for (Notebook n : notebookDao.getAll(d)) result.addAll(sectionDao.getByNotebook(d, n.getId()));
+        return result;
+    }
+    public void saveSection(Section section, OperationCallback cb) {
+        write(cb, NOTEBOOKS, d -> sectionDao.save(d, section));
+    }
+    public void deleteSection(String sectionId, String moveToId, OperationCallback cb) {
+        inTransaction(cb, NOTEBOOKS | ENTRIES, d -> {
+            Section source = sectionDao.getById(d, sectionId);
+            Section target = sectionDao.getById(d, moveToId);
+            if (source == null || target == null || !source.getNotebookId().equals(target.getNotebookId())) {
+                throw new UserFacingException(appContext.getString(R.string.error_generic));
+            }
+            List<Section> notebookSections = sectionDao.getByNotebook(d, source.getNotebookId());
+            if (notebookSections.size() <= 1) {
+                throw new UserFacingException(appContext.getString(R.string.section_keep_one));
+            }
+            android.content.ContentValues v = new android.content.ContentValues(); v.put(DatabaseContract.Entries.COL_SECTION, moveToId);
+            d.update(DatabaseContract.Entries.TABLE, v, DatabaseContract.Entries.COL_SECTION + " = ?", new String[]{sectionId});
+            d.delete("sections", "uuid = ?", new String[]{sectionId});
+        });
+    }
+
     public void saveEntryWithTags(Entry entry, List<String> tagNames, OperationCallback cb) {
         inTransaction(cb, ENTRIES | LINKS, d -> saveEntryWithTags(d, entry, tagNames));
     }
 
     private void saveEntryWithTags(SQLiteDatabase d, Entry entry, List<String> tagNames) {
+        Section selectedSection = sectionDao.getById(d, entry.getSectionId());
+        if (!SectionAssignment.moveEntry(entry, selectedSection)) {
+            List<Section> validSections = sectionDao.getByNotebook(d, entry.getNotebookId());
+            if (validSections.isEmpty()) {
+                Section fallback = Section.createNew(entry.getNotebookId(),
+                        appContext.getString(R.string.default_section_name), 0);
+                sectionDao.save(d, fallback);
+                SectionAssignment.moveEntry(entry, fallback);
+            } else {
+                SectionAssignment.moveEntry(entry, validSections.get(0));
+            }
+        }
         int tagsBefore = tagDao.count(d);
         if (entryDao.update(d, entry) == 0) {
             entryDao.insert(d, entry);
@@ -253,8 +305,13 @@ public final class DearestRepository {
                 if (notebooks.isEmpty()) {
                     throw new UserFacingException(appContext.getString(R.string.error_generic));
                 }
-                entry = new Entry(entry.getId(), notebooks.get(0).getId(), entry.getTitle(),
+                entry = new Entry(entry.getId(), notebooks.get(0).getId(), entry.getSectionId(), entry.getTitle(),
                         entry.getBody(), entry.getCreatedAt(), entry.getUpdatedAt());
+            }
+            Section savedSection = sectionDao.getById(d, entry.getSectionId());
+            if (savedSection == null || !savedSection.getNotebookId().equals(entry.getNotebookId())) {
+                List<Section> sections = sectionDao.getByNotebook(d, entry.getNotebookId());
+                if (!sections.isEmpty()) entry.setSectionId(sections.get(0).getId());
             }
             saveEntryWithTags(d, entry, deleted.tagNames);
         });
@@ -295,9 +352,10 @@ public final class DearestRepository {
     }
 
     public void saveNotebook(Notebook notebook) {
-        write(null, NOTEBOOKS, d -> {
+        inTransaction(null, NOTEBOOKS, d -> {
             if (notebookDao.update(d, notebook) == 0) {
                 notebookDao.insert(d, notebook);
+                sectionDao.save(d, Section.createNew(notebook.getId(), appContext.getString(R.string.default_section_name), 0));
             }
         });
     }

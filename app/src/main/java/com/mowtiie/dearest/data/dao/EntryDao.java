@@ -18,6 +18,7 @@ public class EntryDao {
     private static final String[] COLUMNS = {
             Entries.COL_UUID,
             Entries.COL_NOTEBOOK,
+            Entries.COL_SECTION,
             Entries.COL_TITLE,
             Entries.COL_BODY,
             Entries.COL_CREATED,
@@ -30,6 +31,7 @@ public class EntryDao {
     private static final String[] LIST_COLUMNS = {
             Entries.COL_UUID,
             Entries.COL_NOTEBOOK,
+            Entries.COL_SECTION,
             Entries.COL_TITLE,
             "substr(" + Entries.COL_BODY + ", 1, " + SNIPPET_LENGTH + ") AS " + Entries.COL_BODY,
             Entries.COL_CREATED,
@@ -69,6 +71,11 @@ public class EntryDao {
                 null, null, Entries.COL_CREATED + " DESC")) {
             return collect(c);
         }
+    }
+
+    public List<Entry> getBySection(SQLiteDatabase db, String sectionId) {
+        try (Cursor c = db.query(Entries.TABLE, LIST_COLUMNS, Entries.COL_SECTION + " = ?",
+                new String[]{sectionId}, null, null, Entries.COL_CREATED + " DESC")) { return collect(c); }
     }
 
     public List<Entry> getAll(SQLiteDatabase db) {
@@ -113,7 +120,7 @@ public class EntryDao {
 
         final String sql =
                 "SELECT e." + Entries.COL_UUID + ", e." + Entries.COL_NOTEBOOK +
-                        ", e." + Entries.COL_TITLE + ", substr(e." + Entries.COL_BODY + ", 1, " + SNIPPET_LENGTH + ") AS " + Entries.COL_BODY +
+                        ", e." + Entries.COL_SECTION + ", e." + Entries.COL_TITLE + ", substr(e." + Entries.COL_BODY + ", 1, " + SNIPPET_LENGTH + ") AS " + Entries.COL_BODY +
                         ", e." + Entries.COL_CREATED + ", e." + Entries.COL_UPDATED +
                         " FROM " + EntriesFts.TABLE + " f" +
                         " JOIN " + Entries.TABLE + " e ON e." + Entries._ID + " = f.rowid" +
@@ -132,11 +139,19 @@ public class EntryDao {
         }
     }
 
+    public int countBySection(SQLiteDatabase db, String sectionId) {
+        try (Cursor c = db.rawQuery("SELECT COUNT(*) FROM " + Entries.TABLE +
+                " WHERE " + Entries.COL_SECTION + " = ?", new String[]{sectionId})) {
+            return c.moveToFirst() ? c.getInt(0) : 0;
+        }
+    }
 
-    private ContentValues toValues(Entry entry) {
+
+    ContentValues toValues(Entry entry) {
         ContentValues values = new ContentValues();
         values.put(Entries.COL_UUID, entry.getId());
         values.put(Entries.COL_NOTEBOOK, entry.getNotebookId());
+        values.put(Entries.COL_SECTION, entry.getSectionId());
         values.put(Entries.COL_TITLE, entry.getTitle());
         values.put(Entries.COL_BODY, entry.getBody());
         values.put(Entries.COL_CREATED, entry.getCreatedAt());
@@ -154,6 +169,7 @@ public class EntryDao {
         return new Entry(
                 c.getString(c.getColumnIndexOrThrow(Entries.COL_UUID)),
                 c.getString(c.getColumnIndexOrThrow(Entries.COL_NOTEBOOK)),
+                c.getString(c.getColumnIndexOrThrow(Entries.COL_SECTION)),
                 c.getString(c.getColumnIndexOrThrow(Entries.COL_TITLE)),
                 c.getString(c.getColumnIndexOrThrow(Entries.COL_BODY)),
                 c.getLong(c.getColumnIndexOrThrow(Entries.COL_CREATED)),

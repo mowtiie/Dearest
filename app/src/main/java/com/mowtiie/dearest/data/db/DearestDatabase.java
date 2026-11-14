@@ -12,7 +12,7 @@ import java.util.UUID;
 public class DearestDatabase extends SQLiteOpenHelper {
 
     public static final String DB_NAME    = "dearest.db";
-    public static final int    DB_VERSION = 3;
+    public static final int    DB_VERSION = 4;
 
     private static boolean sLibraryLoaded = false;
 
@@ -57,6 +57,8 @@ public class DearestDatabase extends SQLiteOpenHelper {
         createTagTables(db);
 
         seedDefaultNotebook(db);
+        createSectionTables(db);
+        seedDefaultSections(db);
     }
 
     @Override
@@ -68,6 +70,15 @@ public class DearestDatabase extends SQLiteOpenHelper {
             db.execSQL("ALTER TABLE " + DatabaseContract.Notebooks.TABLE +
                     " ADD COLUMN " + DatabaseContract.Notebooks.COL_DESCRIPTION + " TEXT;");
         }
+        if (oldVersion < 4) {
+            db.execSQL(CREATE_SECTIONS);
+            db.execSQL(INDEX_SECTIONS_NOTEBOOK);
+            db.execSQL("ALTER TABLE " + DatabaseContract.Entries.TABLE + " ADD COLUMN " +
+                    DatabaseContract.Entries.COL_SECTION + " TEXT;");
+            db.execSQL("CREATE INDEX idx_entries_section ON " + DatabaseContract.Entries.TABLE +
+                    "(" + DatabaseContract.Entries.COL_SECTION + ");");
+            seedDefaultSections(db);
+        }
     }
 
     private void createTagTables(SQLiteDatabase db) {
@@ -75,6 +86,36 @@ public class DearestDatabase extends SQLiteOpenHelper {
         db.execSQL(INDEX_TAGS_NAME);
         db.execSQL(CREATE_ENTRY_TAGS);
         db.execSQL(INDEX_ENTRY_TAGS_TAG);
+    }
+
+    private void createSectionTables(SQLiteDatabase db) {
+        db.execSQL(CREATE_SECTIONS);
+        db.execSQL(INDEX_SECTIONS_NOTEBOOK);
+        db.execSQL("CREATE INDEX idx_entries_section ON " + DatabaseContract.Entries.TABLE +
+                "(" + DatabaseContract.Entries.COL_SECTION + ");");
+    }
+
+    private void seedDefaultSections(SQLiteDatabase db) {
+        try (android.database.Cursor c = db.query(DatabaseContract.Notebooks.TABLE,
+                new String[]{DatabaseContract.Notebooks.COL_UUID}, null, null, null, null, null)) {
+            while (c.moveToNext()) {
+                String notebookId = c.getString(0);
+                String sectionId;
+                try (android.database.Cursor s = db.query(DatabaseContract.Sections.TABLE,
+                        new String[]{DatabaseContract.Sections.COL_UUID},
+                        DatabaseContract.Sections.COL_NOTEBOOK + " = ?",
+                        new String[]{notebookId}, null, null, null)) {
+                    if (s.moveToFirst()) sectionId = s.getString(0);
+                    else {
+                        sectionId = UUID.randomUUID().toString();
+                        db.execSQL("INSERT INTO sections (uuid, notebook_uuid, name, position, created_at) VALUES (?, ?, ?, 0, ?)",
+                                new Object[]{sectionId, notebookId, appContext.getString(R.string.default_section_name), System.currentTimeMillis()});
+                    }
+                }
+                db.execSQL("UPDATE entries SET section_uuid = ? WHERE notebook_uuid = ? AND section_uuid IS NULL",
+                        new Object[]{sectionId, notebookId});
+            }
+        }
     }
 
     private void seedDefaultNotebook(SQLiteDatabase db) {
@@ -106,12 +147,20 @@ public class DearestDatabase extends SQLiteOpenHelper {
                     DatabaseContract.Entries._ID          + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
                     DatabaseContract.Entries.COL_UUID     + " TEXT    NOT NULL UNIQUE, " +
                     DatabaseContract.Entries.COL_NOTEBOOK + " TEXT    NOT NULL, " +
+                    DatabaseContract.Entries.COL_SECTION + " TEXT, " +
                     DatabaseContract.Entries.COL_TITLE    + " TEXT, " +
                     DatabaseContract.Entries.COL_BODY     + " TEXT, " +
                     DatabaseContract.Entries.COL_CREATED  + " INTEGER NOT NULL, " +
                     DatabaseContract.Entries.COL_UPDATED  + " INTEGER NOT NULL, " +
                     "FOREIGN KEY (" + DatabaseContract.Entries.COL_NOTEBOOK + ") REFERENCES " +
                     DatabaseContract.Notebooks.TABLE + "(" + DatabaseContract.Notebooks.COL_UUID + "));";
+
+    private static final String CREATE_SECTIONS = "CREATE TABLE sections (" +
+            "_id INTEGER PRIMARY KEY AUTOINCREMENT, uuid TEXT NOT NULL UNIQUE, " +
+            "notebook_uuid TEXT NOT NULL, name TEXT NOT NULL, position INTEGER NOT NULL DEFAULT 0, " +
+            "created_at INTEGER NOT NULL, UNIQUE(notebook_uuid, name COLLATE NOCASE), " +
+            "FOREIGN KEY(notebook_uuid) REFERENCES notebooks(uuid) ON DELETE CASCADE);";
+    private static final String INDEX_SECTIONS_NOTEBOOK = "CREATE INDEX idx_sections_notebook ON sections(notebook_uuid, position);";
 
     private static final String INDEX_ENTRIES_NOTEBOOK =
             "CREATE INDEX idx_entries_notebook ON " + DatabaseContract.Entries.TABLE +
