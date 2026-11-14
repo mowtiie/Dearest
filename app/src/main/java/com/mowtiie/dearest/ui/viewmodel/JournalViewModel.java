@@ -12,7 +12,7 @@ import androidx.lifecycle.Transformations;
 import com.mowtiie.dearest.data.model.Entry;
 import com.mowtiie.dearest.data.model.Notebook;
 import com.mowtiie.dearest.data.model.Tag;
-
+import com.mowtiie.dearest.data.model.SectionAssignment;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -28,6 +28,7 @@ public class JournalViewModel extends DearestViewModel {
 
     private final MutableLiveData<String> selectedNotebookId = new MutableLiveData<>();
     private final MutableLiveData<Set<String>> selectedTagIds = new MutableLiveData<>(new HashSet<>());
+    private final MutableLiveData<String> selectedSectionId = new MutableLiveData<>();
     private final MutableLiveData<String> query = new MutableLiveData<>("");
     private final MutableLiveData<Sort> sort = new MutableLiveData<>(Sort.NEWEST);
 
@@ -62,6 +63,7 @@ public class JournalViewModel extends DearestViewModel {
         entries.addSource(entryTagLinks, m -> recompute());
         entries.addSource(selectedTagIds, s -> recompute());
         entries.addSource(selectedNotebookId, id -> recompute());
+        entries.addSource(selectedSectionId, id -> recompute());
         entries.addSource(query, q -> recompute());
         entries.addSource(sort, s -> recompute());
 
@@ -75,16 +77,25 @@ public class JournalViewModel extends DearestViewModel {
     public LiveData<List<Notebook>>            notebooks()          { return notebooks; }
     public LiveData<List<Tag>>                 tags()               { return tags; }
     public LiveData<List<Entry>>               entries()            { return entries; }
-    /** True while a search, notebook or tag filter is narrowing the list. */
+    /** True while a search, Notebook, Section or tag filter is narrowing the list. */
     public LiveData<Boolean>                   filtering()          { return filtering; }
     public LiveData<Notebook>                  selectedNotebook()   { return selectedNotebook; }
     public LiveData<String>                    selectedNotebookId() { return selectedNotebookId; }
     public LiveData<Set<String>>               selectedTagIds()     { return selectedTagIds; }
     public LiveData<Sort>                      sort()               { return sort; }
+    public LiveData<String> selectedSectionId() { return selectedSectionId; }
+    public void selectSection(String id) { if (!equal(id, selectedSectionId.getValue())) selectedSectionId.setValue(id); }
+    public void setScope(@Nullable String notebookId, @Nullable String sectionId) {
+        selectNotebook(notebookId);
+        selectSection(sectionId);
+    }
 
     public void selectNotebook(@Nullable String notebookId) {
         if (!equal(notebookId, selectedNotebookId.getValue())) {
+            String nextSectionId = SectionAssignment.afterNotebookChange(
+                    selectedNotebookId.getValue(), notebookId, selectedSectionId.getValue());
             selectedNotebookId.setValue(notebookId);
+            selectedSectionId.setValue(nextSectionId);
         }
     }
 
@@ -126,10 +137,14 @@ public class JournalViewModel extends DearestViewModel {
         return (list != null && !list.isEmpty()) ? list.get(0).getId() : null;
     }
 
+    @Nullable
+    public String sectionForNewEntry() { return selectedSectionId.getValue(); }
+
     private void updateFiltering() {
         Set<String> tagIds = selectedTagIds.getValue();
         String q = query.getValue();
         boolean active = selectedNotebookId.getValue() != null
+                || selectedSectionId.getValue() != null
                 || (tagIds != null && !tagIds.isEmpty())
                 || (q != null && !q.isEmpty());
         filtering.setValue(active);
@@ -154,16 +169,8 @@ public class JournalViewModel extends DearestViewModel {
         Set<String> wantedTags = selectedTagIds.getValue();
         Map<String, Set<String>> links = entryTagLinks.getValue();
 
-        List<Entry> out = new ArrayList<>();
-        for (Entry e : base) {
-            if (wantedTags != null && !wantedTags.isEmpty() && !matchesAnyTag(e, wantedTags, links)) {
-                continue;
-            }
-            if (notebookId != null && !notebookId.equals(e.getNotebookId())) {
-                continue;
-            }
-            out.add(e);
-        }
+        List<Entry> out = filterForScope(base, notebookId, selectedSectionId.getValue());
+        if (wantedTags != null && !wantedTags.isEmpty()) out.removeIf(e -> !matchesAnyTag(e, wantedTags, links));
         sortEntries(out, sort.getValue());
         entries.setValue(out);
     }
@@ -209,5 +216,17 @@ public class JournalViewModel extends DearestViewModel {
 
     private static boolean equal(@Nullable String a, @Nullable String b) {
         return a == null ? b == null : a.equals(b);
+    }
+    static boolean matchesScope(Entry entry, @Nullable String notebookId, @Nullable String sectionId) {
+        return (notebookId == null || notebookId.equals(entry.getNotebookId()))
+                && (sectionId == null || sectionId.equals(entry.getSectionId()));
+    }
+
+    static List<Entry> filterForScope(List<Entry> source, @Nullable String notebookId,
+                                      @Nullable String sectionId) {
+        List<Entry> result = new ArrayList<>();
+        for (Entry entry : source) if (matchesScope(entry, notebookId, sectionId)) result.add(entry);
+        sortEntries(result, Sort.NEWEST);
+        return result;
     }
 }

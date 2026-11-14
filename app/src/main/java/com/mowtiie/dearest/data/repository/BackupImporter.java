@@ -8,6 +8,8 @@ import com.mowtiie.dearest.data.db.DatabaseContract;
 import com.mowtiie.dearest.data.model.Entry;
 import com.mowtiie.dearest.data.model.Notebook;
 import com.mowtiie.dearest.data.model.Tag;
+import com.mowtiie.dearest.data.model.Section;
+import com.mowtiie.dearest.data.dao.SectionDao;
 
 import net.zetetic.database.sqlcipher.SQLiteDatabase;
 
@@ -23,6 +25,7 @@ final class BackupImporter {
     private final EntryDao entryDao = new EntryDao();
     private final NotebookDao notebookDao = new NotebookDao();
     private final TagDao tagDao = new TagDao();
+    private final SectionDao sectionDao = new SectionDao();
 
     /**
      * With {@code replaceAll} everything is wiped first. Otherwise notebooks and entries are merged
@@ -44,6 +47,37 @@ final class BackupImporter {
             }
         }
 
+        Map<String, String> sectionIdMap = new HashMap<>();
+        for (Section source : data.sections) {
+            Section existingById = sectionDao.getById(d, source.getId());
+            if (existingById != null && existingById.getNotebookId().equals(source.getNotebookId())) {
+                Section existingByName = sectionDao.getByName(d, source.getNotebookId(), source.getName());
+                if (existingByName != null && !existingByName.getId().equals(source.getId())) {
+                    sectionIdMap.put(source.getId(), existingByName.getId());
+                    continue;
+                }
+                sectionDao.save(d, source);
+                sectionIdMap.put(source.getId(), source.getId());
+                continue;
+            }
+            Section existingByName = sectionDao.getByName(d, source.getNotebookId(), source.getName());
+            if (existingByName != null) {
+                sectionIdMap.put(source.getId(), existingByName.getId());
+                continue;
+            }
+            // A UUID from another device may already belong to another notebook. Preserve both
+            // records by assigning a local UUID and remapping the imported entries below.
+            Section imported = existingById == null ? source : Section.createNew(
+                    source.getNotebookId(), source.getName(), source.getPosition());
+            sectionDao.save(d, imported);
+            sectionIdMap.put(source.getId(), imported.getId());
+        }
+        // Older JSON has no sections. Create one per notebook so its restored entries remain browsable.
+        for (Notebook n : data.notebooks) {
+            if (sectionDao.getByNotebook(d, n.getId()).isEmpty())
+                sectionDao.save(d, Section.createNew(n.getId(), "General", 0));
+        }
+
         // A backup tag may collide by name with a local one; link entries to whichever survives.
         Map<String, String> tagIdMap = new HashMap<>();
         for (Tag t : data.tags) {
@@ -51,6 +85,13 @@ final class BackupImporter {
         }
 
         for (Entry e : data.entries) {
+            String importedSectionId = sectionIdMap.get(e.getSectionId());
+            if (importedSectionId != null) e.setSectionId(importedSectionId);
+            Section assignedSection = sectionDao.getById(d, e.getSectionId());
+            if (assignedSection == null || !assignedSection.getNotebookId().equals(e.getNotebookId())) {
+                List<Section> sections = sectionDao.getByNotebook(d, e.getNotebookId());
+                if (!sections.isEmpty()) e.setSectionId(sections.get(0).getId());
+            }
             Entry existing = entryDao.getById(d, e.getId());
             if (existing == null) {
                 entryDao.insert(d, e);

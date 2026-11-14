@@ -3,6 +3,7 @@ package com.mowtiie.dearest.backup;
 import com.mowtiie.dearest.data.model.Entry;
 import com.mowtiie.dearest.data.model.Notebook;
 import com.mowtiie.dearest.data.model.Tag;
+import com.mowtiie.dearest.data.model.Section;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -21,7 +22,7 @@ import java.util.Set;
 
 public final class BackupSerializer {
 
-    private static final int VERSION = 2;
+    private static final int VERSION = 3;
     private static final DateTimeFormatter DATE_FMT =
             DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm").withZone(ZoneId.systemDefault());
 
@@ -46,6 +47,13 @@ public final class BackupSerializer {
             }
             root.put("notebooks", notebooks);
 
+            JSONArray sections = new JSONArray();
+            for (Section s : data.sections) {
+                JSONObject o = new JSONObject(); o.put("id", s.getId()); o.put("notebookId", s.getNotebookId());
+                o.put("name", s.getName()); o.put("position", s.getPosition()); o.put("createdAt", s.getCreatedAt()); sections.put(o);
+            }
+            root.put("sections", sections);
+
             JSONArray tags = new JSONArray();
             for (Tag t : data.tags) {
                 JSONObject o = new JSONObject();
@@ -61,6 +69,7 @@ public final class BackupSerializer {
                 JSONObject o = new JSONObject();
                 o.put("id", e.getId());
                 o.put("notebookId", e.getNotebookId());
+                o.put("sectionId", e.getSectionId() == null ? JSONObject.NULL : e.getSectionId());
                 o.put("title", e.getTitle() == null ? JSONObject.NULL : e.getTitle());
                 o.put("body", e.getBody() == null ? JSONObject.NULL : e.getBody());
                 o.put("createdAt", e.getCreatedAt());
@@ -98,6 +107,12 @@ public final class BackupSerializer {
         }
 
         List<Tag> tags = new ArrayList<>();
+        List<Section> sections = new ArrayList<>();
+        JSONArray sa = root.optJSONArray("sections");
+        if (sa != null) for (int i = 0; i < sa.length(); i++) {
+            JSONObject o = sa.getJSONObject(i);
+            sections.add(new Section(o.getString("id"), o.getString("notebookId"), o.getString("name"), o.optInt("position", i), o.optLong("createdAt", System.currentTimeMillis())));
+        }
         JSONArray ta = root.optJSONArray("tags");
         if (ta != null) {
             for (int i = 0; i < ta.length(); i++) {
@@ -118,6 +133,7 @@ public final class BackupSerializer {
                 entries.add(new Entry(
                         o.getString("id"),
                         o.getString("notebookId"),
+                        o.isNull("sectionId") ? null : o.optString("sectionId", null),
                         o.isNull("title") ? null : o.optString("title"),
                         o.isNull("body") ? null : o.optString("body"),
                         o.optLong("createdAt", System.currentTimeMillis()),
@@ -131,17 +147,20 @@ public final class BackupSerializer {
             }
         }
         return root.has("tags")
-                ? new BackupData(notebooks, entries, tags, entryTagIds)
+                ? new BackupData(notebooks, entries, sections, tags, entryTagIds)
                 : new BackupData(notebooks, entries);
     }
 
     public static String toPlainText(BackupData data) {
         Map<String, String> names = notebookNames(data);
+        Map<String, String> sectionNames = sectionNames(data);
         StringBuilder sb = new StringBuilder();
         for (Entry e : data.entries) {
             String nb = names.get(e.getNotebookId());
             sb.append(nb == null ? "" : nb).append("  \u2022  ")
                     .append(DATE_FMT.format(Instant.ofEpochMilli(e.getCreatedAt()))).append('\n');
+            String section = sectionNames.get(e.getSectionId());
+            if (section != null) sb.append("Section: ").append(section).append('\n');
             if (e.getTitle() != null && !e.getTitle().trim().isEmpty()) {
                 sb.append(e.getTitle()).append('\n');
             }
@@ -156,11 +175,13 @@ public final class BackupSerializer {
 
     public static String toCsv(BackupData data) {
         Map<String, String> names = notebookNames(data);
+        Map<String, String> sectionNames = sectionNames(data);
         StringBuilder sb = new StringBuilder();
-        sb.append("Notebook,Created,Updated,Title,Body,Tags\r\n");
+        sb.append("Notebook,Section,Created,Updated,Title,Body,Tags\r\n");
         for (Entry e : data.entries) {
             String nb = names.get(e.getNotebookId());
             sb.append(csv(nb == null ? "" : nb)).append(',')
+                    .append(csv(sectionNames.getOrDefault(e.getSectionId(), ""))).append(',')
                     .append(csv(DATE_FMT.format(Instant.ofEpochMilli(e.getCreatedAt())))).append(',')
                     .append(csv(DATE_FMT.format(Instant.ofEpochMilli(e.getUpdatedAt())))).append(',')
                     .append(csv(e.getTitle() == null ? "" : e.getTitle())).append(',')
@@ -193,5 +214,8 @@ public final class BackupSerializer {
         Map<String, String> map = new HashMap<>();
         for (Notebook n : data.notebooks) map.put(n.getId(), n.getName());
         return map;
+    }
+    private static Map<String, String> sectionNames(BackupData data) {
+        Map<String, String> map = new HashMap<>(); for (Section s : data.sections) map.put(s.getId(), s.getName()); return map;
     }
 }

@@ -25,6 +25,7 @@ import com.google.android.material.chip.Chip;
 import com.mowtiie.dearest.ui.SecureDialogBuilder;
 import com.mowtiie.dearest.R;
 import com.mowtiie.dearest.data.model.Notebook;
+import com.mowtiie.dearest.data.model.Section;
 import com.mowtiie.dearest.databinding.FragmentEntryEditorBinding;
 import com.mowtiie.dearest.ui.InsetsUtil;
 import com.mowtiie.dearest.ui.activities.TagPickerActivity;
@@ -46,6 +47,7 @@ public class EntryEditorFragment extends Fragment {
 
     private static final String ARG_ENTRY_ID = "entryId";
     private static final String ARG_NOTEBOOK_ID = "notebookId";
+    private static final String ARG_SECTION_ID = "sectionId";
     private static final String ARG_STANDALONE = "standalone";
     private static final long AUTOSAVE_DELAY_MS = 2000L;
 
@@ -55,9 +57,15 @@ public class EntryEditorFragment extends Fragment {
      */
     public static EntryEditorFragment newInstance(@Nullable String entryId,
                                                   @Nullable String notebookId, boolean standalone) {
+        return newInstance(entryId, notebookId, null, standalone);
+    }
+
+    public static EntryEditorFragment newInstance(@Nullable String entryId, @Nullable String notebookId,
+                                                  @Nullable String sectionId, boolean standalone) {
         Bundle args = new Bundle();
         args.putString(ARG_ENTRY_ID, entryId);
         args.putString(ARG_NOTEBOOK_ID, notebookId);
+        args.putString(ARG_SECTION_ID, sectionId);
         args.putBoolean(ARG_STANDALONE, standalone);
         EntryEditorFragment fragment = new EntryEditorFragment();
         fragment.setArguments(args);
@@ -70,6 +78,7 @@ public class EntryEditorFragment extends Fragment {
     private final Handler autosaveHandler = new Handler(Looper.getMainLooper());
     private final Runnable autosaveRunnable = this::autosave;
     private final List<String> notebookIdsForDropdown = new ArrayList<>();
+    private final List<String> sectionIdsForDropdown = new ArrayList<>();
     private boolean shouldPopulate;
     private boolean finishing;
 
@@ -105,7 +114,7 @@ public class EntryEditorFragment extends Fragment {
         binding.editorToolbar.setOnMenuItemClickListener(this::onMenuItemSelected);
 
         viewModel = new ViewModelProvider(this).get(EntryEditorViewModel.class);
-        viewModel.init(args.getString(ARG_ENTRY_ID), args.getString(ARG_NOTEBOOK_ID));
+        viewModel.init(args.getString(ARG_ENTRY_ID), args.getString(ARG_NOTEBOOK_ID), args.getString(ARG_SECTION_ID));
         binding.editorToolbar.setTitle(viewModel.isNew() ? R.string.editor_title_new : R.string.editor_title_edit);
         updateMenu();
 
@@ -136,8 +145,15 @@ public class EntryEditorFragment extends Fragment {
         });
         viewModel.notebookId().observe(getViewLifecycleOwner(), id -> {
             bindNotebookDropdown();
+            viewModel.ensureNotebook(viewModel.notebooks().getValue());
             scheduleAutosave();
         });
+        viewModel.sections().observe(getViewLifecycleOwner(), sections -> {
+            viewModel.ensureSectionForNotebook(sections);
+            bindSectionDropdown();
+            scheduleAutosave();
+        });
+        viewModel.sectionId().observe(getViewLifecycleOwner(), id -> { bindSectionDropdown(); scheduleAutosave(); });
 
         viewModel.tagNames().observe(getViewLifecycleOwner(), names -> {
             renderTagChips(names);
@@ -219,6 +235,23 @@ public class EntryEditorFragment extends Fragment {
         boolean hasDescription = currentDescription != null && !currentDescription.trim().isEmpty();
         binding.notebookDescriptionHint.setVisibility(hasDescription ? View.VISIBLE : View.GONE);
         if (hasDescription) binding.notebookDescriptionHint.setText(currentDescription);
+    }
+
+    private void bindSectionDropdown() {
+        if (binding == null) return;
+        List<Section> sections = viewModel.sections().getValue(); if (sections == null) return;
+        String targetNotebook = viewModel.notebookId().getValue();
+        List<Section> valid = new ArrayList<>();
+        for (Section s : sections) if (targetNotebook != null && targetNotebook.equals(s.getNotebookId())) valid.add(s);
+        if (valid.isEmpty()) { binding.sectionDropdownLayout.setVisibility(View.GONE); return; }
+        binding.sectionDropdownLayout.setVisibility(View.VISIBLE);
+        sectionIdsForDropdown.clear(); List<String> names = new ArrayList<>(); String selectedName = null;
+        String selected = viewModel.sectionId().getValue();
+        for (Section s : valid) { sectionIdsForDropdown.add(s.getId()); names.add(s.getName()); if (s.getId().equals(selected)) selectedName = s.getName(); }
+        if (selectedName == null) { selectedName = valid.get(0).getName(); viewModel.setSection(valid.get(0).getId()); }
+        binding.sectionDropdown.setAdapter(new ArrayAdapter<>(requireContext(), android.R.layout.simple_dropdown_item_1line, names));
+        binding.sectionDropdown.setOnItemClickListener((p, v, position, id) -> viewModel.setSection(sectionIdsForDropdown.get(position)));
+        binding.sectionDropdown.setText(selectedName, false);
     }
 
     private void renderTagChips(@Nullable List<String> tagNames) {

@@ -19,10 +19,20 @@ public final class DatabaseContract {
         public static final String TABLE        = "entries";
         public static final String COL_UUID     = "uuid";
         public static final String COL_NOTEBOOK = "notebook_uuid";
+        public static final String COL_SECTION = "section_uuid";
         public static final String COL_TITLE    = "title";
         public static final String COL_BODY     = "body";
         public static final String COL_CREATED  = "created_at";
         public static final String COL_UPDATED  = "updated_at";
+    }
+
+    public static final class Sections implements BaseColumns {
+        public static final String TABLE = "sections";
+        public static final String COL_UUID = "uuid";
+        public static final String COL_NOTEBOOK = "notebook_uuid";
+        public static final String COL_NAME = "name";
+        public static final String COL_POSITION = "position";
+        public static final String COL_CREATED = "created_at";
     }
 
     public static final class EntriesFts {

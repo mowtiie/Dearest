@@ -8,6 +8,7 @@ public class Entry {
 
     private final String id;
     private String notebookId;
+    private String sectionId;
     private String title;
     private String body;
     private final long createdAt;
@@ -15,8 +16,14 @@ public class Entry {
 
     public Entry(String id, String notebookId, String title, String body,
                  long createdAt, long updatedAt) {
+        this(id, notebookId, null, title, body, createdAt, updatedAt);
+    }
+
+    public Entry(String id, String notebookId, String sectionId, String title, String body,
+                 long createdAt, long updatedAt) {
         this.id = id;
         this.notebookId = notebookId;
+        this.sectionId = sectionId;
         this.title = title;
         this.body = body;
         this.createdAt = createdAt;
@@ -30,12 +37,14 @@ public class Entry {
 
     public String getId() { return id; }
     public String getNotebookId() { return notebookId; }
+    public String getSectionId() { return sectionId; }
     public String getTitle() { return title; }
     public String getBody() { return body; }
     public long getCreatedAt() { return createdAt; }
     public long getUpdatedAt() { return updatedAt; }
 
     public void setNotebookId(String notebookId) { this.notebookId = notebookId; }
+    public void setSectionId(String sectionId) { this.sectionId = sectionId; }
     public void setTitle(String title) { this.title = title; }
     public void setBody(String body) { this.body = body; }
 

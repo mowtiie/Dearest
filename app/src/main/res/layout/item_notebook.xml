@@ -46,6 +46,24 @@
     </LinearLayout>
 
     <ImageButton
+        android:id="@+id/edit_button"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="@string/rename_notebook_title"
+        android:src="@drawable/ic_edit"
+        app:tint="?attr/colorOnSurfaceVariant" />
+
+    <ImageButton
+        android:id="@+id/open_sections_button"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="@string/open_notebook_sections"
+        android:src="@drawable/ic_chevron_right"
+        app:tint="?attr/colorOnSurfaceVariant" />
+
+    <ImageButton
         android:id="@+id/delete_button"
         android:layout_width="48dp"
         android:layout_height="48dp"

@@ -11,9 +11,11 @@ import com.mowtiie.dearest.backup.BackupData;
 import com.mowtiie.dearest.data.TestDatabase;
 import com.mowtiie.dearest.data.dao.EntryDao;
 import com.mowtiie.dearest.data.dao.NotebookDao;
+import com.mowtiie.dearest.data.dao.SectionDao;
 import com.mowtiie.dearest.data.dao.TagDao;
 import com.mowtiie.dearest.data.model.Entry;
 import com.mowtiie.dearest.data.model.Notebook;
+import com.mowtiie.dearest.data.model.Section;
 import com.mowtiie.dearest.data.model.Tag;
 
 import net.zetetic.database.sqlcipher.SQLiteDatabase;
@@ -36,6 +38,7 @@ public class BackupImporterTest {
 
     private final EntryDao entries = new EntryDao();
     private final NotebookDao notebooks = new NotebookDao();
+    private final SectionDao sections = new SectionDao();
     private final TagDao tags = new TagDao();
     private final BackupImporter importer = new BackupImporter();
 
@@ -91,6 +94,47 @@ public class BackupImporterTest {
         assertEquals("desc", notebooks.getById(db, "nb-9").getDescription());
         assertEquals("world", entries.getById(db, "e-1").getBody());
         assertEquals(set("work", "ideas"), tagNamesOf("e-1"));
+    }
+
+    @Test
+    public void importsSectionAndEntryAssignment() {
+        Notebook nb = new Notebook("nb-sections", "Imported", null, 0, 1L);
+        Section section = new Section("s-ideas", "nb-sections", "Ideas", 0, 2L);
+        Entry entry = new Entry("e-section", "nb-sections", "s-ideas", "title", "body", 3L, 4L);
+
+        apply(new BackupData(Collections.singletonList(nb), Collections.singletonList(entry),
+                Collections.singletonList(section), Collections.emptyList(), Collections.emptyMap()), false);
+
+        assertEquals("Ideas", sections.getByNotebook(db, "nb-sections").get(0).getName());
+        assertEquals("s-ideas", entries.getById(db, "e-section").getSectionId());
+    }
+
+    @Test
+    public void legacyBackupWithoutSectionsRestoresEntriesIntoGeneral() {
+        Notebook nb = new Notebook("nb-legacy", "Legacy", null, 0, 1L);
+        Entry entry = new Entry("e-legacy", "nb-legacy", "old title", "old body", 3L, 4L);
+
+        apply(new BackupData(Collections.singletonList(nb), Collections.singletonList(entry)), false);
+
+        List<Section> restoredSections = sections.getByNotebook(db, "nb-legacy");
+        assertEquals(1, restoredSections.size());
+        assertEquals("General", restoredSections.get(0).getName());
+        assertEquals(restoredSections.get(0).getId(), entries.getById(db, "e-legacy").getSectionId());
+    }
+
+    @Test
+    public void mergeMapsSameNamedSectionFromAnotherDeviceToLocalSection() {
+        String notebookId = notebooks.getAll(db).get(0).getId();
+        Section localSection = Section.createNew(notebookId, "Ideas", 1);
+        sections.save(db, localSection);
+        Section backupSection = new Section("s-other-device", notebookId, "ideas", 0, 2L);
+        Entry entry = new Entry("e-other-device", notebookId, "s-other-device", "title", "body", 3L, 4L);
+
+        apply(new BackupData(Collections.emptyList(), Collections.singletonList(entry),
+                Collections.singletonList(backupSection), Collections.emptyList(), Collections.emptyMap()), false);
+
+        assertEquals(localSection.getId(), entries.getById(db, "e-other-device").getSectionId());
+        assertEquals(2, sections.getByNotebook(db, notebookId).size());
     }
 
     @Test

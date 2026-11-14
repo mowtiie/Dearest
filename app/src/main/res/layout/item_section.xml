@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent" android:layout_height="wrap_content"
+    android:layout_marginHorizontal="16dp" android:layout_marginVertical="6dp"
+    android:clickable="true" android:focusable="true"
+    app:cardCornerRadius="12dp" app:cardElevation="0dp"
+    app:strokeColor="?attr/colorOutline" app:strokeWidth="1dp">
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:gravity="center_vertical" android:minHeight="72dp" android:orientation="horizontal"
+        android:paddingHorizontal="12dp" android:paddingVertical="8dp">
+        <ImageView android:id="@+id/section_drag_handle" android:layout_width="32dp" android:layout_height="40dp"
+            android:contentDescription="@string/cd_reorder_section" android:padding="8dp"
+            android:src="@drawable/ic_drag" app:tint="?attr/colorOnSurfaceVariant" />
+        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
+            android:orientation="vertical" android:paddingHorizontal="8dp">
+            <TextView android:id="@+id/section_name" android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:ellipsize="end" android:maxLines="1" android:textAppearance="?attr/textAppearanceTitleMedium" />
+            <TextView android:id="@+id/section_count" android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:layout_marginTop="3dp" android:textAppearance="?attr/textAppearanceBodySmall"
+                android:textColor="?attr/colorOnSurfaceVariant" />
+        </LinearLayout>
+        <ImageButton android:id="@+id/section_edit_button" android:layout_width="48dp" android:layout_height="48dp"
+            android:background="?attr/selectableItemBackgroundBorderless" android:contentDescription="@string/cd_edit_section"
+            android:src="@drawable/ic_edit" app:tint="?attr/colorOnSurfaceVariant" />
+        <ImageButton android:id="@+id/section_delete_button" android:layout_width="48dp" android:layout_height="48dp"
+            android:background="?attr/selectableItemBackgroundBorderless" android:contentDescription="@string/cd_delete_section"
+            android:src="@drawable/ic_delete" app:tint="?attr/colorOnSurfaceVariant" />
+        <ImageView android:layout_width="24dp" android:layout_height="24dp" android:importantForAccessibility="no"
+            android:src="@drawable/ic_chevron_right" app:tint="?attr/colorOnSurfaceVariant" />
+    </LinearLayout>
+</com.google.android.material.card.MaterialCardView>

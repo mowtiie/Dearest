@@ -9,6 +9,33 @@
     <string name="entry_deleted">Entry deleted</string>
     <string name="action_undo">Undo</string>
     <string name="default_notebook_name">My Journal</string>
+    <string name="default_section_name">General</string>
+    <string name="editor_section_hint">Section</string>
+    <string name="section_add">Add section</string>
+    <string name="section_rename">Rename section</string>
+    <string name="section_delete">Delete section</string>
+    <string name="section_move_up">Move up</string>
+    <string name="section_move_down">Move down</string>
+    <string name="section_delete_message">Entries in this section will move to another section in the same notebook.</string>
+    <string name="section_manage_hint">Long press to manage sections</string>
+    <string name="section_keep_one">A Notebook must have at least one Section.</string>
+    <string name="open_notebook_sections">Open Notebook Sections</string>
+    <string name="cd_edit_section">Rename Section</string>
+    <string name="action_add_section">New Section</string>
+    <string name="sections_title">Sections</string>
+    <string name="sections_empty">No Sections yet.</string>
+    <string name="section_name_hint">Section name</string>
+    <plurals name="section_entry_count">
+        <item quantity="one">%d entry</item>
+        <item quantity="other">%d entries</item>
+    </plurals>
+    <string name="section_delete_move_title">Move entries and delete Section?</string>
+    <string name="section_delete_move_message">Choose a Section in this Notebook. Its entries will move there.</string>
+    <string name="section_deleted">Section deleted</string>
+    <string name="cd_reorder_section">Reorder Section</string>
+    <string name="cd_delete_section">Delete Section</string>
+    <string name="section_saved">Section saved</string>
+    <string name="section_sort_saved">Section order saved</string>
     <string name="title_notebooks">Notebooks</string>
     <string name="title_settings">Settings</string>
 

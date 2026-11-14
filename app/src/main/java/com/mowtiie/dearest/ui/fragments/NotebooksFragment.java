@@ -28,6 +28,7 @@ import com.mowtiie.dearest.databinding.FragmentNotebooksBinding;
 import com.mowtiie.dearest.ui.adapters.NotebookAdapter;
 import com.mowtiie.dearest.ui.viewmodel.NotebookViewModel;
 import com.mowtiie.dearest.ui.viewmodel.NotebookViewModel.Sort;
+import com.mowtiie.dearest.ui.activities.NotebookSectionsActivity;
 import com.mowtiie.dearest.ui.SecureDialogBuilder;
 
 import java.util.ArrayList;
@@ -128,6 +129,11 @@ public class NotebooksFragment extends Fragment implements NotebookAdapter.Liste
         }
         MenuItem item = menu.findItem(itemId);
         if (item != null) item.setChecked(true);
+    }
+
+    @Override
+    public void onOpen(Notebook notebook) {
+        NotebookSectionsActivity.open(requireContext(), notebook.getId(), notebook.getName());
     }
 
     @Override

@@ -21,6 +21,7 @@ import java.util.List;
 public class NotebookAdapter extends RecyclerView.Adapter<NotebookAdapter.NotebookViewHolder> {
 
     public interface Listener {
+        void onOpen(Notebook notebook);
         void onRename(Notebook notebook);
         void onDelete(Notebook notebook);
         void onStartDrag(RecyclerView.ViewHolder holder);
@@ -74,7 +75,9 @@ public class NotebookAdapter extends RecyclerView.Adapter<NotebookAdapter.Notebo
         boolean hasDescription = description != null && !description.trim().isEmpty();
         holder.description.setVisibility(hasDescription ? View.VISIBLE : View.GONE);
         if (hasDescription) holder.description.setText(description);
-        holder.itemView.setOnClickListener(v -> listener.onRename(nb));
+        holder.itemView.setOnClickListener(v -> listener.onOpen(nb));
+        holder.itemView.findViewById(R.id.open_sections_button).setOnClickListener(v -> listener.onOpen(nb));
+        holder.edit.setOnClickListener(v -> listener.onRename(nb));
         holder.delete.setOnClickListener(v -> listener.onDelete(nb));
 
         holder.handle.setVisibility(reorderEnabled ? View.VISIBLE : View.GONE);
@@ -100,6 +103,7 @@ public class NotebookAdapter extends RecyclerView.Adapter<NotebookAdapter.Notebo
         final TextView name;
         final TextView description;
         final ImageButton delete;
+        final ImageButton edit;
 
         NotebookViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -107,6 +111,7 @@ public class NotebookAdapter extends RecyclerView.Adapter<NotebookAdapter.Notebo
             name = itemView.findViewById(R.id.notebook_name);
             description = itemView.findViewById(R.id.notebook_description);
             delete = itemView.findViewById(R.id.delete_button);
+            edit = itemView.findViewById(R.id.edit_button);
         }
     }
 }

@@ -17,11 +17,18 @@ public class EntryEditorActivity extends DearestActivity implements EntryEditorF
 
     private static final String EXTRA_ENTRY_ID = "com.dearest.extra.ENTRY_ID";
     private static final String EXTRA_NOTEBOOK_ID = "com.dearest.extra.NOTEBOOK_ID";
+    private static final String EXTRA_SECTION_ID = "com.dearest.extra.SECTION_ID";
 
     public static void open(Context context, @Nullable String entryId, @Nullable String notebookId) {
+        open(context, entryId, notebookId, null);
+    }
+
+    public static void open(Context context, @Nullable String entryId, @Nullable String notebookId,
+                            @Nullable String sectionId) {
         Intent intent = new Intent(context, EntryEditorActivity.class);
         intent.putExtra(EXTRA_ENTRY_ID, entryId);
         intent.putExtra(EXTRA_NOTEBOOK_ID, notebookId);
+        intent.putExtra(EXTRA_SECTION_ID, sectionId);
         context.startActivity(intent);
     }
 
@@ -34,7 +41,8 @@ public class EntryEditorActivity extends DearestActivity implements EntryEditorF
             getSupportFragmentManager().beginTransaction()
                     .replace(R.id.editor_container, EntryEditorFragment.newInstance(
                             getIntent().getStringExtra(EXTRA_ENTRY_ID),
-                            getIntent().getStringExtra(EXTRA_NOTEBOOK_ID), true))
+                            getIntent().getStringExtra(EXTRA_NOTEBOOK_ID),
+                            getIntent().getStringExtra(EXTRA_SECTION_ID), true))
                     .commit();
         }
 
